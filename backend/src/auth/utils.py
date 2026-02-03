@@ -1,6 +1,6 @@
 import hashlib
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -23,13 +23,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
 
     to_encode.update({
         "exp": expire,
-        "iat": datetime.utcnow(),
+        "iat": datetime.now(timezone.utc),
         "type": "access"
     })
     return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
@@ -38,13 +38,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
+        expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
 
     to_encode.update({
         "exp": expire,
-        "iat": datetime.utcnow(),
+        "iat": datetime.now(timezone.utc),
         "type": "refresh",
         "jti": secrets.token_urlsafe(16)  # Unique token ID for revocation
     })
@@ -66,5 +66,16 @@ def hash_token(token: str) -> str:
 def get_token_expiry(token: str) -> Optional[datetime]:
     payload = decode_token(token)
     if payload and "exp" in payload:
-        return datetime.utcfromtimestamp(payload["exp"])
+        # Return naive datetime for PostgreSQL compatibility
+        return datetime.fromtimestamp(payload["exp"], tz=timezone.utc).replace(tzinfo=None)
     return None
+
+
+def create_password_reset_token() -> str:
+    """Generate a secure random token for password reset."""
+    return secrets.token_urlsafe(32)
+
+
+def get_password_reset_expiry() -> datetime:
+    """Get expiry time for password reset token (1 hour from now)."""
+    return (datetime.now(timezone.utc) + timedelta(hours=1)).replace(tzinfo=None)

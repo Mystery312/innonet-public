@@ -1,0 +1,444 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.backNav {
+  margin-bottom: 1rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+.emptyState h2 {
+  margin: 0 0 0.5rem;
+  color: var(--color-text);
+}
+
+.emptyState p {
+  margin: 0 0 1.5rem;
+  color: var(--color-text-secondary);
+}
+
+/* Header Section */
+.header {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+  border: 1px solid var(--color-border);
+}
+
+.headerContent {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.headerInfo {
+  flex: 1;
+}
+
+.headerInfo h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.75rem;
+  color: var(--color-text);
+}
+
+.username {
+  margin: 0 0 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.location {
+  margin: 0 0 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.location::before {
+  content: '📍';
+  font-size: 0.85rem;
+}
+
+.bio {
+  margin: 0 0 1rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.socialLinks {
+  display: flex;
+  gap: 1rem;
+}
+
+.socialLinks a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.socialLinks a:hover {
+  text-decoration: underline;
+}
+
+.headerActions {
+  flex-shrink: 0;
+}
+
+/* Profile Score Card */
+.scoreCard {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  text-align: center;
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+}
+
+.scoreValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.scoreLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+/* Section */
+.section {
+  margin-bottom: 2rem;
+}
+
+.section h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--color-text);
+}
+
+/* Skills */
+.skillsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* AI Insights */
+.insightsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.insightCard {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+}
+
+.insightCard h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.insightCard ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.insightCard li {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.insightCard li:last-child {
+  margin-bottom: 0;
+}
+
+.insightActions {
+  margin-top: 1rem;
+}
+
+/* Section Header */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+}
+
+.viewAllLink {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.viewAllLink:hover {
+  text-decoration: underline;
+}
+
+/* Similar Users */
+.similarUsersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.similarUserCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  border: 1px solid var(--color-border);
+}
+
+.similarUserCard:hover {
+  background: var(--color-background);
+  box-shadow: var(--shadow-md);
+}
+
+.similarUserInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.similarUserName {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.similarUserMatch {
+  font-size: 0.8rem;
+  color: var(--color-success);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.sharedSkills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.moreSkills {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-left: 0.25rem;
+}
+
+/* Overview Section */
+.overviewSection {
+  margin-bottom: 1.5rem;
+}
+
+.overviewSection h3 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* Experience Item */
+.experienceItem {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.experienceItem:last-child {
+  border-bottom: none;
+}
+
+.expTitle {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.expCompany {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.expDates {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+.expDescription {
+  margin: 0.75rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Project Item */
+.projectItem {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.projectItem:last-child {
+  border-bottom: none;
+}
+
+.projectTitle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.projectTitle a {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.projectTitle a:hover {
+  text-decoration: underline;
+}
+
+.projectRole {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.projectItem p {
+  margin: 0.5rem 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.techList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+/* Education Item */
+.educationItem {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.educationItem:last-child {
+  border-bottom: none;
+}
+
+.eduInstitution {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.eduDegree {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.eduDates {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .header {
+    padding: 1.5rem;
+  }
+
+  .headerContent {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .headerInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .socialLinks {
+    justify-content: center;
+  }
+
+  .headerActions {
+    width: 100%;
+  }
+
+  .headerActions button {
+    width: 100%;
+  }
+
+  .scoreCard {
+    position: static;
+    margin-top: 1.5rem;
+    width: 100%;
+  }
+
+  .insightsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .similarUsersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+}

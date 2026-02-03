@@ -57,6 +57,11 @@ export const LoginForm: React.FC = () => {
           placeholder="Enter your password"
           required
         />
+        <div style={{ textAlign: 'right', marginTop: '-0.5rem' }}>
+          <Link to="/forgot-password" style={{ fontSize: '0.875rem', color: 'var(--color-primary)' }}>
+            Forgot password?
+          </Link>
+        </div>
       </div>
 
       <Button type="submit" fullWidth isLoading={isLoading}>

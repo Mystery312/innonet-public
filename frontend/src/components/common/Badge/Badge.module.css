@@ -1,0 +1,110 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.small {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+}
+
+.medium {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+}
+
+/* Variants */
+.default {
+  background-color: var(--color-gray-100);
+  color: var(--color-text-secondary);
+}
+
+.primary {
+  background-color: rgba(77, 77, 255, 0.15);
+  color: var(--color-primary);
+}
+
+.success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.danger {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.info {
+  background-color: rgba(6, 182, 212, 0.15);
+  color: var(--color-accent);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .default {
+  background-color: var(--color-gray-100);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .primary {
+  background-color: rgba(77, 77, 255, 0.25);
+}
+
+[data-theme="dark"] .success {
+  background-color: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="dark"] .warning {
+  background-color: rgba(245, 158, 11, 0.2);
+}
+
+[data-theme="dark"] .danger {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme="dark"] .info {
+  background-color: rgba(6, 182, 212, 0.2);
+}
+
+.content {
+  display: inline-block;
+}
+
+.removeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin-left: 0.125rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: opacity 0.15s, background-color 0.15s;
+  color: inherit;
+}
+
+.removeButton:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .removeButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.removeButton svg {
+  display: block;
+}

@@ -6,41 +6,158 @@
 
 .main {
   flex: 1;
-  padding: 2rem 0;
+  padding: 2rem 0 4rem;
+}
+
+.backNav {
+  margin-bottom: 1rem;
 }
 
 .header {
   margin-bottom: 2rem;
 }
 
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
 .title {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--color-gray-900);
-  margin-bottom: 0.5rem;
+  color: var(--color-text);
+  margin: 0 0 0.5rem;
 }
 
 .subtitle {
-  color: var(--color-gray-600);
+  color: var(--color-text-secondary);
   font-size: 1.125rem;
+  margin: 0;
+}
+
+.viewToggle {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.toggleBtn:hover {
+  background: var(--color-gray-100);
+  color: var(--color-text);
+}
+
+.toggleBtn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+}
+
+.content {
+  min-width: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.filters {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filterSelect {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.2s ease;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
+.calendarView {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+}
+
 .loading,
-.error,
 .empty {
   text-align: center;
   padding: 4rem 2rem;
-  color: var(--color-gray-500);
+  color: var(--color-text-secondary);
 }
 
 .error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 2rem;
+  background: var(--color-error-light);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.error p {
+  margin: 0;
   color: var(--color-error);
+  font-size: 1rem;
+}
+
+.retryButton {
+  padding: 0.625rem 1.25rem;
+  background: var(--color-error);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.retryButton:hover {
+  opacity: 0.9;
 }
 
 .pagination {
@@ -50,24 +167,24 @@
   gap: 1rem;
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 1px solid var(--color-gray-200);
+  border-top: 1px solid var(--color-border);
 }
 
 .pageButton {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--color-gray-300);
-  background: white;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-gray-700);
+  color: var(--color-text);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .pageButton:hover:not(:disabled) {
-  background: var(--color-gray-50);
-  border-color: var(--color-gray-400);
+  background: var(--color-gray-100);
+  border-color: var(--color-gray-300);
 }
 
 .pageButton:disabled {
@@ -77,5 +194,42 @@
 
 .pageInfo {
   font-size: 0.875rem;
-  color: var(--color-gray-600);
+  color: var(--color-text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    order: -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .headerContent {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .viewToggle {
+    justify-content: flex-start;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .filters {
+    flex-direction: column;
+  }
+
+  .filterSelect {
+    width: 100%;
+  }
 }

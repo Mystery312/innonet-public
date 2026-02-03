@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     # Authentication
-    secret_key: str = "your-secret-key-change-in-production"
+    secret_key: str  # REQUIRED - No default for security
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
@@ -27,8 +27,15 @@ class Settings(BaseSettings):
     sendgrid_api_key: str = ""
     sendgrid_from_email: str = "noreply@innonet.com"
 
-    # OpenAI (for future AI features)
+    # OpenAI (for AI features)
     openai_api_key: str = ""
+    openai_embedding_model: str = "text-embedding-3-small"
+    openai_chat_model: str = "gpt-4-turbo-preview"
+
+    # Neo4j (for graph networking)
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str  # REQUIRED - No default for security
 
     # Frontend URL (for CORS and redirects)
     frontend_url: str = "http://localhost:5173"

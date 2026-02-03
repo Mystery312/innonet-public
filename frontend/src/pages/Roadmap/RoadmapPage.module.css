@@ -1,0 +1,158 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f6f8fa;
+}
+
+.header {
+  background: #fff;
+  border-bottom: 1px solid #d0d7de;
+  padding: 1.5rem 2rem;
+}
+
+.backButton {
+  margin-bottom: 1rem;
+}
+
+.headerContent {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.headerContent h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #24292f;
+}
+
+.headerContent p {
+  margin: 0;
+  color: #57606a;
+  font-size: 0.9375rem;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  background: #fff;
+  border-left: 1px solid #d0d7de;
+  border-right: 1px solid #d0d7de;
+}
+
+.graphSection {
+  flex: 1;
+  min-height: 600px;
+  position: relative;
+}
+
+.loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  gap: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f6f8fa;
+  border-top-color: #0969da;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading p {
+  margin: 0;
+  color: #57606a;
+  font-size: 0.875rem;
+}
+
+.error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.error p {
+  margin: 0;
+  color: #cf222e;
+  font-size: 0.9375rem;
+}
+
+.retryButton {
+  padding: 0.5rem 1rem;
+  background: #0969da;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.retryButton:hover {
+  background: #0860ca;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #fff;
+  border-top: 1px solid #d0d7de;
+  font-size: 0.875rem;
+  color: #57606a;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .content {
+    flex-direction: column;
+  }
+
+  .graphSection {
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem;
+  }
+
+  .headerContent h1 {
+    font-size: 1.25rem;
+  }
+
+  .headerContent p {
+    font-size: 0.875rem;
+  }
+
+  .graphSection {
+    min-height: 350px;
+  }
+}

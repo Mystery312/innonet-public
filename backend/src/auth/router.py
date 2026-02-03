@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from src.database.postgres import get_db
 from src.auth.schemas import (
@@ -10,16 +12,21 @@ from src.auth.schemas import (
     AuthResponse,
     UserResponse,
     MessageResponse,
+    PasswordResetRequest,
+    PasswordResetConfirm,
 )
 from src.auth.service import AuthService
 from src.auth.dependencies import get_current_user
 from src.auth.models import User
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("3/minute")
 async def register(
+    request: Request,
     data: UserRegisterRequest,
     db: AsyncSession = Depends(get_db),
 ):
@@ -36,7 +43,9 @@ async def register(
 
 
 @router.post("/login", response_model=AuthResponse)
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     data: UserLoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
@@ -55,7 +64,9 @@ async def login(
 
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit("10/minute")
 async def refresh_token(
+    request: Request,
     data: RefreshTokenRequest,
     db: AsyncSession = Depends(get_db),
 ):
@@ -84,3 +95,46 @@ async def logout(
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
     return UserResponse.model_validate(current_user)
+
+
+@router.post("/forgot-password", response_model=MessageResponse)
+@limiter.limit("3/minute")
+async def forgot_password(
+    request: Request,
+    data: PasswordResetRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Request a password reset email."""
+    auth_service = AuthService(db)
+    token = await auth_service.request_password_reset(data.email)
+
+    # In production, send email with reset link
+    # For development, we'll return a success message regardless
+    # and log the token for testing
+    if token:
+        # TODO: Send email with reset link
+        # For now, log the token for development/testing
+        import logging
+        logging.info(f"Password reset token for {data.email}: {token}")
+        print(f"\n[DEV] Password reset token: {token}\n")
+
+    # Always return same message to prevent email enumeration
+    return MessageResponse(
+        message="If an account exists with this email, you will receive a password reset link."
+    )
+
+
+@router.post("/reset-password", response_model=MessageResponse)
+@limiter.limit("5/minute")
+async def reset_password(
+    request: Request,
+    data: PasswordResetConfirm,
+    db: AsyncSession = Depends(get_db),
+):
+    """Reset password using a valid reset token."""
+    auth_service = AuthService(db)
+    try:
+        await auth_service.reset_password(data.token, data.new_password)
+        return MessageResponse(message="Password has been reset successfully.")
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

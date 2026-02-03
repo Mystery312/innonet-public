@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 80" fill="none">
+  <!-- INNONET logo for light backgrounds (dark text) -->
+  <defs>
+    <clipPath id="circleClipDark">
+      <circle cx="175" cy="40" r="28"/>
+    </clipPath>
+  </defs>
+
+  <!-- INN text -->
+  <text x="10" y="60" font-family="Arial Black, Arial, sans-serif" font-size="56" font-weight="900" fill="#1A1A1A">INN</text>
+
+  <!-- Network Circle (replacing O) -->
+  <g clip-path="url(#circleClipDark)">
+    <circle cx="175" cy="40" r="28" fill="#4D4DFF"/>
+    <!-- Network lines -->
+    <line x1="155" y1="25" x2="185" y2="55" stroke="#1A1A1A" stroke-width="2"/>
+    <line x1="195" y1="25" x2="160" y2="50" stroke="#1A1A1A" stroke-width="2"/>
+    <line x1="165" y1="60" x2="190" y2="35" stroke="#1A1A1A" stroke-width="2"/>
+    <line x1="175" y1="15" x2="175" y2="65" stroke="#1A1A1A" stroke-width="2"/>
+    <!-- Network nodes -->
+    <circle cx="175" cy="20" r="4" fill="#1A1A1A" stroke="#4D4DFF" stroke-width="1"/>
+    <circle cx="160" cy="45" r="4" fill="#1A1A1A" stroke="#4D4DFF" stroke-width="1"/>
+    <circle cx="190" cy="40" r="4" fill="#1A1A1A" stroke="#4D4DFF" stroke-width="1"/>
+    <circle cx="175" cy="58" r="4" fill="#1A1A1A" stroke="#4D4DFF" stroke-width="1"/>
+  </g>
+
+  <!-- NET text -->
+  <text x="210" y="60" font-family="Arial Black, Arial, sans-serif" font-size="56" font-weight="900" fill="#1A1A1A">NET</text>
+</svg>

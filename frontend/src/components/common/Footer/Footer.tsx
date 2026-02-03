@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import styles from './Footer.module.css';
 
 export const Footer: React.FC = () => {
@@ -6,7 +7,9 @@ export const Footer: React.FC = () => {
     <footer className={styles.footer}>
       <div className={`container ${styles.container}`}>
         <div className={styles.brand}>
-          <span className={styles.logo}>Innonet</span>
+          <Link to="/" className={styles.logoLink}>
+            <img src="/logo.svg" alt="Innonet" className={styles.logoImage} />
+          </Link>
           <p className={styles.tagline}>From ideas to impact, faster.</p>
         </div>
         <div className={styles.copyright}>

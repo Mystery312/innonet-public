@@ -11,6 +11,20 @@ from src.auth.models import User, UserProfile, RefreshToken
 from src.events.models import Event, EventRegistration
 from src.payments.models import Payment
 from src.waitlist.models import Waitlist
+from src.profiles.models import (
+    Skill, UserSkill, Project, Certification, Award,
+    WorkExperience, Education, ProfileEmbedding, ProfileAnalysis, Connection,
+    ResumeUpload
+)
+from src.communities.models import (
+    Community, CommunityMember, Post, Comment, PostVote
+)
+from src.companies.models import (
+    Company, CompanyMember, Challenge, ChallengeApplication
+)
+from src.messaging.models import (
+    Conversation, ConversationParticipant, Message, Notification
+)
 
 config = context.config
 

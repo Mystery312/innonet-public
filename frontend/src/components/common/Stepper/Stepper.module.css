@@ -1,0 +1,132 @@
+.stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stepContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+}
+
+.step.clickable {
+  cursor: pointer;
+}
+
+.step.clickable:hover .stepIndicator {
+  transform: scale(1.1);
+}
+
+.step:not(.clickable):not(.active) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.step:not(.clickable):not(.active) .stepIndicator {
+  background-color: var(--color-bg-tertiary, #f6f8fa);
+  border-color: var(--color-border-light, #eaeef2);
+}
+
+.step:not(.clickable):not(.active) .stepTitle {
+  color: var(--color-text-tertiary, #8b949e);
+}
+
+.stepIndicator {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  background-color: var(--color-bg-tertiary, #f6f8fa);
+  color: var(--color-text-secondary, #57606a);
+  border: 2px solid var(--color-border, #d0d7de);
+  transition: all 0.2s ease;
+}
+
+.step.active .stepIndicator {
+  background-color: var(--color-accent-emphasis, #0969da);
+  color: white;
+  border-color: var(--color-accent-emphasis, #0969da);
+}
+
+.step.completed .stepIndicator {
+  background-color: var(--color-success-emphasis, #1a7f37);
+  color: white;
+  border-color: var(--color-success-emphasis, #1a7f37);
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.25rem;
+}
+
+.stepTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #57606a);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.step.active .stepTitle,
+.step.completed .stepTitle {
+  color: var(--color-text-primary, #24292f);
+}
+
+.optional {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-tertiary, #8c959f);
+}
+
+.stepDescription {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary, #8c959f);
+  margin-top: 0.125rem;
+}
+
+.connector {
+  width: 2px;
+  height: 24px;
+  background-color: var(--color-border, #d0d7de);
+  margin-left: 15px;
+}
+
+.step.completed + .connector,
+.stepContainer:has(.step.completed) .connector {
+  background-color: var(--color-success-emphasis, #1a7f37);
+}
+
+/* Horizontal variant for larger screens */
+@media (min-width: 768px) {
+  .stepper.horizontal {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .stepper.horizontal .stepContainer {
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+  }
+
+  .stepper.horizontal .connector {
+    width: auto;
+    height: 2px;
+    flex: 1;
+    margin: 0 0.5rem;
+  }
+}

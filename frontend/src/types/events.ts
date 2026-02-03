@@ -39,3 +39,40 @@ export interface EventRegistration {
   ticket_code: string | null;
   registered_at: string;
 }
+
+export interface EventWithRegistration extends Event {
+  registration_status: string | null;
+  ticket_code: string | null;
+  registered_at: string | null;
+}
+
+export interface UserEventsResponse {
+  upcoming: EventWithRegistration[];
+  past: EventWithRegistration[];
+}
+
+export interface RecommendedEvent extends Event {
+  recommendation_score: number;
+  recommendation_reason: string | null;
+}
+
+export interface EventRecommendationsResponse {
+  events: RecommendedEvent[];
+  total: number;
+}
+
+export interface CalendarEvent {
+  id: string;
+  name: string;
+  event_type: string | null;
+  start_datetime: string;
+  end_datetime: string | null;
+  location_city: string | null;
+  is_registered: boolean;
+}
+
+export interface CalendarResponse {
+  events: CalendarEvent[];
+  month: number;
+  year: number;
+}

@@ -1,9 +1,10 @@
 .card {
-  background: white;
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  border: 1px solid var(--color-border);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
 }
 
 .card:hover {
@@ -29,7 +30,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-gray-400);
+  color: var(--color-text-muted);
 }
 
 .badge {
@@ -52,7 +53,7 @@
 .title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-gray-900);
+  color: var(--color-text);
   margin-bottom: 0.75rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -73,7 +74,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: var(--color-gray-600);
+  color: var(--color-text-secondary);
 }
 
 .footer {
@@ -81,11 +82,11 @@
   align-items: center;
   justify-content: space-between;
   padding-top: 1rem;
-  border-top: 1px solid var(--color-gray-100);
+  border-top: 1px solid var(--color-border);
 }
 
 .price {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-gray-900);
+  color: var(--color-text);
 }

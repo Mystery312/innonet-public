@@ -1,10 +1,15 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 
 from src.database.postgres import Base
+
+
+def utc_now() -> datetime:
+    """Return current UTC time as a naive datetime (for PostgreSQL compatibility)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Waitlist(Base):
@@ -17,4 +22,4 @@ class Waitlist(Base):
     source: Mapped[str | None] = mapped_column(String(100), nullable=True)  # homepage, referral, etc.
     referral_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     confirmation_sent: Mapped[bool] = mapped_column(Boolean, default=False)
-    subscribed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    subscribed_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)

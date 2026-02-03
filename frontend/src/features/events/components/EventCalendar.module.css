@@ -1,0 +1,168 @@
+.calendar {
+  background: var(--color-bg-primary, #ffffff);
+  border: 1px solid var(--color-border, #d0d7de);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.navButton {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: var(--color-text-secondary, #57606a);
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.navButton:hover {
+  background: var(--color-bg-secondary, #f6f8fa);
+  color: var(--color-text-primary, #24292f);
+}
+
+.monthYear {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #24292f);
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 0.5rem;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-tertiary, #8b949e);
+  padding: 0.5rem 0;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.day {
+  aspect-ratio: 1;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+  min-height: 40px;
+}
+
+.day:hover {
+  background: var(--color-bg-secondary, #f6f8fa);
+}
+
+.emptyDay {
+  aspect-ratio: 1;
+}
+
+.dayNumber {
+  font-size: 0.85rem;
+  color: var(--color-text-primary, #24292f);
+  font-weight: 500;
+}
+
+.today {
+  background: var(--color-primary-subtle, #ddf4ff);
+}
+
+.today .dayNumber {
+  color: var(--color-primary, #0969da);
+  font-weight: 700;
+}
+
+.hasEvents {
+  background: var(--color-bg-secondary, #f6f8fa);
+}
+
+.eventDots {
+  display: flex;
+  gap: 3px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.eventDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary, #0969da);
+  display: block;
+}
+
+.eventDot:hover {
+  transform: scale(1.3);
+}
+
+.registeredDot {
+  background: var(--color-success, #1a7f37);
+}
+
+.moreEvents {
+  font-size: 0.65rem;
+  color: var(--color-text-tertiary, #8b949e);
+}
+
+.registeredIndicator {
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-success, #1a7f37);
+}
+
+.loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-secondary, #57606a);
+}
+
+.legend {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border-light, #eaeef2);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #57606a);
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary, #0969da);
+}
+
+.legendDot.registeredDot {
+  background: var(--color-success, #1a7f37);
+}

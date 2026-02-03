@@ -47,11 +47,12 @@
 
 .ghost {
   background-color: transparent;
-  color: var(--color-gray-700);
+  color: var(--color-text-secondary);
 }
 
 .ghost:hover:not(:disabled) {
   background-color: var(--color-gray-100);
+  color: var(--color-text);
 }
 
 /* Sizes */

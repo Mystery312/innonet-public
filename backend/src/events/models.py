@@ -1,11 +1,21 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
+from typing import TYPE_CHECKING
+
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from src.database.postgres import Base
+
+if TYPE_CHECKING:  # pragma: no cover
+    from src.companies.models import Company
+
+
+def utc_now() -> datetime:
+    """Return current UTC time as a naive datetime (for PostgreSQL compatibility)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Event(Base):
@@ -32,15 +42,22 @@ class Event(Base):
     is_cancelled: Mapped[bool] = mapped_column(Boolean, default=False)
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    company_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("companies.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, default=utc_now, onupdate=utc_now
     )
 
     # Relationships
     registrations: Mapped[list["EventRegistration"]] = relationship(back_populates="event")
+    company: Mapped["Company"] = relationship("Company", backref="events")
 
 
 class EventRegistration(Base):
@@ -60,7 +77,7 @@ class EventRegistration(Base):
     payment_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("payments.id"), nullable=True
     )
-    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    registered_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships

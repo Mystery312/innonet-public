@@ -1,0 +1,61 @@
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.toggle:hover {
+  background-color: var(--color-gray-100);
+  color: var(--color-text);
+}
+
+.toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.toggle:active {
+  transform: scale(0.95);
+}
+
+.iconWrapper {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transform: scale(0.5) rotate(-90deg);
+  transition: opacity 0.2s ease, transform 0.3s ease;
+}
+
+.icon.active {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.sun {
+  color: #f59e0b;
+}
+
+.moon {
+  color: var(--color-primary-light);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .toggle:hover {
+  background-color: var(--color-gray-100);
+}

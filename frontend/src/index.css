@@ -1,10 +1,20 @@
 :root {
-  /* Colors */
-  --color-primary: #2563eb;
-  --color-primary-dark: #1d4ed8;
-  --color-primary-light: #3b82f6;
+  /* Brand Colors - Innonet Blue */
+  --color-primary: #4D4DFF;
+  --color-primary-dark: #3D3DE6;
+  --color-primary-light: #6B6BFF;
   --color-secondary: #7c3aed;
   --color-accent: #06b6d4;
+
+  /* Theme Colors (Light Mode Default) */
+  --color-background: #ffffff;
+  --color-background-secondary: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
 
   /* Neutrals */
   --color-gray-50: #f8fafc;
@@ -20,8 +30,11 @@
 
   /* Status */
   --color-success: #10b981;
+  --color-success-light: #d1fae5;
   --color-warning: #f59e0b;
+  --color-warning-light: #fef3c7;
   --color-error: #ef4444;
+  --color-error-light: #fee2e2;
 
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -45,6 +58,46 @@
 
   /* Typography */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* Transitions */
+  --transition-colors: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+  --color-background: #1A1A1A;
+  --color-background-secondary: #121212;
+  --color-surface: #2A2A2A;
+  --color-text: #ffffff;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+  --color-border: #3f3f46;
+  --color-border-light: #27272a;
+
+  /* Adjusted grays for dark mode */
+  --color-gray-50: #27272a;
+  --color-gray-100: #3f3f46;
+  --color-gray-200: #52525b;
+  --color-gray-300: #71717a;
+  --color-gray-400: #a1a1aa;
+  --color-gray-500: #d4d4d8;
+  --color-gray-600: #e4e4e7;
+  --color-gray-700: #f4f4f5;
+  --color-gray-800: #fafafa;
+  --color-gray-900: #ffffff;
+
+  /* Adjusted primary for dark mode */
+  --color-primary-dark: #6B6BFF;
+
+  /* Status colors for dark mode */
+  --color-success-light: #064e3b;
+  --color-warning-light: #78350f;
+  --color-error-light: #7f1d1d;
+
+  /* Shadows for dark mode */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
 }
 
 * {
@@ -61,10 +114,11 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-gray-50);
-  color: var(--color-gray-900);
+  background-color: var(--color-background-secondary);
+  color: var(--color-text);
   line-height: 1.6;
   min-height: 100vh;
+  transition: var(--transition-colors);
 }
 
 #root {
