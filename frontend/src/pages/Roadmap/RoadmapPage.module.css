@@ -44,10 +44,101 @@
   border-right: 1px solid #d0d7de;
 }
 
+.viewModeTabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem 0.5rem;
+  background: #f6f8fa;
+  border-left: 1px solid #d0d7de;
+  border-right: 1px solid #d0d7de;
+  border-bottom: 1px solid #d0d7de;
+}
+
+.viewModeTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #57606a;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.viewModeTab svg {
+  flex-shrink: 0;
+}
+
+.viewModeTab:hover {
+  background: #f3f4f6;
+  border-color: #d0d7de;
+}
+
+.viewModeTab.active {
+  background: #0b69da10;
+  color: #0969da;
+  border-color: #0969da;
+  box-shadow: 0 0 0 1px #0969da20;
+}
+
 .graphSection {
   flex: 1;
   min-height: 600px;
   position: relative;
+}
+
+.sidebarContainer {
+  width: 320px;
+  max-width: 100%;
+  border-left: 1px solid #d0d7de;
+  background: #f6f8fa;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.nodeActions {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.focusButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #d0d7de;
+  background: #ffffff;
+  color: #24292f;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
+  transition: background 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease, transform 0.05s ease;
+}
+
+.focusButton svg {
+  flex-shrink: 0;
+}
+
+.focusButton:hover {
+  background: #f6f8fa;
+  border-color: #8c959f;
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.15);
+}
+
+.focusButton:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 0 rgba(31, 35, 40, 0);
 }
 
 .loading {
@@ -128,6 +219,129 @@
   color: #57606a;
 }
 
+.viewModeLabel {
+  font-weight: 500;
+  color: #24292f;
+}
+
+.serviceWarning {
+  color: #9a6700;
+  font-weight: 500;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #57606a;
+  text-align: center;
+  padding: 2rem;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #24292f;
+}
+
+.emptyStateHint {
+  font-size: 0.875rem;
+  font-weight: 400;
+  margin-top: 0.5rem;
+  color: #57606a;
+}
+
+/* Skill Search Section */
+.skillSearch {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #d0d7de;
+  padding: 1rem;
+}
+
+.sidebarTitle {
+  margin: 0 0 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #24292f;
+}
+
+.sidebarDescription {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  color: #57606a;
+  line-height: 1.4;
+}
+
+.skillForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skillInput {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.skillInput:focus {
+  outline: none;
+  border-color: #0969da;
+  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
+}
+
+.skillInput:disabled {
+  background: #f6f8fa;
+  color: #8c959f;
+}
+
+.skillButton {
+  padding: 0.5rem 1rem;
+  background: #2da44e;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.skillButton:hover:not(:disabled) {
+  background: #238636;
+}
+
+.skillButton:disabled {
+  background: #94d3a2;
+  cursor: not-allowed;
+}
+
+.roadmapInfo {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #d0d7de;
+}
+
+.roadmapInfo h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #24292f;
+}
+
+.roadmapInfo p {
+  margin: 0 0 0.25rem;
+  font-size: 0.8125rem;
+  color: #57606a;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .content {
@@ -136,6 +350,17 @@
 
   .graphSection {
     min-height: 400px;
+  }
+
+  .viewModeTabs {
+    padding: 0.5rem 1rem 0.25rem;
+  }
+
+  .sidebarContainer {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #d0d7de;
+    flex-direction: column;
   }
 }
 
@@ -154,5 +379,15 @@
 
   .graphSection {
     min-height: 350px;
+  }
+
+  .viewModeTabs {
+    flex-wrap: wrap;
+    row-gap: 0.4rem;
+  }
+
+  .viewModeTab {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
   }
 }

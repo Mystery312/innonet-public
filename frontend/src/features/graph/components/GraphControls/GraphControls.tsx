@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { GraphViewType, GraphFilters, NodeType } from '../../types/graph';
+import type { GraphViewType, GraphFilters, NodeType, GraphViewMode } from '../../types/graph';
 import styles from './GraphControls.module.css';
 
 interface GraphControlsProps {
@@ -11,6 +11,13 @@ interface GraphControlsProps {
   onDepthChange: (depth: number) => void;
   onSearch?: (query: string) => void;
   isLoading?: boolean;
+  // Obsidian-like controls
+  viewMode?: GraphViewMode;
+  onViewModeChange?: (mode: GraphViewMode) => void;
+  localDepth?: number;
+  onLocalDepthChange?: (depth: number) => void;
+  showClusters?: boolean;
+  onShowClustersChange?: (show: boolean) => void;
 }
 
 const VIEW_OPTIONS: { value: GraphViewType; label: string; description: string }[] = [
@@ -36,6 +43,13 @@ export const GraphControls: React.FC<GraphControlsProps> = ({
   onDepthChange,
   onSearch,
   isLoading,
+  // Obsidian-like controls (optional)
+  viewMode,
+  onViewModeChange,
+  localDepth,
+  onLocalDepthChange,
+  showClusters,
+  onShowClustersChange,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -157,6 +171,36 @@ export const GraphControls: React.FC<GraphControlsProps> = ({
                 className={styles.slider}
               />
               <span>{Math.round((filters.min_similarity || 0.5) * 100)}%</span>
+            </div>
+          )}
+
+          {/* Local view depth control */}
+          {viewMode === 'local' && onLocalDepthChange && (
+            <div className={styles.filterGroup}>
+              <label>Local View Depth:</label>
+              <select
+                value={localDepth || 2}
+                onChange={(e) => onLocalDepthChange(Number(e.target.value))}
+                disabled={isLoading}
+              >
+                <option value={1}>1 hop</option>
+                <option value={2}>2 hops</option>
+                <option value={3}>3 hops</option>
+              </select>
+            </div>
+          )}
+
+          {/* Cluster toggle */}
+          {onShowClustersChange && (
+            <div className={styles.filterGroup}>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={showClusters || false}
+                  onChange={(e) => onShowClustersChange(e.target.checked)}
+                />
+                <span>Show Clusters</span>
+              </label>
             </div>
           )}
         </div>

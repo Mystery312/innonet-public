@@ -76,3 +76,19 @@ export interface CalendarResponse {
   month: number;
   year: number;
 }
+
+export interface EventCreate {
+  name: string;
+  description?: string;
+  event_type?: string;
+  location_name?: string;
+  location_address?: string;
+  location_city?: string;
+  location_country?: string;
+  start_datetime: string;
+  end_datetime?: string;
+  max_attendees?: number;
+  price_cents?: number;
+  currency?: string;
+  image_url?: string;
+}

@@ -143,6 +143,72 @@ class CompanyService:
         )
         return list(result.scalars().all())
 
+    async def get_member_by_id(self, member_id: uuid.UUID) -> Optional[CompanyMember]:
+        """Get a company member by ID."""
+        result = await self.db.execute(
+            select(CompanyMember).where(CompanyMember.id == member_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def add_company_member(
+        self,
+        company_id: uuid.UUID,
+        user_id: uuid.UUID,
+        role: str = "member",
+        title: Optional[str] = None,
+    ) -> CompanyMember:
+        """Add a new member to a company."""
+        # Check if already a member
+        existing = await self.db.execute(
+            select(CompanyMember).where(
+                CompanyMember.company_id == company_id,
+                CompanyMember.user_id == user_id
+            )
+        )
+        if existing.scalar_one_or_none():
+            raise ValueError("User is already a member of this company")
+
+        member = CompanyMember(
+            company_id=company_id,
+            user_id=user_id,
+            role=role,
+            title=title,
+        )
+        self.db.add(member)
+        await self.db.commit()
+        await self.db.refresh(member)
+        return member
+
+    async def update_company_member(
+        self,
+        member_id: uuid.UUID,
+        role: Optional[str] = None,
+        title: Optional[str] = None,
+    ) -> Optional[CompanyMember]:
+        """Update a company member's role or title."""
+        member = await self.get_member_by_id(member_id)
+        if not member:
+            return None
+
+        if role is not None:
+            member.role = role
+        if title is not None:
+            member.title = title
+
+        await self.db.commit()
+        await self.db.refresh(member)
+        return member
+
+    async def remove_company_member(self, member_id: uuid.UUID) -> bool:
+        """Remove a member from a company."""
+        member = await self.get_member_by_id(member_id)
+        if not member:
+            return False
+
+        await self.db.delete(member)
+        await self.db.commit()
+        return True
+
     async def get_challenge_count(self, company_id: uuid.UUID) -> int:
         result = await self.db.execute(
             select(func.count()).select_from(Challenge).where(

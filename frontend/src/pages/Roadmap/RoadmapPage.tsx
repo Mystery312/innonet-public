@@ -16,6 +16,7 @@ import type {
   LocalGraphOptions,
   PathOptions,
   PathResult,
+  SkillRoadmap,
 } from '../../features/graph/types/graph';
 import styles from './RoadmapPage.module.css';
 
@@ -45,6 +46,11 @@ export const RoadmapPage: React.FC = () => {
 
   // Mini-map viewport state
   const [viewport, setViewport] = useState({ x: 0, y: 0, width: 800, height: 600 });
+
+  // Skill roadmap state
+  const [targetSkill, setTargetSkill] = useState('');
+  const [skillRoadmap, setSkillRoadmap] = useState<SkillRoadmap | null>(null);
+  const [isSkillLoading, setIsSkillLoading] = useState(false);
 
   // Load graph data based on view type
   const loadGraphData = useCallback(async () => {
@@ -132,6 +138,26 @@ export const RoadmapPage: React.FC = () => {
     }
   };
 
+  // Handle skill roadmap search
+  const handleSkillRoadmapSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetSkill.trim()) return;
+
+    setIsSkillLoading(true);
+    setError(null);
+
+    try {
+      const roadmap = await graphApi.getSkillRoadmap(targetSkill.trim());
+      setSkillRoadmap(roadmap);
+      setGraphData(roadmap.graph);
+    } catch (err) {
+      console.error('Skill roadmap failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate skill roadmap');
+    } finally {
+      setIsSkillLoading(false);
+    }
+  };
+
   // Handle node click - enter local view mode
   const handleNodeClick = useCallback((node: GraphNode | null) => {
     setSelectedNode(node);
@@ -187,31 +213,20 @@ export const RoadmapPage: React.FC = () => {
     setPathResult(null);
 
     try {
-      // Call API to find path
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/graph/path/${sourceId}/${targetId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          },
-        }
-      );
+      const result = await graphApi.findPath(sourceId, targetId);
+      setPathResult(result);
 
-      if (response.ok) {
-        const result: PathResult = await response.json();
-        setPathResult(result);
-
-        if (result.found) {
-          setViewMode('path');
-          setPathOptions({
-            sourceId,
-            targetId,
-            highlightPath: true,
-          });
-        }
+      if (result.found) {
+        setViewMode('path');
+        setPathOptions({
+          sourceId,
+          targetId,
+          highlightPath: true,
+        });
       }
     } catch (err) {
       console.error('Path finding failed:', err);
+      setError(err instanceof Error ? err.message : 'Path finding failed');
     } finally {
       setIsPathLoading(false);
     }
@@ -345,7 +360,7 @@ export const RoadmapPage: React.FC = () => {
                 Retry
               </button>
             </div>
-          ) : graphData ? (
+          ) : graphData && graphData.nodes.length > 0 ? (
             <>
               <KnowledgeGraph
                 data={graphData}
@@ -371,11 +386,55 @@ export const RoadmapPage: React.FC = () => {
                 />
               )}
             </>
+          ) : graphData ? (
+            <div className={styles.emptyState}>
+              <p>None for now</p>
+              <p className={styles.emptyStateHint}>
+                Start connecting with professionals to build your knowledge graph.
+              </p>
+            </div>
           ) : null}
         </div>
 
         {/* Sidebar - either PathFinder or node details */}
         <div className={styles.sidebarContainer}>
+          {/* Skill Roadmap Search */}
+          {viewType === 'skills' && (
+            <div className={styles.skillSearch}>
+              <h3 className={styles.sidebarTitle}>Skill Roadmap</h3>
+              <p className={styles.sidebarDescription}>
+                Enter a target skill to see the path from your current skills.
+              </p>
+              <form onSubmit={handleSkillRoadmapSearch} className={styles.skillForm}>
+                <input
+                  type="text"
+                  value={targetSkill}
+                  onChange={(e) => setTargetSkill(e.target.value)}
+                  placeholder="e.g., Machine Learning, React, DevOps..."
+                  className={styles.skillInput}
+                  disabled={isSkillLoading}
+                />
+                <button
+                  type="submit"
+                  className={styles.skillButton}
+                  disabled={isSkillLoading || !targetSkill.trim()}
+                >
+                  {isSkillLoading ? 'Loading...' : 'Generate Roadmap'}
+                </button>
+              </form>
+              {skillRoadmap && (
+                <div className={styles.roadmapInfo}>
+                  <h4>Path to {skillRoadmap.target_skill}</h4>
+                  <p>Your skills: {skillRoadmap.current_skills.join(', ') || 'None listed'}</p>
+                  <p>Steps: {skillRoadmap.path.length}</p>
+                  {skillRoadmap.profiles_with_skill.length > 0 && (
+                    <p>{skillRoadmap.profiles_with_skill.length} professionals have this skill</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {viewMode === 'path' || pathResult ? (
             <PathFinder
               nodes={graphData?.nodes || []}
@@ -428,6 +487,12 @@ export const RoadmapPage: React.FC = () => {
                 {viewMode === 'cluster' && 'Cluster View'}
                 {viewMode === 'search' && 'Search Results'}
               </span>
+            </>
+          )}
+          {graphData.metadata.error && (
+            <>
+              <span>•</span>
+              <span className={styles.serviceWarning}>{graphData.metadata.error}</span>
             </>
           )}
         </div>

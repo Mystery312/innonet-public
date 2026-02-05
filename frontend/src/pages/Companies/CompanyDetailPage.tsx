@@ -245,13 +245,13 @@ export const CompanyDetailPage: React.FC = () => {
                 {company.team_members.slice(0, 5).map((member) => (
                   <div key={member.id} className={styles.teamMember}>
                     <Avatar
-                      name={member.user?.full_name || member.user?.username || 'Member'}
-                      src={member.user?.profile_image_url}
+                      name={member.user?.full_name || 'Member'}
+                      src={member.user?.avatar_url}
                       size="small"
                     />
                     <div className={styles.memberInfo}>
                       <span className={styles.memberName}>
-                        {member.user?.full_name || member.user?.username}
+                        {member.user?.full_name || 'Team Member'}
                       </span>
                       <span className={styles.memberRole}>
                         {member.title || member.role}

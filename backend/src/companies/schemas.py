@@ -9,7 +9,7 @@ from .models import CompanySize, ChallengeStatus, ChallengeDifficulty, Applicati
 # User info for nested responses
 class UserBrief(BaseModel):
     id: uuid.UUID
-    full_name: str
+    full_name: Optional[str] = None
     avatar_url: Optional[str] = None
 
     class Config:
@@ -75,6 +75,17 @@ class CompanyListResponse(BaseModel):
 
 
 # Company Member Schemas
+class CompanyMemberCreate(BaseModel):
+    user_id: uuid.UUID
+    role: str = Field(default="member", pattern="^(admin|member)$")
+    title: Optional[str] = None
+
+
+class CompanyMemberUpdate(BaseModel):
+    role: Optional[str] = Field(None, pattern="^(admin|member)$")
+    title: Optional[str] = None
+
+
 class CompanyMemberResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID

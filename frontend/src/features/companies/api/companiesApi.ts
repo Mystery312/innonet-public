@@ -5,6 +5,9 @@ import type {
   CompanyUpdate,
   CompanyDetail,
   CompanyListResponse,
+  CompanyMember,
+  CompanyMemberCreate,
+  CompanyMemberUpdate,
   Challenge,
   ChallengeCreate,
   ChallengeUpdate,
@@ -15,6 +18,7 @@ import type {
   ApplicationUpdate,
   ApplicationListResponse,
 } from '../../../types/company';
+import type { Event, EventCreate } from '../../../types/events';
 
 export const companiesApi = {
   // Company endpoints
@@ -140,6 +144,57 @@ export const companiesApi = {
       return response.data;
     } catch (error) {
       console.error('[companiesApi] getApplications failed:', error);
+      throw error;
+    }
+  },
+
+  // Company Event Creation (Admin Only)
+  createEvent: async (companyId: string, data: EventCreate): Promise<Event> => {
+    try {
+      const response = await api.post(`/events/company/${companyId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('[companiesApi] createEvent failed:', error);
+      throw error;
+    }
+  },
+
+  // Team Member Management (Admin Only)
+  addMember: async (
+    companyId: string,
+    data: CompanyMemberCreate
+  ): Promise<CompanyMember> => {
+    try {
+      const response = await api.post(`/companies/${companyId}/members`, data);
+      return response.data;
+    } catch (error) {
+      console.error('[companiesApi] addMember failed:', error);
+      throw error;
+    }
+  },
+
+  updateMember: async (
+    companyId: string,
+    memberId: string,
+    data: CompanyMemberUpdate
+  ): Promise<CompanyMember> => {
+    try {
+      const response = await api.put(
+        `/companies/${companyId}/members/${memberId}`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      console.error('[companiesApi] updateMember failed:', error);
+      throw error;
+    }
+  },
+
+  removeMember: async (companyId: string, memberId: string): Promise<void> => {
+    try {
+      await api.delete(`/companies/${companyId}/members/${memberId}`);
+    } catch (error) {
+      console.error('[companiesApi] removeMember failed:', error);
       throw error;
     }
   },

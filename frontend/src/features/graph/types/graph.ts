@@ -57,6 +57,7 @@ export interface GraphMetadata {
   total_nodes: number;
   total_edges: number;
   view_type?: string;
+  error?: string;  // Error message when service is unavailable
 }
 
 export interface KnowledgeGraph {

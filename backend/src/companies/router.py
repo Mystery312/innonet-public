@@ -14,6 +14,8 @@ from src.companies.schemas import (
     CompanyResponse,
     CompanyDetailResponse,
     CompanyListResponse,
+    CompanyMemberCreate,
+    CompanyMemberUpdate,
     CompanyMemberResponse,
     ChallengeCreate,
     ChallengeUpdate,
@@ -32,15 +34,18 @@ router = APIRouter()
 
 # Helper to get user brief info
 async def get_user_brief(db: AsyncSession, user_id: uuid.UUID) -> Optional[UserBrief]:
+    from src.auth.models import UserProfile
+    from sqlalchemy.orm import selectinload
+
     result = await db.execute(
-        select(User).where(User.id == user_id)
+        select(User).options(selectinload(User.profile)).where(User.id == user_id)
     )
     user = result.scalar_one_or_none()
     if user:
         return UserBrief(
             id=user.id,
-            full_name=user.full_name,
-            avatar_url=user.avatar_url
+            full_name=user.profile.full_name if user.profile else user.username,
+            avatar_url=user.profile.profile_image_url if user.profile else None
         )
     return None
 
@@ -169,6 +174,143 @@ async def update_company(
         )
 
     return CompanyResponse.model_validate(company)
+
+
+# Team Member Management Routes
+@router.post("/companies/{company_id}/members", response_model=CompanyMemberResponse, status_code=status.HTTP_201_CREATED)
+async def add_company_member(
+    company_id: uuid.UUID,
+    data: CompanyMemberCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Add a member to a company. Only company admins can add members."""
+    service = CompanyService(db)
+
+    if not await service.is_company_admin(company_id, current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to add members to this company"
+        )
+
+    try:
+        member = await service.add_company_member(
+            company_id=company_id,
+            user_id=data.user_id,
+            role=data.role,
+            title=data.title,
+        )
+        user = await get_user_brief(db, member.user_id)
+        return CompanyMemberResponse(
+            id=member.id,
+            user_id=member.user_id,
+            role=member.role,
+            title=member.title,
+            joined_at=member.joined_at,
+            user=user,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.put("/companies/{company_id}/members/{member_id}", response_model=CompanyMemberResponse)
+async def update_company_member(
+    company_id: uuid.UUID,
+    member_id: uuid.UUID,
+    data: CompanyMemberUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update a company member's role or title. Only company admins can update."""
+    service = CompanyService(db)
+
+    if not await service.is_company_admin(company_id, current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update members in this company"
+        )
+
+    # Verify member belongs to company
+    member = await service.get_member_by_id(member_id)
+    if not member or member.company_id != company_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found in this company"
+        )
+
+    # Prevent removing the last admin
+    if data.role == "member" and member.role == "admin":
+        members = await service.get_company_members(company_id)
+        admin_count = sum(1 for m in members if m.role == "admin")
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot remove the last admin"
+            )
+
+    updated = await service.update_company_member(
+        member_id=member_id,
+        role=data.role,
+        title=data.title,
+    )
+
+    user = await get_user_brief(db, updated.user_id)
+    return CompanyMemberResponse(
+        id=updated.id,
+        user_id=updated.user_id,
+        role=updated.role,
+        title=updated.title,
+        joined_at=updated.joined_at,
+        user=user,
+    )
+
+
+@router.delete("/companies/{company_id}/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_company_member(
+    company_id: uuid.UUID,
+    member_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Remove a member from a company. Only company admins can remove members."""
+    service = CompanyService(db)
+
+    if not await service.is_company_admin(company_id, current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to remove members from this company"
+        )
+
+    # Verify member belongs to company
+    member = await service.get_member_by_id(member_id)
+    if not member or member.company_id != company_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found in this company"
+        )
+
+    # Prevent removing the last admin
+    if member.role == "admin":
+        members = await service.get_company_members(company_id)
+        admin_count = sum(1 for m in members if m.role == "admin")
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot remove the last admin"
+            )
+
+    # Prevent self-removal if admin
+    if member.user_id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot remove yourself from the company"
+        )
+
+    await service.remove_company_member(member_id)
+    return None
 
 
 # Challenge Routes

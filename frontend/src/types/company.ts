@@ -161,3 +161,15 @@ export interface ApplicationUpdate {
   status: ApplicationStatus;
   reviewer_notes?: string;
 }
+
+// Company Member Management Types
+export interface CompanyMemberCreate {
+  user_id: string;
+  role?: 'admin' | 'member';
+  title?: string;
+}
+
+export interface CompanyMemberUpdate {
+  role?: 'admin' | 'member';
+  title?: string;
+}

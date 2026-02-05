@@ -118,16 +118,17 @@ async def get_skill_roadmap(
     Analyzes profiles that have the target skill to find common skill progressions.
     """
     from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
     from src.profiles.models import UserSkill
 
     # Get user's current skills
     skills_result = await db.execute(
         select(UserSkill)
-        .options(__import__('sqlalchemy.orm', fromlist=['selectinload']).selectinload(UserSkill.skill))
+        .options(selectinload(UserSkill.skill))
         .where(UserSkill.user_id == current_user.id)
     )
     user_skills = skills_result.scalars().all()
-    current_skills = [us.skill.name for us in user_skills]
+    current_skills = [us.skill.name for us in user_skills if us.skill]
 
     return await graph_service.get_skill_roadmap(
         db=db,

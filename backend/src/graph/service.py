@@ -63,7 +63,7 @@ class GraphService:
         """
         if not self.neo4j.is_connected:
             logger.warning("Neo4j not connected, returning empty graph")
-            return self._empty_graph(view_type)
+            return self._empty_graph(view_type, error="Graph database unavailable. Some features may be limited.")
 
         if view_type == "personal":
             return await self._get_personal_graph(user_id, depth, filters, limit)
@@ -491,7 +491,7 @@ class GraphService:
             return CommunityGraph(
                 community_id=community_id,
                 community_name="",
-                graph=self._empty_graph(),
+                graph=self._empty_graph(error="Graph database unavailable. Some features may be limited."),
                 member_count=0,
                 connection_density=0.0
             )
@@ -554,7 +554,7 @@ class GraphService:
 
     # ============== Helper Methods ==============
 
-    def _empty_graph(self, view_type: str = None, query: str = None) -> KnowledgeGraph:
+    def _empty_graph(self, view_type: str = None, query: str = None, error: str = None) -> KnowledgeGraph:
         """Return an empty graph."""
         return KnowledgeGraph(
             nodes=[],
@@ -563,7 +563,8 @@ class GraphService:
                 total_nodes=0,
                 total_edges=0,
                 view_type=view_type,
-                query=query
+                query=query,
+                error=error
             )
         )
 

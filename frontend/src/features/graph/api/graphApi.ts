@@ -5,6 +5,8 @@ import type {
   SimilarProfilesResponse,
   SkillRoadmap,
   CommunityGraph,
+  PathResult,
+  ClusteredGraph,
 } from '../types/graph';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -144,6 +146,36 @@ export const graphApi = {
     if (params.limit) searchParams.set('limit', params.limit.toString());
 
     return fetchWithAuth(`/api/v1/graph/network/${userId}?${searchParams}`);
+  },
+
+  /**
+   * Find the shortest path between two users/nodes
+   */
+  findPath: async (
+    sourceId: string,
+    targetId: string,
+    maxDepth?: number
+  ): Promise<PathResult> => {
+    const searchParams = new URLSearchParams();
+    if (maxDepth) searchParams.set('max_depth', maxDepth.toString());
+
+    return fetchWithAuth(`/api/v1/graph/path/${sourceId}/${targetId}?${searchParams}`);
+  },
+
+  /**
+   * Get clustered graph showing communities of similar users
+   */
+  getClusteredGraph: async (params: {
+    algorithm?: 'louvain' | 'kmeans' | 'skill_based';
+    minClusterSize?: number;
+    limit?: number;
+  } = {}): Promise<ClusteredGraph> => {
+    const searchParams = new URLSearchParams();
+    if (params.algorithm) searchParams.set('algorithm', params.algorithm);
+    if (params.minClusterSize) searchParams.set('min_cluster_size', params.minClusterSize.toString());
+    if (params.limit) searchParams.set('limit', params.limit.toString());
+
+    return fetchWithAuth(`/api/v1/graph/clustered?${searchParams}`);
   },
 };
 

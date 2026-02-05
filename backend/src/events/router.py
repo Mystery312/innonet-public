@@ -147,6 +147,29 @@ async def list_company_events(
     )
 
 
+@router.post("/company/{company_id}", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
+async def create_company_event(
+    company_id: uuid.UUID,
+    data: EventCreateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Create an event for a company. Only company admins can create events."""
+    company_service = CompanyService(db)
+
+    if not await company_service.is_company_admin(company_id, current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to create events for this company"
+        )
+
+    event_service = EventService(db)
+    event_data = data.model_dump()
+    event_data['company_id'] = company_id
+    event = await event_service.create_event(event_data, current_user.id)
+    return EventResponse.model_validate(event)
+
+
 @router.get("/{event_id}", response_model=EventDetailResponse)
 async def get_event(
     event_id: uuid.UUID,

@@ -47,6 +47,7 @@ class GraphMetadata(BaseModel):
     total_nodes: int
     total_edges: int
     view_type: Optional[str] = None
+    error: Optional[str] = None  # Error message when service is unavailable
 
 
 class KnowledgeGraph(BaseModel):

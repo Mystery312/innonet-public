@@ -7,9 +7,10 @@ interface AuthTokens {
   refreshToken: string | null;
 }
 
+// Initialize tokens from localStorage on module load
 let tokens: AuthTokens = {
-  accessToken: null,
-  refreshToken: null,
+  accessToken: localStorage.getItem('access_token'),
+  refreshToken: localStorage.getItem('refreshToken'),
 };
 
 let isRefreshing = false;
@@ -32,12 +33,14 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 export const setTokens = (accessToken: string, refreshToken: string) => {
   tokens.accessToken = accessToken;
   tokens.refreshToken = refreshToken;
+  localStorage.setItem('access_token', accessToken);
   localStorage.setItem('refreshToken', refreshToken);
 };
 
 export const clearTokens = () => {
   tokens.accessToken = null;
   tokens.refreshToken = null;
+  localStorage.removeItem('access_token');
   localStorage.removeItem('refreshToken');
 };
 

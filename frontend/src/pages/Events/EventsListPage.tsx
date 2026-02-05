@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../lib/api';
+import { eventsApi } from '../../features/events/api/eventsApi';
 import { Navbar } from '../../components/common/Navbar';
 import { Footer } from '../../components/common/Footer';
 import { BackButton } from '../../components/common/BackButton';
@@ -8,7 +8,7 @@ import EventCard from '../../features/events/components/EventCard';
 import { EventCalendar } from '../../features/events/components/EventCalendar';
 import { RecommendedEvents } from '../../features/events/components/RecommendedEvents';
 import { MyEvents } from '../../features/events/components/MyEvents';
-import type { Event, EventListResponse } from '../../types/events';
+import type { Event } from '../../types/events';
 import styles from './EventsListPage.module.css';
 
 type ViewMode = 'grid' | 'calendar';
@@ -28,13 +28,14 @@ export const EventsListPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const params: Record<string, string | number> = { page, limit: 12 };
-      if (eventType) params.event_type = eventType;
-      if (city) params.city = city;
-
-      const response = await api.get<EventListResponse>('/events', { params });
-      setEvents(response.data.events);
-      setTotalPages(response.data.pages);
+      const response = await eventsApi.getEvents({
+        page,
+        limit: 12,
+        event_type: eventType || undefined,
+        city: city || undefined,
+      });
+      setEvents(response.events);
+      setTotalPages(response.pages);
     } catch (err) {
       console.error('Failed to fetch events:', err);
       setError('Unable to load events. Please try again.');
@@ -144,7 +145,7 @@ export const EventsListPage: React.FC = () => {
                     </div>
                   ) : events.length === 0 ? (
                     <div className={styles.empty}>
-                      <p>No events found. Check back later!</p>
+                      <p>None for now</p>
                     </div>
                   ) : (
                     <>
