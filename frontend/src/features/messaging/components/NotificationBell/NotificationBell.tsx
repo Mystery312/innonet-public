@@ -88,7 +88,7 @@ export const NotificationBell: React.FC = () => {
 
   const handleMarkAllAsRead = useCallback(async () => {
     try {
-      const result = await messagingApi.markAllNotificationsRead();
+      await messagingApi.markAllNotificationsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (error) {

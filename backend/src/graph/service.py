@@ -49,27 +49,32 @@ class GraphService:
         view_type: str = "personal",
         depth: int = 2,
         filters: Optional[GraphFilters] = None,
-        limit: int = 100
+        limit: int = 100,
+        db: Optional[AsyncSession] = None
     ) -> KnowledgeGraph:
         """
         Get a knowledge graph centered on the user.
 
         Args:
             user_id: The center user's ID
-            view_type: "personal" (connections), "ecosystem" (+ skills, communities), "discover" (global)
+            view_type: "personal" (connections), "ecosystem" (+ skills, communities, company colleagues, messaging contacts), "discover" (global)
             depth: How many hops from center (1-3)
             filters: Optional filters for node types, etc.
             limit: Maximum number of nodes
+            db: Optional database session for PostgreSQL queries
         """
-        if not self.neo4j.is_connected:
-            logger.warning("Neo4j not connected, returning empty graph")
-            return self._empty_graph(view_type, error="Graph database unavailable. Some features may be limited.")
-
         if view_type == "personal":
+            if not self.neo4j.is_connected:
+                logger.warning("Neo4j not connected, returning empty graph")
+                return self._empty_graph(view_type, error="Graph database unavailable. Some features may be limited.")
             return await self._get_personal_graph(user_id, depth, filters, limit)
         elif view_type == "ecosystem":
-            return await self._get_ecosystem_graph(user_id, depth, filters, limit)
+            # Ecosystem works with PostgreSQL fallback even if Neo4j is not available
+            return await self._get_ecosystem_graph(user_id, depth, filters, limit, db)
         elif view_type == "discover":
+            if not self.neo4j.is_connected:
+                logger.warning("Neo4j not connected, returning empty graph")
+                return self._empty_graph(view_type, error="Graph database unavailable. Some features may be limited.")
             return await self._get_discover_graph(user_id, filters, limit)
         else:
             return self._empty_graph(view_type)
@@ -106,102 +111,214 @@ class GraphService:
         user_id: UUID,
         depth: int,
         filters: Optional[GraphFilters],
-        limit: int
+        limit: int,
+        db: Optional[AsyncSession] = None
     ) -> KnowledgeGraph:
-        """Get user's ecosystem including skills, communities, events."""
-        # First, get the user and their direct attributes
-        query = """
-        // Get center user
-        MATCH (center:User {id: $user_id})
-
-        // Get connected users
-        OPTIONAL MATCH (center)-[conn:CONNECTED_TO {status: 'accepted'}]-(connected:User)
-
-        // Get user's skills
-        OPTIONAL MATCH (center)-[hs:HAS_SKILL]->(skill:Skill)
-
-        // Get user's communities
-        OPTIONAL MATCH (center)-[mo:MEMBER_OF]->(community:Community)
-
-        // Get user's events
-        OPTIONAL MATCH (center)-[att:ATTENDING]->(event:Event)
-
-        // Collect all nodes
-        WITH center,
-             collect(DISTINCT connected) as connectedUsers,
-             collect(DISTINCT skill) as skills,
-             collect(DISTINCT community) as communities,
-             collect(DISTINCT event) as events,
-             collect(DISTINCT conn) as userConnections,
-             collect(DISTINCT hs) as skillRels,
-             collect(DISTINCT mo) as communityRels,
-             collect(DISTINCT att) as eventRels
-
-        RETURN center, connectedUsers, skills, communities, events,
-               userConnections, skillRels, communityRels, eventRels
-        """
-
-        result = await self.neo4j.execute_query(query, {"user_id": str(user_id)})
-
-        if not result:
-            return self._empty_graph("ecosystem")
-
+        """Get user's ecosystem including skills, communities, events, company colleagues, and messaging contacts."""
         nodes = []
         edges = []
-        row = result[0]
+        seen_node_ids = set()
 
-        # Add center user
-        center = row.get("center", {})
-        if center:
-            nodes.append(self._user_to_node(center, is_current=True))
+        # Add center user first
+        center_node = GraphNode(
+            id=str(user_id),
+            type="user",
+            label="You",
+            properties={"is_current_user": True},
+            size=1.5,
+            color="#0969da"
+        )
+        nodes.append(center_node)
+        seen_node_ids.add(str(user_id))
 
-        # Add connected users
-        for user in row.get("connectedUsers", []) or []:
-            if user:
-                nodes.append(self._user_to_node(user))
-                edges.append(GraphEdge(
-                    id=f"conn_{center.get('id')}_{user.get('id')}",
-                    source=str(center.get("id")),
-                    target=str(user.get("id")),
-                    type="CONNECTED_TO",
-                    label="Connected"
-                ))
+        # Try Neo4j for connections, skills, communities if available
+        if self.neo4j.is_connected:
+            query = """
+            // Get center user
+            MATCH (center:User {id: $user_id})
 
-        # Add skills
-        for skill in row.get("skills", []) or []:
-            if skill:
-                nodes.append(self._skill_to_node(skill))
-                edges.append(GraphEdge(
-                    id=f"skill_{center.get('id')}_{skill.get('id')}",
-                    source=str(center.get("id")),
-                    target=str(skill.get("id")),
-                    type="HAS_SKILL",
-                    label="Has Skill"
-                ))
+            // Get connected users
+            OPTIONAL MATCH (center)-[conn:CONNECTED_TO {status: 'accepted'}]-(connected:User)
 
-        # Add communities
-        for community in row.get("communities", []) or []:
-            if community:
-                nodes.append(self._community_to_node(community))
-                edges.append(GraphEdge(
-                    id=f"member_{center.get('id')}_{community.get('id')}",
-                    source=str(center.get("id")),
-                    target=str(community.get("id")),
-                    type="MEMBER_OF",
-                    label="Member Of"
-                ))
+            // Get user's skills
+            OPTIONAL MATCH (center)-[hs:HAS_SKILL]->(skill:Skill)
 
-        # Add events
-        for event in row.get("events", []) or []:
-            if event:
-                nodes.append(self._event_to_node(event))
-                edges.append(GraphEdge(
-                    id=f"attending_{center.get('id')}_{event.get('id')}",
-                    source=str(center.get("id")),
-                    target=str(event.get("id")),
-                    type="ATTENDING",
-                    label="Attending"
-                ))
+            // Get user's communities
+            OPTIONAL MATCH (center)-[mo:MEMBER_OF]->(community:Community)
+
+            // Get user's events
+            OPTIONAL MATCH (center)-[att:ATTENDING]->(event:Event)
+
+            // Collect all nodes
+            WITH center,
+                 collect(DISTINCT connected) as connectedUsers,
+                 collect(DISTINCT skill) as skills,
+                 collect(DISTINCT community) as communities,
+                 collect(DISTINCT event) as events
+
+            RETURN center, connectedUsers, skills, communities, events
+            """
+
+            result = await self.neo4j.execute_query(query, {"user_id": str(user_id)})
+
+            if result:
+                row = result[0]
+
+                # Update center user label from Neo4j
+                center_data = row.get("center", {})
+                if center_data:
+                    center_node.label = center_data.get("full_name") or center_data.get("username") or "You"
+                    center_node.image_url = center_data.get("profile_image_url")
+
+                # Add connected users
+                for user in row.get("connectedUsers", []) or []:
+                    if user and user.get("id") and str(user.get("id")) not in seen_node_ids:
+                        nodes.append(self._user_to_node(user))
+                        seen_node_ids.add(str(user.get("id")))
+                        edges.append(GraphEdge(
+                            id=f"conn_{user_id}_{user.get('id')}",
+                            source=str(user_id),
+                            target=str(user.get("id")),
+                            type="CONNECTED_TO",
+                            label="Connected"
+                        ))
+
+                # Add skills
+                for skill in row.get("skills", []) or []:
+                    if skill and skill.get("id") and str(skill.get("id")) not in seen_node_ids:
+                        nodes.append(self._skill_to_node(skill))
+                        seen_node_ids.add(str(skill.get("id")))
+                        edges.append(GraphEdge(
+                            id=f"skill_{user_id}_{skill.get('id')}",
+                            source=str(user_id),
+                            target=str(skill.get("id")),
+                            type="HAS_SKILL",
+                            label="Has Skill"
+                        ))
+
+                # Add communities
+                for community in row.get("communities", []) or []:
+                    if community and community.get("id") and str(community.get("id")) not in seen_node_ids:
+                        nodes.append(self._community_to_node(community))
+                        seen_node_ids.add(str(community.get("id")))
+                        edges.append(GraphEdge(
+                            id=f"member_{user_id}_{community.get('id')}",
+                            source=str(user_id),
+                            target=str(community.get("id")),
+                            type="MEMBER_OF",
+                            label="Member Of"
+                        ))
+
+                # Add events
+                for event in row.get("events", []) or []:
+                    if event and event.get("id") and str(event.get("id")) not in seen_node_ids:
+                        nodes.append(self._event_to_node(event))
+                        seen_node_ids.add(str(event.get("id")))
+                        edges.append(GraphEdge(
+                            id=f"attending_{user_id}_{event.get('id')}",
+                            source=str(user_id),
+                            target=str(event.get("id")),
+                            type="ATTENDING",
+                            label="Attending"
+                        ))
+
+        # Get company colleagues and messaging contacts from PostgreSQL
+        if db:
+            from sqlalchemy import text
+
+            # Get company colleagues (people in the same companies as the user)
+            company_colleagues_query = text("""
+                SELECT DISTINCT
+                    u.id as user_id,
+                    u.username,
+                    up.full_name,
+                    up.profile_image_url,
+                    up.location,
+                    cm1.company_id,
+                    c.name as company_name
+                FROM users u
+                JOIN company_members cm2 ON cm2.user_id = u.id
+                JOIN company_members cm1 ON cm1.company_id = cm2.company_id AND cm1.user_id = :user_id
+                JOIN companies c ON c.id = cm1.company_id
+                LEFT JOIN user_profiles up ON up.user_id = u.id
+                WHERE u.is_active = true
+                    AND u.id != :user_id
+                LIMIT :limit
+            """)
+
+            company_result = await db.execute(company_colleagues_query, {
+                "user_id": str(user_id),
+                "limit": limit // 2  # Reserve half the limit for colleagues
+            })
+            company_rows = company_result.fetchall()
+
+            for row in company_rows:
+                if str(row.user_id) not in seen_node_ids:
+                    nodes.append(GraphNode(
+                        id=str(row.user_id),
+                        type="user",
+                        label=row.full_name or row.username,
+                        properties={
+                            "username": row.username,
+                            "location": row.location,
+                            "company": row.company_name
+                        },
+                        color=NODE_COLORS["user"],
+                        image_url=row.profile_image_url
+                    ))
+                    seen_node_ids.add(str(row.user_id))
+                    edges.append(GraphEdge(
+                        id=f"company_{user_id}_{row.user_id}",
+                        source=str(user_id),
+                        target=str(row.user_id),
+                        type="COMPANY_COLLEAGUE",
+                        label=f"Colleague at {row.company_name}"
+                    ))
+
+            # Get messaging contacts (people the user has conversed with)
+            messaging_contacts_query = text("""
+                SELECT DISTINCT
+                    u.id as user_id,
+                    u.username,
+                    up.full_name,
+                    up.profile_image_url,
+                    up.location
+                FROM users u
+                JOIN conversation_participants cp2 ON cp2.user_id = u.id
+                JOIN conversation_participants cp1 ON cp1.conversation_id = cp2.conversation_id AND cp1.user_id = :user_id
+                LEFT JOIN user_profiles up ON up.user_id = u.id
+                WHERE u.is_active = true
+                    AND u.id != :user_id
+                LIMIT :limit
+            """)
+
+            messaging_result = await db.execute(messaging_contacts_query, {
+                "user_id": str(user_id),
+                "limit": limit // 2
+            })
+            messaging_rows = messaging_result.fetchall()
+
+            for row in messaging_rows:
+                if str(row.user_id) not in seen_node_ids:
+                    nodes.append(GraphNode(
+                        id=str(row.user_id),
+                        type="user",
+                        label=row.full_name or row.username,
+                        properties={
+                            "username": row.username,
+                            "location": row.location
+                        },
+                        color=NODE_COLORS["user"],
+                        image_url=row.profile_image_url
+                    ))
+                    seen_node_ids.add(str(row.user_id))
+                    edges.append(GraphEdge(
+                        id=f"messaged_{user_id}_{row.user_id}",
+                        source=str(user_id),
+                        target=str(row.user_id),
+                        type="MESSAGED",
+                        label="Messaged"
+                    ))
 
         # Apply filters
         if filters and filters.node_types:

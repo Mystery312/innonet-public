@@ -73,7 +73,7 @@ class KnowledgeGraphRequest(BaseModel):
     view_type: Literal["personal", "ecosystem", "discover"] = "personal"
     depth: int = Field(2, ge=1, le=3)
     filters: Optional[GraphFilters] = None
-    limit: int = Field(100, ge=1, le=500)
+    limit: int = Field(100, ge=1, le=50)
 
 
 class SearchGraphRequest(BaseModel):
@@ -120,7 +120,7 @@ class SkillNode(BaseModel):
     """A skill in the roadmap."""
     id: str
     name: str
-    category: Optional[str]
+    category: Optional[str] = None
     is_current: bool = False  # User already has this skill
     is_target: bool = False  # This is the target skill
     proficiency_required: Optional[str] = None

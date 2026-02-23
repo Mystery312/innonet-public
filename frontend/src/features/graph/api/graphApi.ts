@@ -1,35 +1,33 @@
 import type {
   KnowledgeGraph,
   GraphViewType,
-  GraphFilters,
   SimilarProfilesResponse,
   SkillRoadmap,
   CommunityGraph,
   PathResult,
   ClusteredGraph,
 } from '../types/graph';
+import { api } from '../../../lib/api';
+import type { AxiosError } from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
-async function fetchWithAuth(url: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('access_token');
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
-  };
-
-  const response = await fetch(`${API_BASE}${url}`, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-    throw new Error(error.detail || 'Request failed');
+/**
+ * Make an authenticated API request using the shared axios instance.
+ * This uses the token refresh mechanism built into lib/api.ts.
+ */
+async function apiRequest<T>(url: string): Promise<T> {
+  try {
+    const response = await api.get<T>(url);
+    return response.data;
+  } catch (error) {
+    const axiosError = error as AxiosError<{ detail?: string }>;
+    if (axiosError.response?.data?.detail) {
+      throw new Error(axiosError.response.data.detail);
+    }
+    if (axiosError.message === 'Network Error') {
+      throw new Error('Network error: Unable to connect to the server. Please check your connection.');
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 export const graphApi = {
@@ -48,7 +46,7 @@ export const graphApi = {
     if (params.limit) searchParams.set('limit', params.limit.toString());
     if (params.nodeTypes?.length) searchParams.set('node_types', params.nodeTypes.join(','));
 
-    return fetchWithAuth(`/api/v1/graph/knowledge?${searchParams}`);
+    return apiRequest<KnowledgeGraph>(`/graph/knowledge?${searchParams}`);
   },
 
   /**
@@ -67,14 +65,14 @@ export const graphApi = {
     }
     if (options.limit) searchParams.set('limit', options.limit.toString());
 
-    return fetchWithAuth(`/api/v1/graph/search?${searchParams}`);
+    return apiRequest<KnowledgeGraph>(`/graph/search?${searchParams}`);
   },
 
   /**
    * Get skill roadmap for a target skill
    */
   getSkillRoadmap: async (skillName: string): Promise<SkillRoadmap> => {
-    return fetchWithAuth(`/api/v1/graph/roadmap/${encodeURIComponent(skillName)}`);
+    return apiRequest<SkillRoadmap>(`/graph/roadmap/${encodeURIComponent(skillName)}`);
   },
 
   /**
@@ -88,7 +86,7 @@ export const graphApi = {
     if (params.minSimilarity) searchParams.set('min_similarity', params.minSimilarity.toString());
     if (params.limit) searchParams.set('limit', params.limit.toString());
 
-    return fetchWithAuth(`/api/v1/graph/similar?${searchParams}`);
+    return apiRequest<SimilarProfilesResponse>(`/graph/similar?${searchParams}`);
   },
 
   /**
@@ -105,7 +103,7 @@ export const graphApi = {
     if (params.minSimilarity) searchParams.set('min_similarity', params.minSimilarity.toString());
     if (params.limit) searchParams.set('limit', params.limit.toString());
 
-    return fetchWithAuth(`/api/v1/graph/similar/${userId}?${searchParams}`);
+    return apiRequest<SimilarProfilesResponse>(`/graph/similar/${userId}?${searchParams}`);
   },
 
   /**
@@ -121,14 +119,14 @@ export const graphApi = {
     if (params.minSimilarity) searchParams.set('min_similarity', params.minSimilarity.toString());
     if (params.limit) searchParams.set('limit', params.limit.toString());
 
-    return fetchWithAuth(`/api/v1/graph/similarity-graph?${searchParams}`);
+    return apiRequest<KnowledgeGraph>(`/graph/similarity-graph?${searchParams}`);
   },
 
   /**
    * Get community member graph
    */
   getCommunityGraph: async (communityId: string): Promise<CommunityGraph> => {
-    return fetchWithAuth(`/api/v1/graph/community/${communityId}`);
+    return apiRequest<CommunityGraph>(`/graph/community/${communityId}`);
   },
 
   /**
@@ -145,7 +143,7 @@ export const graphApi = {
     if (params.depth) searchParams.set('depth', params.depth.toString());
     if (params.limit) searchParams.set('limit', params.limit.toString());
 
-    return fetchWithAuth(`/api/v1/graph/network/${userId}?${searchParams}`);
+    return apiRequest<KnowledgeGraph>(`/graph/network/${userId}?${searchParams}`);
   },
 
   /**
@@ -159,7 +157,7 @@ export const graphApi = {
     const searchParams = new URLSearchParams();
     if (maxDepth) searchParams.set('max_depth', maxDepth.toString());
 
-    return fetchWithAuth(`/api/v1/graph/path/${sourceId}/${targetId}?${searchParams}`);
+    return apiRequest<PathResult>(`/graph/path/${sourceId}/${targetId}?${searchParams}`);
   },
 
   /**
@@ -175,7 +173,7 @@ export const graphApi = {
     if (params.minClusterSize) searchParams.set('min_cluster_size', params.minClusterSize.toString());
     if (params.limit) searchParams.set('limit', params.limit.toString());
 
-    return fetchWithAuth(`/api/v1/graph/clustered?${searchParams}`);
+    return apiRequest<ClusteredGraph>(`/graph/clustered?${searchParams}`);
   },
 };
 

@@ -254,6 +254,95 @@
   color: #57606a;
 }
 
+/* View Mode Divider */
+.viewModeDivider {
+  width: 1px;
+  height: 24px;
+  background: #d0d7de;
+  margin: 0 0.25rem;
+  align-self: center;
+}
+
+/* Network Badge */
+.networkBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #0969da;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Network Controls Bar */
+.networkControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 2rem;
+  background: #f6f8fa;
+  border-bottom: 1px solid #d0d7de;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.depthControl {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #57606a;
+}
+
+.depthControl select {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  background: #fff;
+}
+
+.networkStatsBar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  color: #57606a;
+}
+
+.networkStatsBar strong {
+  color: #24292f;
+}
+
+.pendingBadge {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #ddf4ff;
+  color: #0969da;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.manageLink {
+  background: none;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8125rem;
+  color: #24292f;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.manageLink:hover {
+  background: #f3f4f6;
+}
+
 /* Skill Search Section */
 .skillSearch {
   background: #fff;

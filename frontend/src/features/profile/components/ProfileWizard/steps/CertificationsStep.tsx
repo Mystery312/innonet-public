@@ -22,7 +22,7 @@ const emptyCertification: CertificationCreate = {
   credential_url: '',
 };
 
-export const CertificationsStep: React.FC<CertificationsStepProps> = ({ onNext, onPrevious, onSkip, parsedData }) => {
+export const CertificationsStep: React.FC<CertificationsStepProps> = ({ onNext, onPrevious, onSkip, parsedData: _parsedData }) => {
   const [certifications, setCertifications] = useState<Certification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);

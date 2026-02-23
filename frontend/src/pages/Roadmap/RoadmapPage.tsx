@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { KnowledgeGraph } from '../../features/graph/components/KnowledgeGraph';
 import { GraphControls } from '../../features/graph/components/GraphControls';
 import { GraphSidebar } from '../../features/graph/components/GraphSidebar';
 import { PathFinder } from '../../features/graph/components/PathFinder';
 import { MiniGraph } from '../../features/graph/components/MiniGraph';
+import { NetworkGraph } from '../../features/network/components/NetworkGraph';
 import { graphApi } from '../../features/graph/api/graphApi';
+import { networkApi } from '../../features/network/api/networkApi';
 import { BackButton } from '../../components/common/BackButton';
+import { formatError } from '../../utils/error';
 import type {
   KnowledgeGraph as KnowledgeGraphType,
   GraphNode,
@@ -18,10 +21,12 @@ import type {
   PathResult,
   SkillRoadmap,
 } from '../../features/graph/types/graph';
+import type { NetworkGraph as NetworkGraphType, NetworkGraphNode, NetworkStats } from '../../types/network';
 import styles from './RoadmapPage.module.css';
 
 export const RoadmapPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Graph data state
   const [graphData, setGraphData] = useState<KnowledgeGraphType | null>(null);
@@ -51,6 +56,15 @@ export const RoadmapPage: React.FC = () => {
   const [targetSkill, setTargetSkill] = useState('');
   const [skillRoadmap, setSkillRoadmap] = useState<SkillRoadmap | null>(null);
   const [isSkillLoading, setIsSkillLoading] = useState(false);
+
+  // Network view state
+  const [showNetworkView, setShowNetworkView] = useState(
+    searchParams.get('view') === 'network'
+  );
+  const [networkData, setNetworkData] = useState<NetworkGraphType | null>(null);
+  const [networkStats, setNetworkStats] = useState<NetworkStats | null>(null);
+  const [networkDepth, setNetworkDepth] = useState(2);
+  const [isNetworkLoading, setIsNetworkLoading] = useState(false);
 
   // Load graph data based on view type
   const loadGraphData = useCallback(async () => {
@@ -102,21 +116,47 @@ export const RoadmapPage: React.FC = () => {
       setGraphData(data);
     } catch (err) {
       console.error('Failed to load graph data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load graph data');
+      setError(formatError(err));
     } finally {
       setIsLoading(false);
     }
   }, [viewType, depth, filters]);
 
+  // Load network data
+  const loadNetworkData = useCallback(async () => {
+    setIsNetworkLoading(true);
+    try {
+      const [graph, stats] = await Promise.all([
+        networkApi.getNetworkGraph(networkDepth),
+        networkApi.getNetworkStats(),
+      ]);
+      setNetworkData(graph);
+      setNetworkStats(stats);
+    } catch (err) {
+      console.error('Failed to load network data:', err);
+    } finally {
+      setIsNetworkLoading(false);
+    }
+  }, [networkDepth]);
+
+  // Load network stats eagerly for badge display
+  useEffect(() => {
+    networkApi.getNetworkStats().then(setNetworkStats).catch(() => {});
+  }, []);
+
   // Load data on mount and when settings change
   useEffect(() => {
-    loadGraphData();
-  }, [loadGraphData]);
+    if (showNetworkView) {
+      loadNetworkData();
+    } else {
+      loadGraphData();
+    }
+  }, [loadGraphData, loadNetworkData, showNetworkView]);
 
   // Update URL when view type changes
   useEffect(() => {
-    setSearchParams({ view: viewType });
-  }, [viewType, setSearchParams]);
+    setSearchParams({ view: showNetworkView ? 'network' : viewType });
+  }, [viewType, showNetworkView, setSearchParams]);
 
   // Handle search
   const handleSearch = async (query: string) => {
@@ -132,7 +172,7 @@ export const RoadmapPage: React.FC = () => {
       setGraphData(data);
     } catch (err) {
       console.error('Search failed:', err);
-      setError(err instanceof Error ? err.message : 'Search failed');
+      setError(formatError(err));
     } finally {
       setIsLoading(false);
     }
@@ -152,7 +192,7 @@ export const RoadmapPage: React.FC = () => {
       setGraphData(roadmap.graph);
     } catch (err) {
       console.error('Skill roadmap failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate skill roadmap');
+      setError(formatError(err));
     } finally {
       setIsSkillLoading(false);
     }
@@ -170,8 +210,16 @@ export const RoadmapPage: React.FC = () => {
     }
   }, []);
 
+  // Handle network node click
+  const handleNetworkNodeClick = useCallback((node: NetworkGraphNode) => {
+    if (!node.isCurrentUser) {
+      navigate(`/profile/${node.id}`);
+    }
+  }, [navigate]);
+
   // Handle view type change
   const handleViewTypeChange = (type: GraphViewType) => {
+    setShowNetworkView(false);
     setViewType(type);
     setSelectedNode(null);
     setViewMode('full');
@@ -226,7 +274,7 @@ export const RoadmapPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Path finding failed:', err);
-      setError(err instanceof Error ? err.message : 'Path finding failed');
+      setError(formatError(err));
     } finally {
       setIsPathLoading(false);
     }
@@ -277,11 +325,30 @@ export const RoadmapPage: React.FC = () => {
         </div>
       </header>
 
+      {!showNetworkView && (
+        <GraphControls
+          viewType={viewType}
+          onViewTypeChange={handleViewTypeChange}
+          filters={filters}
+          onFiltersChange={setFilters}
+          depth={depth}
+          onDepthChange={setDepth}
+          onSearch={handleSearch}
+          isLoading={isLoading}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          localDepth={localOptions?.depth}
+          onLocalDepthChange={handleLocalDepthChange}
+          showClusters={showClusters}
+          onShowClustersChange={setShowClusters}
+        />
+      )}
+
       {/* View Mode Tabs */}
       <div className={styles.viewModeTabs}>
         <button
-          className={`${styles.viewModeTab} ${viewMode === 'full' ? styles.active : ''}`}
-          onClick={() => handleViewModeChange('full')}
+          className={`${styles.viewModeTab} ${viewMode === 'full' && !showNetworkView ? styles.active : ''}`}
+          onClick={() => { setShowNetworkView(false); handleViewModeChange('full'); }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
@@ -290,8 +357,9 @@ export const RoadmapPage: React.FC = () => {
           Full Graph
         </button>
         <button
-          className={`${styles.viewModeTab} ${viewMode === 'local' ? styles.active : ''}`}
+          className={`${styles.viewModeTab} ${viewMode === 'local' && !showNetworkView ? styles.active : ''}`}
           onClick={() => {
+            setShowNetworkView(false);
             if (selectedNode) {
               enterLocalView(selectedNode.id);
             }
@@ -306,8 +374,8 @@ export const RoadmapPage: React.FC = () => {
           Local View
         </button>
         <button
-          className={`${styles.viewModeTab} ${viewMode === 'path' ? styles.active : ''}`}
-          onClick={() => setViewMode(viewMode === 'path' ? 'full' : 'path')}
+          className={`${styles.viewModeTab} ${viewMode === 'path' && !showNetworkView ? styles.active : ''}`}
+          onClick={() => { setShowNetworkView(false); setViewMode(viewMode === 'path' ? 'full' : 'path'); }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -316,8 +384,8 @@ export const RoadmapPage: React.FC = () => {
           Find Path
         </button>
         <button
-          className={`${styles.viewModeTab} ${showClusters ? styles.active : ''}`}
-          onClick={() => setShowClusters(!showClusters)}
+          className={`${styles.viewModeTab} ${showClusters && !showNetworkView ? styles.active : ''}`}
+          onClick={() => { setShowNetworkView(false); setShowClusters(!showClusters); }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="6" cy="6" r="3" />
@@ -327,76 +395,126 @@ export const RoadmapPage: React.FC = () => {
           </svg>
           Clusters
         </button>
+        <div className={styles.viewModeDivider} />
+        <button
+          className={`${styles.viewModeTab} ${showNetworkView ? styles.active : ''}`}
+          onClick={() => setShowNetworkView(!showNetworkView)}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          My Network
+          {networkStats && (
+            <span className={styles.networkBadge}>{networkStats.total_connections}</span>
+          )}
+        </button>
       </div>
 
-      <GraphControls
-        viewType={viewType}
-        onViewTypeChange={handleViewTypeChange}
-        filters={filters}
-        onFiltersChange={setFilters}
-        depth={depth}
-        onDepthChange={setDepth}
-        onSearch={handleSearch}
-        isLoading={isLoading}
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-        localDepth={localOptions?.depth}
-        onLocalDepthChange={handleLocalDepthChange}
-        showClusters={showClusters}
-        onShowClustersChange={setShowClusters}
-      />
+      {showNetworkView && (
+        <div className={styles.networkControls}>
+          <label className={styles.depthControl}>
+            <span>Network Depth:</span>
+            <select value={networkDepth} onChange={(e) => setNetworkDepth(Number(e.target.value))}>
+              <option value={1}>1st degree only</option>
+              <option value={2}>Up to 2nd degree</option>
+              <option value={3}>Up to 3rd degree</option>
+            </select>
+          </label>
+          {networkStats && (
+            <div className={styles.networkStatsBar}>
+              <span><strong>{networkStats.total_connections}</strong> connections</span>
+              {networkStats.pending_requests > 0 && (
+                <span className={styles.pendingBadge}>{networkStats.pending_requests} pending</span>
+              )}
+              <button
+                className={styles.manageLink}
+                onClick={() => navigate('/connections')}
+              >
+                Manage Connections
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className={styles.content}>
         <div className={styles.graphSection}>
-          {isLoading ? (
-            <div className={styles.loading}>
-              <div className={styles.spinner} />
-              <p>Loading graph...</p>
-            </div>
-          ) : error ? (
-            <div className={styles.error}>
-              <p>{error}</p>
-              <button onClick={loadGraphData} className={styles.retryButton}>
-                Retry
-              </button>
-            </div>
-          ) : graphData && graphData.nodes.length > 0 ? (
-            <>
-              <KnowledgeGraph
-                data={graphData}
-                onNodeClick={handleNodeClick}
-                selectedNodeId={selectedNode?.id}
-                showLabels={true}
-                showEdgeLabels={false}
-                viewMode={viewMode}
-                localOptions={localOptions || undefined}
-                pathOptions={pathOptions || undefined}
-                highlightConnectedOnHover={true}
-                enableClustering={showClusters}
+          {showNetworkView ? (
+            // Network graph view
+            isNetworkLoading ? (
+              <div className={styles.loading}>
+                <div className={styles.spinner} />
+                <p>Loading your network...</p>
+              </div>
+            ) : networkData ? (
+              <NetworkGraph
+                data={networkData}
+                onNodeClick={handleNetworkNodeClick}
               />
-
-              {/* Mini-map */}
-              {graphWithPositions && graphWithPositions.nodes.length > 10 && (
-                <MiniGraph
-                  data={graphWithPositions}
-                  viewport={viewport}
-                  onViewportChange={(newViewport) =>
-                    setViewport({ ...viewport, ...newViewport })
-                  }
+            ) : (
+              <div className={styles.emptyState}>
+                <p>No connections yet</p>
+                <p className={styles.emptyStateHint}>
+                  Start connecting with professionals to see your network graph.
+                </p>
+              </div>
+            )
+          ) : (
+            // Knowledge graph view
+            isLoading ? (
+              <div className={styles.loading}>
+                <div className={styles.spinner} />
+                <p>Loading graph...</p>
+              </div>
+            ) : error ? (
+              <div className={styles.error}>
+                <p>{error}</p>
+                <button onClick={loadGraphData} className={styles.retryButton}>
+                  Retry
+                </button>
+              </div>
+            ) : graphData && graphData.nodes.length > 0 ? (
+              <>
+                <KnowledgeGraph
+                  data={graphData}
+                  onNodeClick={handleNodeClick}
+                  selectedNodeId={selectedNode?.id}
+                  showLabels={true}
+                  showEdgeLabels={false}
+                  viewMode={viewMode}
+                  localOptions={localOptions || undefined}
+                  pathOptions={pathOptions || undefined}
+                  highlightConnectedOnHover={true}
+                  enableClustering={showClusters}
                 />
-              )}
-            </>
-          ) : graphData ? (
-            <div className={styles.emptyState}>
-              <p>None for now</p>
-              <p className={styles.emptyStateHint}>
-                Start connecting with professionals to build your knowledge graph.
-              </p>
-            </div>
-          ) : null}
+
+                {/* Mini-map */}
+                {graphWithPositions && graphWithPositions.nodes.length > 10 && (
+                  <MiniGraph
+                    data={graphWithPositions}
+                    viewport={viewport}
+                    onViewportChange={(newViewport) =>
+                      setViewport({ ...viewport, ...newViewport })
+                    }
+                  />
+                )}
+              </>
+            ) : graphData ? (
+              <div className={styles.emptyState}>
+                <p>None for now</p>
+                <p className={styles.emptyStateHint}>
+                  Start connecting with professionals to build your knowledge graph.
+                </p>
+              </div>
+            ) : null
+          )}
         </div>
 
-        {/* Sidebar - either PathFinder or node details */}
+        {/* Sidebar - either PathFinder or node details (hidden in network view) */}
+        {!showNetworkView && (
         <div className={styles.sidebarContainer}>
           {/* Skill Roadmap Search */}
           {viewType === 'skills' && (
@@ -471,9 +589,10 @@ export const RoadmapPage: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
 
-      {graphData && (
+      {!showNetworkView && graphData && (
         <div className={styles.stats}>
           <span>{graphData.metadata.total_nodes} nodes</span>
           <span>•</span>

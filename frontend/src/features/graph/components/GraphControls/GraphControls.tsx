@@ -45,7 +45,7 @@ export const GraphControls: React.FC<GraphControlsProps> = ({
   isLoading,
   // Obsidian-like controls (optional)
   viewMode,
-  onViewModeChange,
+  onViewModeChange: _onViewModeChange,
   localDepth,
   onLocalDepthChange,
   showClusters,

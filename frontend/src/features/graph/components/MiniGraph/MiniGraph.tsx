@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
-import type { MiniGraphProps, GraphNode } from '../../types/graph';
+import type { MiniGraphProps } from '../../types/graph';
 import { NODE_COLORS } from '../../types/graph';
 import styles from './MiniGraph.module.css';
 

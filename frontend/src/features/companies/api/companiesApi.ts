@@ -15,10 +15,9 @@ import type {
   ChallengeListResponse,
   Application,
   ApplicationCreate,
-  ApplicationUpdate,
   ApplicationListResponse,
 } from '../../../types/company';
-import type { Event, EventCreate } from '../../../types/events';
+import type { Event, EventCreate, EventUpdate } from '../../../types/events';
 
 export const companiesApi = {
   // Company endpoints
@@ -76,6 +75,7 @@ export const companiesApi = {
     company_id?: string;
     status?: string;
     difficulty?: string;
+    search?: string;
     page?: number;
     limit?: number;
   }): Promise<ChallengeListResponse> => {
@@ -155,6 +155,17 @@ export const companiesApi = {
       return response.data;
     } catch (error) {
       console.error('[companiesApi] createEvent failed:', error);
+      throw error;
+    }
+  },
+
+  // Update Event (Admin Only)
+  updateEvent: async (eventId: string, data: EventUpdate): Promise<Event> => {
+    try {
+      const response = await api.put(`/events/${eventId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('[companiesApi] updateEvent failed:', error);
       throw error;
     }
   },

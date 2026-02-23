@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Navbar } from '../../components/common/Navbar';
 import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { BackButton } from '../../components/common/BackButton';
 import { eventsApi } from '../../features/events/api/eventsApi';
 import { PaymentModal } from '../../features/events/components/PaymentModal';
+import { formatError } from '../../utils/error';
 import type { EventDetail } from '../../types/events';
 import styles from './EventDetailPage.module.css';
 
@@ -27,8 +28,9 @@ export const EventDetailPage: React.FC = () => {
     try {
       const data = await eventsApi.getEvent(eventId);
       setEvent(data);
-    } catch {
-      setError('Failed to load event details');
+    } catch (err) {
+      console.error('Load event error:', err);
+      setError(formatError(err));
     } finally {
       setIsLoading(false);
     }
@@ -76,19 +78,12 @@ export const EventDetailPage: React.FC = () => {
     try {
       await eventsApi.registerForEvent(eventId);
       await loadEvent(); // Refresh event data
-    } catch (err: unknown) {
-      const error = err as { response?: { status?: number; data?: { detail?: string } } };
-      if (error.response?.status === 402) {
-        setPaymentMessage({
-          type: 'error',
-          text: 'Payment required for this event.',
-        });
-      } else {
-        setPaymentMessage({
-          type: 'error',
-          text: error.response?.data?.detail || 'Failed to register. Please try again.',
-        });
-      }
+    } catch (err) {
+      console.error('Register error:', err);
+      setPaymentMessage({
+        type: 'error',
+        text: formatError(err),
+      });
     } finally {
       setIsRegistering(false);
     }
@@ -102,8 +97,9 @@ export const EventDetailPage: React.FC = () => {
     try {
       await eventsApi.cancelRegistration(eventId);
       await loadEvent();
-    } catch {
-      alert('Failed to cancel registration');
+    } catch (err) {
+      console.error('Cancel registration error:', err);
+      alert(formatError(err));
     } finally {
       setIsCancelling(false);
     }
@@ -302,6 +298,31 @@ export const EventDetailPage: React.FC = () => {
                     <span>You're registered!</span>
                   </div>
                 ) : null}
+
+                {/* Join Virtually Button */}
+                {event.virtual_meeting_url && event.is_registered && !isPast && !event.is_cancelled && (
+                  <a
+                    href={event.virtual_meeting_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.joinVirtuallyButton}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.447.894L15 14M5 18h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z" />
+                    </svg>
+                    Join Virtually
+                  </a>
+                )}
+
+                {/* Virtual Meeting Info (for non-registered users) */}
+                {event.virtual_meeting_url && !event.is_registered && (
+                  <div className={styles.virtualInfo}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.447.894L15 14M5 18h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z" />
+                    </svg>
+                    <span>Virtual attendance available</span>
+                  </div>
+                )}
 
                 {/* Spots Info */}
                 {event.max_attendees && (

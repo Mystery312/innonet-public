@@ -72,7 +72,7 @@ export const SearchPage: React.FC = () => {
     }
   }, [viewMode, currentQuery]);
 
-  const handleNodeClick = useCallback((node: GraphNode) => {
+  const handleNodeClick = useCallback((node: GraphNode | null) => {
     setSelectedNode(node);
   }, []);
 

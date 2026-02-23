@@ -41,6 +41,7 @@ class Event(Base):
     is_published: Mapped[bool] = mapped_column(Boolean, default=False)
     is_cancelled: Mapped[bool] = mapped_column(Boolean, default=False)
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    virtual_meeting_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

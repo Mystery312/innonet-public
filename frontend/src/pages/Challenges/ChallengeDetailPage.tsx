@@ -7,6 +7,7 @@ import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { BackButton } from '../../components/common/BackButton';
 import { companiesApi } from '../../features/companies/api/companiesApi';
+import { formatError } from '../../utils/error';
 import type { ChallengeDetail, ApplicationCreate } from '../../types/company';
 import styles from './ChallengeDetailPage.module.css';
 
@@ -29,8 +30,9 @@ export const ChallengeDetailPage: React.FC = () => {
     try {
       const data = await companiesApi.getChallenge(challengeId);
       setChallenge(data);
-    } catch {
-      setError('Failed to load challenge');
+    } catch (err) {
+      console.error('Load challenge error:', err);
+      setError(formatError(err));
     } finally {
       setIsLoading(false);
     }
@@ -47,8 +49,9 @@ export const ChallengeDetailPage: React.FC = () => {
       await companiesApi.applyToChallenge(challengeId, applicationData);
       setIsApplyModalOpen(false);
       loadChallenge(); // Reload to get updated application status
-    } catch (error) {
-      console.error('Failed to apply:', error);
+    } catch (err) {
+      console.error('Apply error:', err);
+      alert(formatError(err));
     } finally {
       setIsSubmitting(false);
     }

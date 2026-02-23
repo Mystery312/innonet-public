@@ -14,7 +14,7 @@ from src.profiles.models import (
 
 def utc_now_naive() -> datetime:
     """Return current UTC time as a naive datetime (for PostgreSQL compatibility)."""
-    return utc_now_naive().replace(tzinfo=None)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 from src.profiles.schemas import (
     SkillCreate, UserSkillCreate, UserSkillUpdate,
     ProjectCreate, ProjectUpdate,

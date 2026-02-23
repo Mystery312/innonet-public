@@ -33,15 +33,17 @@ router = APIRouter()
 
 # Helper to get user brief info
 async def get_user_brief(db: AsyncSession, user_id: uuid.UUID) -> Optional[UserBrief]:
+    from sqlalchemy.orm import selectinload
+    from src.auth.models import UserProfile
     result = await db.execute(
-        select(User).where(User.id == user_id)
+        select(User).options(selectinload(User.profile)).where(User.id == user_id)
     )
     user = result.scalar_one_or_none()
     if user:
         return UserBrief(
             id=user.id,
-            full_name=user.full_name,
-            avatar_url=user.avatar_url
+            full_name=user.profile.full_name if user.profile else user.username,
+            avatar_url=user.profile.profile_image_url if user.profile else None
         )
     return None
 

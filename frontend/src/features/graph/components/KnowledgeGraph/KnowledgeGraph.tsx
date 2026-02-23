@@ -2,10 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import * as d3 from 'd3';
 import type {
   GraphNode,
-  KnowledgeGraph as KnowledgeGraphType,
   KnowledgeGraphProps,
-  GraphViewMode,
-  CustomGroup,
 } from '../../types/graph';
 import { NODE_COLORS, CLUSTER_COLORS } from '../../types/graph';
 import styles from './KnowledgeGraph.module.css';
@@ -62,7 +59,7 @@ function getConnectedNodeIds(
 // Helper: Calculate node distances from focus node using BFS
 function calculateDistances(
   focusId: string,
-  nodes: SimulationNode[],
+  _nodes: SimulationNode[],
   links: SimulationLink[]
 ): Map<string, number> {
   const distances = new Map<string, number>();
@@ -163,7 +160,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width, height });
-  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [_hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [transform, setTransform] = useState<d3.ZoomTransform | null>(null);
 
   // Update dimensions on resize
@@ -311,24 +308,23 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
     const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
     const links: SimulationLink[] = data.edges
-      .map((edge) => {
+      .reduce<SimulationLink[]>((acc, edge) => {
         const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
         const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
         const source = nodeMap.get(sourceId);
         const target = nodeMap.get(targetId);
         if (source && target) {
-          return {
+          acc.push({
             source,
             target,
             type: edge.type,
             weight: edge.weight,
             label: edge.label,
             isInPath: pathNodeIds.has(sourceId) && pathNodeIds.has(targetId),
-          };
+          });
         }
-        return null;
-      })
-      .filter((link): link is SimulationLink => link !== null);
+        return acc;
+      }, []);
 
     // Calculate distances for local view
     if (viewMode === 'local' && localOptions?.focusNodeId) {
@@ -370,8 +366,9 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
         'charge',
         d3.forceManyBody().strength((d) => {
           // Search nodes attract results
-          if (d.type === 'search') return -600;
-          return d.type === 'user' ? -400 : -200;
+          const node = d as SimulationNode;
+          if (node.type === 'search') return -600;
+          return node.type === 'user' ? -400 : -200;
         })
       )
       .force('center', d3.forceCenter(w / 2, h / 2))
@@ -655,7 +652,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
 
     // Enhanced hover handler with Obsidian-like highlighting
     node
-      .on('mouseover', function (event, d) {
+      .on('mouseover', function (_event, d) {
         setHoveredNodeId(d.id);
 
         // Highlight current node
@@ -686,7 +683,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
 
         if (onNodeHover) onNodeHover(d);
       })
-      .on('mouseout', function (event, d) {
+      .on('mouseout', function (_event, d) {
         setHoveredNodeId(null);
 
         const isSelected = d.id === selectedNodeId;

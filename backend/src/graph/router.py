@@ -37,12 +37,13 @@ async def get_knowledge_graph(
     limit: int = Query(100, ge=1, le=500),
     node_types: Optional[str] = Query(None, description="Comma-separated node types to include"),
     current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
     graph_service: GraphService = Depends(get_graph_service)
 ):
     """
     Get the knowledge graph for the current user.
 
-    - **view_type**: "personal" (connections only), "ecosystem" (+ skills, communities), "discover" (global)
+    - **view_type**: "personal" (connections only), "ecosystem" (+ skills, communities, company colleagues, messaging contacts), "discover" (global)
     - **depth**: How many hops from center (1-3)
     - **limit**: Maximum number of nodes
     - **node_types**: Filter by node types (e.g., "user,skill,community")
@@ -56,7 +57,8 @@ async def get_knowledge_graph(
         view_type=view_type,
         depth=depth,
         filters=filters,
-        limit=limit
+        limit=limit,
+        db=db
     )
 
 

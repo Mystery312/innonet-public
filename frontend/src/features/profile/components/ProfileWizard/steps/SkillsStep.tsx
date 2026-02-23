@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '../../../../../components/common/Input';
 import { Button } from '../../../../../components/common/Button';
 import { Badge } from '../../../../../components/common/Badge';
@@ -12,7 +12,7 @@ interface SkillsStepProps {
   parsedData?: ResumeParseResult | null;
 }
 
-export const SkillsStep: React.FC<SkillsStepProps> = ({ onNext, onPrevious, parsedData }) => {
+export const SkillsStep: React.FC<SkillsStepProps> = ({ onNext, onPrevious, parsedData: _parsedData }) => {
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
   const [searchQuery, setSearchQuery] = useState('');

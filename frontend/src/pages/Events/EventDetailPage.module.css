@@ -293,6 +293,55 @@
   font-weight: 500;
 }
 
+.joinVirtuallyButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.joinVirtuallyButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.joinVirtuallyButton:active {
+  transform: translateY(0);
+}
+
+.joinVirtuallyButton svg {
+  flex-shrink: 0;
+}
+
+.virtualInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.virtualInfo svg {
+  flex-shrink: 0;
+}
+
 .spotsInfo {
   margin-bottom: 1rem;
 }

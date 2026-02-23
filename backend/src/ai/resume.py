@@ -16,6 +16,11 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
+def utc_now_naive() -> datetime:
+    """Return current UTC time as a naive datetime (for PostgreSQL compatibility)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 class ResumeParsingService:
     """Service for parsing resumes using OpenAI GPT-4."""
 
@@ -108,13 +113,13 @@ class ResumeParsingService:
 
             resume_upload.parsed_data = parsed_data
             resume_upload.status = "completed"
-            resume_upload.processed_at = datetime.now(timezone.utc)
+            resume_upload.processed_at = utc_now_naive()
 
         except Exception as e:
             logger.error(f"Resume parsing failed: {e}")
             resume_upload.status = "failed"
             resume_upload.error_message = str(e)
-            resume_upload.processed_at = datetime.now(timezone.utc)
+            resume_upload.processed_at = utc_now_naive()
 
         await db.commit()
         await db.refresh(resume_upload)

@@ -16,7 +16,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   event,
   isOpen,
   onClose,
-  onSuccess,
+  onSuccess: _onSuccess,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);

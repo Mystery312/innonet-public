@@ -1,7 +1,12 @@
 #!/bin/bash
 
 # Innonet - Launch Script
-# Starts the entire application stack (Docker services + Backend + Frontend)
+# Starts the entire application stack
+#
+# Usage:
+#   ./start.sh           # Development mode (local processes)
+#   ./start.sh --prod    # Production mode (Docker Compose)
+#   ./start.sh --prod --build   # Production mode with forced rebuild
 
 set -e  # Exit on error
 
@@ -16,13 +21,42 @@ NC='\033[0m' # No Color
 # Get the project root directory
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# PID tracking
+# Parse arguments
+MODE="dev"
+BUILD_FLAG=""
+for arg in "$@"; do
+    case $arg in
+        --prod|--production)
+            MODE="prod"
+            ;;
+        --build)
+            BUILD_FLAG="--build"
+            ;;
+    esac
+done
+
+# PID tracking (dev mode only)
 BACKEND_PID=""
 FRONTEND_PID=""
 
-echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║     Innonet - Launch Script          ║${NC}"
-echo -e "${BLUE}╚══════════════════════════════════════╝${NC}\n"
+# Docker compose helper
+docker_compose() {
+    if command -v docker-compose &> /dev/null; then
+        docker-compose "$@"
+    else
+        docker compose "$@"
+    fi
+}
+
+if [ "$MODE" = "prod" ]; then
+    echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║  Innonet - Production Launch Script  ║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════╝${NC}\n"
+else
+    echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║  Innonet - Development Launch Script ║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════╝${NC}\n"
+fi
 
 # Helper functions
 print_status() {
@@ -40,6 +74,138 @@ print_error() {
 print_info() {
     echo -e "${CYAN}ℹ${NC} $1"
 }
+
+# ============================================
+# Production Mode
+# ============================================
+if [ "$MODE" = "prod" ]; then
+
+    # Cleanup for production
+    cleanup_prod() {
+        echo -e "\n${YELLOW}Shutting down production services...${NC}"
+        cd "$PROJECT_ROOT"
+        docker_compose -f docker-compose.prod.yml --env-file .env.production down
+        print_status "All services stopped"
+        echo -e "\n${GREEN}Goodbye!${NC}\n"
+        exit 0
+    }
+    trap cleanup_prod SIGINT SIGTERM
+
+    # Step 1: Check prerequisites
+    echo -e "${CYAN}[1/4]${NC} Checking prerequisites..."
+
+    if ! command -v docker &> /dev/null; then
+        print_error "Docker is not installed"
+        exit 1
+    fi
+
+    if ! docker info &> /dev/null; then
+        print_error "Docker daemon is not running. Please start Docker and try again."
+        exit 1
+    fi
+
+    print_status "Docker is available"
+
+    # Step 2: Check .env.production
+    echo -e "\n${CYAN}[2/4]${NC} Checking production environment..."
+
+    if [ ! -f "$PROJECT_ROOT/.env.production" ]; then
+        print_error ".env.production not found"
+        print_info "Create it from the template and fill in your secrets:"
+        print_info "  cp .env.production.example .env.production"
+        exit 1
+    fi
+
+    # Warn if CHANGE_ME values are still present
+    if grep -q "CHANGE_ME" "$PROJECT_ROOT/.env.production"; then
+        echo ""
+        print_error "WARNING: .env.production still contains CHANGE_ME placeholder values!"
+        print_info "Edit .env.production and replace all CHANGE_ME values before deploying."
+        echo ""
+        read -p "Continue anyway? (for local testing) [y/N]: " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+    fi
+
+    print_status "Production environment file found"
+
+    # Step 3: Build and start
+    echo -e "\n${CYAN}[3/4]${NC} Building and starting all services..."
+
+    cd "$PROJECT_ROOT"
+    print_step "Running docker compose up (this may take a few minutes on first build)..."
+    docker_compose -f docker-compose.prod.yml --env-file .env.production up -d $BUILD_FLAG
+
+    # Step 4: Wait for health and display status
+    echo -e "\n${CYAN}[4/4]${NC} Waiting for services to be healthy..."
+
+    MAX_RETRIES=60
+    RETRY_COUNT=0
+
+    # Wait for backend health check
+    print_step "Waiting for backend..."
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        if docker exec innonet-backend curl -sf http://localhost:8000/health &> /dev/null; then
+            break
+        fi
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        sleep 2
+    done
+
+    if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+        print_error "Backend failed to become healthy"
+        print_info "Check logs with: docker compose -f docker-compose.prod.yml logs backend"
+        exit 1
+    fi
+    print_status "Backend is healthy"
+
+    # Quick check that nginx is responding
+    RETRY_COUNT=0
+    print_step "Waiting for nginx..."
+    while [ $RETRY_COUNT -lt 15 ]; do
+        if curl -sf http://localhost/health &> /dev/null; then
+            break
+        fi
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        sleep 2
+    done
+
+    if [ $RETRY_COUNT -eq 15 ]; then
+        print_error "Nginx is not responding on port 80"
+        print_info "Check logs with: docker compose -f docker-compose.prod.yml logs nginx"
+        exit 1
+    fi
+    print_status "Nginx is healthy"
+
+    # Display summary
+    echo ""
+    echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║    ${GREEN}Production Started Successfully${BLUE}    ║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${GREEN}Application:${NC}"
+    echo -e "  App:         ${CYAN}http://localhost${NC}"
+    echo -e "  API Health:  ${CYAN}http://localhost/health${NC}"
+    echo ""
+    echo -e "${GREEN}Useful commands:${NC}"
+    echo -e "  Logs:     ${CYAN}docker compose -f docker-compose.prod.yml logs -f${NC}"
+    echo -e "  Stop:     ${CYAN}docker compose -f docker-compose.prod.yml --env-file .env.production down${NC}"
+    echo -e "  Rebuild:  ${CYAN}./start.sh --prod --build${NC}"
+    echo ""
+    echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"
+    echo ""
+
+    # Follow logs
+    docker_compose -f docker-compose.prod.yml --env-file .env.production logs -f
+
+    exit 0
+fi
+
+# ============================================
+# Development Mode (original behavior)
+# ============================================
 
 # Cleanup function
 cleanup() {
@@ -63,11 +229,7 @@ cleanup() {
     if [[ $STOP_DOCKER =~ ^[Yy]$ ]]; then
         print_step "Stopping Docker containers..."
         cd "$PROJECT_ROOT"
-        if command -v docker-compose &> /dev/null; then
-            docker-compose down
-        else
-            docker compose down
-        fi
+        docker_compose down
         print_status "Docker containers stopped"
     else
         print_info "Docker containers left running"
@@ -186,12 +348,7 @@ fi
 # Start containers
 print_step "Starting PostgreSQL, Redis, and Neo4j..."
 
-# Use docker-compose or docker compose depending on what's available
-if command -v docker-compose &> /dev/null; then
-    docker-compose up -d
-else
-    docker compose up -d
-fi
+docker_compose up -d
 
 # Wait for services to be healthy
 print_step "Waiting for services to be healthy..."
@@ -321,6 +478,14 @@ if ! curl -s http://localhost:8000/health &> /dev/null; then
     exit 1
 fi
 print_status "Backend started (PID: $BACKEND_PID)"
+
+# Seed the database with sample data
+print_step "Seeding database with sample data..."
+if docker exec -i innonet-postgres psql -U postgres -d innonet < "$PROJECT_ROOT/backend/init-db.sql" > /dev/null 2>&1; then
+    print_status "Database seeded with sample data"
+else
+    print_info "Database seeding skipped (may already have data)"
+fi
 
 # Start frontend
 print_step "Starting React frontend on port 5173..."

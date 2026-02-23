@@ -13,8 +13,13 @@ class EmailService:
 
     async def send_email(self, to_email: str, subject: str, html_content: str) -> bool:
         if not self.client:
-            # In development, just log the email
-            print(f"[DEV] Email to {to_email}: {subject}")
+            # In development, log the email with any links for easy testing
+            import re
+            print(f"\n[DEV] Email to {to_email}: {subject}")
+            links = re.findall(r'href="([^"]+)"', html_content)
+            for link in links:
+                print(f"[DEV] Link: {link}")
+            print()
             return True
 
         message = Mail(
@@ -109,6 +114,51 @@ class EmailService:
                     <p><strong>Event:</strong> {event_name}</p>
                     <p><strong>Date:</strong> {event_date}</p>
                     <p><strong>Ticket Code:</strong> {ticket_code}</p>
+                </div>
+                <div class="footer">
+                    <p>&copy; 2024 Innonet. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        return await self.send_email(to_email, subject, html_content)
+
+    async def send_password_reset_email(self, to_email: str, reset_token: str) -> bool:
+        reset_url = f"{settings.frontend_url}/reset-password?token={reset_token}"
+        subject = "Reset Your Innonet Password"
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 40px 20px; }}
+                .header {{ text-align: center; margin-bottom: 30px; }}
+                .logo {{ font-size: 28px; font-weight: bold; color: #2563eb; }}
+                .content {{ background: #f8fafc; border-radius: 8px; padding: 30px; }}
+                h1 {{ color: #1e293b; font-size: 24px; margin-bottom: 16px; }}
+                p {{ color: #475569; margin-bottom: 16px; }}
+                .btn {{ display: inline-block; background: #2563eb; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; }}
+                .link-text {{ word-break: break-all; font-size: 13px; color: #94a3b8; }}
+                .footer {{ text-align: center; margin-top: 30px; color: #94a3b8; font-size: 14px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <div class="logo">Innonet</div>
+                </div>
+                <div class="content">
+                    <h1>Reset Your Password</h1>
+                    <p>We received a request to reset the password for your Innonet account. Click the button below to set a new password:</p>
+                    <p style="text-align: center; margin: 30px 0;">
+                        <a href="{reset_url}" class="btn">Reset Password</a>
+                    </p>
+                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+                    <p class="link-text">{reset_url}</p>
+                    <p>This link will expire in <strong>1 hour</strong>.</p>
+                    <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
                 </div>
                 <div class="footer">
                     <p>&copy; 2024 Innonet. All rights reserved.</p>

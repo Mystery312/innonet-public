@@ -7,6 +7,8 @@ export interface Event {
   location_address: string | null;
   location_city: string | null;
   location_country: string | null;
+  latitude: number | null;
+  longitude: number | null;
   start_datetime: string;
   end_datetime: string | null;
   max_attendees: number | null;
@@ -15,6 +17,10 @@ export interface Event {
   is_published: boolean;
   is_cancelled: boolean;
   image_url: string | null;
+  virtual_meeting_url: string | null;
+  company_id: string | null;
+  company_name: string | null;
+  company_logo_url: string | null;
   created_at: string;
 }
 
@@ -91,4 +97,24 @@ export interface EventCreate {
   price_cents?: number;
   currency?: string;
   image_url?: string;
+  virtual_meeting_url?: string;
+}
+
+export interface EventUpdate {
+  name?: string;
+  description?: string;
+  event_type?: string;
+  location_name?: string;
+  location_address?: string;
+  location_city?: string;
+  location_country?: string;
+  start_datetime?: string;
+  end_datetime?: string;
+  max_attendees?: number;
+  price_cents?: number;
+  currency?: string;
+  image_url?: string;
+  virtual_meeting_url?: string;
+  is_published?: boolean;
+  is_cancelled?: boolean;
 }

@@ -18,6 +18,7 @@ from src.auth.schemas import (
 from src.auth.service import AuthService
 from src.auth.dependencies import get_current_user
 from src.auth.models import User
+from src.email.service import EmailService
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -108,15 +109,9 @@ async def forgot_password(
     auth_service = AuthService(db)
     token = await auth_service.request_password_reset(data.email)
 
-    # In production, send email with reset link
-    # For development, we'll return a success message regardless
-    # and log the token for testing
     if token:
-        # TODO: Send email with reset link
-        # For now, log the token for development/testing
-        import logging
-        logging.info(f"Password reset token for {data.email}: {token}")
-        print(f"\n[DEV] Password reset token: {token}\n")
+        email_service = EmailService()
+        await email_service.send_password_reset_email(data.email, token)
 
     # Always return same message to prevent email enumeration
     return MessageResponse(

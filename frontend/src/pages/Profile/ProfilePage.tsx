@@ -9,6 +9,7 @@ import { profileApi, aiApi } from '../../features/profile/api/profileApi';
 import { graphApi } from '../../features/graph/api/graphApi';
 import { networkApi } from '../../features/network/api/networkApi';
 import { useAuth } from '../../context/AuthContext';
+import { formatError } from '../../utils/error';
 import type { FullProfile, ProfileAnalysis, PublicProfile } from '../../types/profile';
 import type { SimilarProfile } from '../../features/graph/types/graph';
 import styles from './ProfilePage.module.css';
@@ -58,12 +59,12 @@ export const ProfilePage: React.FC = () => {
               (conn) => conn.user.id === profileData.user_id
             );
             setConnectionStatus(connection ? 'accepted' : null);
-          } catch (error) {
-            console.error('Failed to load connection status:', error);
+          } catch (err) {
+            console.error('Failed to load connection status:', formatError(err));
           }
         }
-      } catch (error) {
-        console.error('Failed to load profile:', error);
+      } catch (err) {
+        console.error('Failed to load profile:', formatError(err));
       } finally {
         setIsLoading(false);
       }
@@ -78,8 +79,9 @@ export const ProfilePage: React.FC = () => {
     try {
       await networkApi.sendConnectionRequest(profile.user_id);
       setConnectionStatus('pending');
-    } catch (error) {
-      console.error('Failed to send connection request:', error);
+    } catch (err) {
+      console.error('Failed to send connection request:', err);
+      alert(formatError(err));
     } finally {
       setIsConnecting(false);
     }

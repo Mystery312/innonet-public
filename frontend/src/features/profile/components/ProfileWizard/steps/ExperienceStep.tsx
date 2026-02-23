@@ -22,7 +22,7 @@ const emptyExperience: WorkExperienceCreate = {
   description: '',
 };
 
-export const ExperienceStep: React.FC<ExperienceStepProps> = ({ onNext, onPrevious, parsedData }) => {
+export const ExperienceStep: React.FC<ExperienceStepProps> = ({ onNext, onPrevious, parsedData: _parsedData }) => {
   const [experiences, setExperiences] = useState<WorkExperience[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);

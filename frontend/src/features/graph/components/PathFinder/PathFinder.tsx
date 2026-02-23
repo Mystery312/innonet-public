@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { GraphNode, PathFinderProps, PathResult } from '../../types/graph';
+import type { GraphNode, PathFinderProps } from '../../types/graph';
 import { NODE_COLORS } from '../../types/graph';
 import styles from './PathFinder.module.css';
 

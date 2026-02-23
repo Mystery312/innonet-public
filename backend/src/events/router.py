@@ -30,6 +30,35 @@ settings = get_settings()
 router = APIRouter()
 
 
+def build_event_response(event, company=None) -> EventResponse:
+    """Build EventResponse with optional company info."""
+    return EventResponse(
+        id=event.id,
+        name=event.name,
+        description=event.description,
+        event_type=event.event_type,
+        location_name=event.location_name,
+        location_address=event.location_address,
+        location_city=event.location_city,
+        location_country=event.location_country,
+        latitude=event.latitude,
+        longitude=event.longitude,
+        start_datetime=event.start_datetime,
+        end_datetime=event.end_datetime,
+        max_attendees=event.max_attendees,
+        price_cents=event.price_cents,
+        currency=event.currency,
+        is_published=event.is_published,
+        is_cancelled=event.is_cancelled,
+        image_url=event.image_url,
+        virtual_meeting_url=event.virtual_meeting_url,
+        company_id=event.company_id,
+        company_name=company.name if company else None,
+        company_logo_url=company.logo_url if company else None,
+        created_at=event.created_at,
+    )
+
+
 @router.get("/my-events", response_model=UserEventsResponse)
 async def get_my_events(
     db: AsyncSession = Depends(get_db),
@@ -155,19 +184,44 @@ async def create_company_event(
     current_user: User = Depends(get_current_user),
 ):
     """Create an event for a company. Only company admins can create events."""
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Creating event for company {company_id} by user {current_user.id}")
+    logger.info(f"Event data: {data.model_dump()}")
+
     company_service = CompanyService(db)
 
-    if not await company_service.is_company_admin(company_id, current_user.id):
+    # Verify admin and get company details
+    company = await company_service.get_company_by_id(company_id)
+    if not company:
+        logger.error(f"Company {company_id} not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Company not found"
+        )
+
+    is_admin = await company_service.is_company_admin(company_id, current_user.id)
+    logger.info(f"User {current_user.id} is_admin: {is_admin}")
+
+    if not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to create events for this company"
         )
 
-    event_service = EventService(db)
-    event_data = data.model_dump()
-    event_data['company_id'] = company_id
-    event = await event_service.create_event(event_data, current_user.id)
-    return EventResponse.model_validate(event)
+    try:
+        event_service = EventService(db)
+        event_data = data.model_dump()
+        event_data['company_id'] = company_id
+        event = await event_service.create_event(event_data, current_user.id)
+        logger.info(f"Event created: {event.id}")
+        return build_event_response(event, company)
+    except Exception as e:
+        logger.error(f"Error creating event: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create event: {str(e)}"
+        )
 
 
 @router.get("/{event_id}", response_model=EventDetailResponse)
@@ -272,8 +326,15 @@ async def create_event(
     current_user: User = Depends(get_current_user),
 ):
     event_service = EventService(db)
+    company = None
+
+    # If company_id is provided, fetch company info
+    if data.company_id:
+        company_service = CompanyService(db)
+        company = await company_service.get_company_by_id(data.company_id)
+
     event = await event_service.create_event(data.model_dump(), current_user.id)
-    return EventResponse.model_validate(event)
+    return build_event_response(event, company)
 
 
 @router.put("/{event_id}", response_model=EventResponse)
@@ -285,6 +346,7 @@ async def update_event(
 ):
     """Update an event. Only the creator or company admin can update."""
     event_service = EventService(db)
+    company_service = CompanyService(db)
     event = await event_service.get_event_by_id(event_id)
 
     if not event:
@@ -295,9 +357,10 @@ async def update_event(
 
     is_creator = event.created_by == current_user.id
     is_company_admin = False
+    company = None
 
     if event.company_id:
-        company_service = CompanyService(db)
+        company = await company_service.get_company_by_id(event.company_id)
         is_company_admin = await company_service.is_company_admin(
             event.company_id, current_user.id
         )
@@ -311,4 +374,4 @@ async def update_event(
     updated_event = await event_service.update_event(
         event_id, data.model_dump(exclude_unset=True)
     )
-    return EventResponse.model_validate(updated_event)
+    return build_event_response(updated_event, company)

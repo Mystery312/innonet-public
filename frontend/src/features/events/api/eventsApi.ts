@@ -28,6 +28,15 @@ export const eventsApi = {
     return response.data;
   },
 
+  // Get events for a specific company
+  getCompanyEvents: async (companyId: string, params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<EventListResponse> => {
+    const response = await api.get(`/events/company/${companyId}`, { params });
+    return response.data;
+  },
+
   // Get single event details
   getEvent: async (eventId: string): Promise<EventDetail> => {
     const response = await api.get(`/events/${eventId}`);

@@ -590,13 +590,6 @@ async def update_application(
 ):
     service = CompanyService(db)
 
-    # Get application to find challenge
-    result = await db.execute(
-        select(service.db).from_statement(
-            select(ChallengeApplication).where(ChallengeApplication.id == application_id)
-        )
-    )
-
     from src.companies.models import ChallengeApplication
     result = await db.execute(
         select(ChallengeApplication).where(ChallengeApplication.id == application_id)

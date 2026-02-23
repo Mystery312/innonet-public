@@ -89,48 +89,52 @@ class ProfileSimilarityService:
         limit: int
     ) -> list[SimilarProfile]:
         """Find profiles with similar embeddings using pgvector."""
-        sql = """
-            SELECT
-                pe.user_id,
-                1 - (pe.embedding <=> :embedding::vector) as similarity,
-                u.username,
-                up.full_name,
-                up.profile_image_url,
-                up.location,
-                up.bio
-            FROM profile_embeddings pe
-            JOIN users u ON u.id = pe.user_id
-            LEFT JOIN user_profiles up ON up.user_id = pe.user_id
-            WHERE u.is_active = true
-                AND pe.embedding IS NOT NULL
-                AND pe.user_id != :user_id
-                AND (up.show_in_graph = true OR up.show_in_graph IS NULL)
-                AND 1 - (pe.embedding <=> :embedding::vector) >= :min_similarity
-            ORDER BY similarity DESC
-            LIMIT :limit
-        """
+        try:
+            sql = """
+                SELECT
+                    pe.user_id,
+                    1 - (pe.embedding <=> :embedding::vector) as similarity,
+                    u.username,
+                    up.full_name,
+                    up.profile_image_url,
+                    up.location,
+                    up.bio
+                FROM profile_embeddings pe
+                JOIN users u ON u.id = pe.user_id
+                LEFT JOIN user_profiles up ON up.user_id = pe.user_id
+                WHERE u.is_active = true
+                    AND pe.embedding IS NOT NULL
+                    AND pe.user_id != :user_id
+                    AND (up.show_in_graph = true OR up.show_in_graph IS NULL)
+                    AND 1 - (pe.embedding <=> :embedding::vector) >= :min_similarity
+                ORDER BY similarity DESC
+                LIMIT :limit
+            """
 
-        result = await db.execute(text(sql), {
-            "embedding": str(embedding),
-            "user_id": str(user_id),
-            "min_similarity": min_similarity,
-            "limit": limit
-        })
-        rows = result.fetchall()
+            result = await db.execute(text(sql), {
+                "embedding": str(embedding),
+                "user_id": str(user_id),
+                "min_similarity": min_similarity,
+                "limit": limit
+            })
+            rows = result.fetchall()
 
-        profiles = []
-        for row in rows:
-            profiles.append(SimilarProfile(
-                user_id=row.user_id,
-                username=row.username,
-                full_name=row.full_name,
-                profile_image_url=row.profile_image_url,
-                location=row.location,
-                similarity_score=float(row.similarity) if row.similarity else 0.0,
-                similarity_reasons=["Similar profile and interests"]
-            ))
+            profiles = []
+            for row in rows:
+                profiles.append(SimilarProfile(
+                    user_id=row.user_id,
+                    username=row.username,
+                    full_name=row.full_name,
+                    profile_image_url=row.profile_image_url,
+                    location=row.location,
+                    similarity_score=float(row.similarity) if row.similarity else 0.0,
+                    similarity_reasons=["Similar profile and interests"]
+                ))
 
-        return profiles
+            return profiles
+        except Exception as e:
+            logger.error(f"Error in semantic similarity search: {e}")
+            return []
 
     async def _find_skill_similar(
         self,
@@ -139,65 +143,69 @@ class ProfileSimilarityService:
         limit: int
     ) -> list[SimilarProfile]:
         """Find users with similar skills."""
-        # First get user's skills
-        user_skills_result = await db.execute(
-            select(UserSkill)
-            .options(selectinload(UserSkill.skill))
-            .where(UserSkill.user_id == user_id)
-        )
-        user_skills = user_skills_result.scalars().all()
-        user_skill_ids = [us.skill_id for us in user_skills]
+        try:
+            # First get user's skills
+            user_skills_result = await db.execute(
+                select(UserSkill)
+                .options(selectinload(UserSkill.skill))
+                .where(UserSkill.user_id == user_id)
+            )
+            user_skills = user_skills_result.scalars().all()
+            user_skill_ids = [us.skill_id for us in user_skills]
 
-        if not user_skill_ids:
+            if not user_skill_ids:
+                return []
+
+            # Find users with overlapping skills
+            sql = """
+                SELECT
+                    u.id as user_id,
+                    u.username,
+                    up.full_name,
+                    up.profile_image_url,
+                    up.location,
+                    COUNT(DISTINCT us.skill_id) as shared_count,
+                    ARRAY_AGG(DISTINCT s.name) as shared_skills
+                FROM users u
+                JOIN user_skills us ON us.user_id = u.id
+                JOIN skills s ON s.id = us.skill_id
+                LEFT JOIN user_profiles up ON up.user_id = u.id
+                WHERE u.is_active = true
+                    AND u.id != :user_id
+                    AND us.skill_id = ANY(:skill_ids)
+                    AND (up.show_in_graph = true OR up.show_in_graph IS NULL)
+                GROUP BY u.id, u.username, up.full_name, up.profile_image_url, up.location
+                HAVING COUNT(DISTINCT us.skill_id) >= 1
+                ORDER BY shared_count DESC
+                LIMIT :limit
+            """
+
+            result = await db.execute(text(sql), {
+                "user_id": str(user_id),
+                "skill_ids": [str(sid) for sid in user_skill_ids],
+                "limit": limit
+            })
+            rows = result.fetchall()
+
+            profiles = []
+            total_skills = len(user_skill_ids)
+            for row in rows:
+                overlap = row.shared_count / total_skills if total_skills > 0 else 0
+                profiles.append(SimilarProfile(
+                    user_id=row.user_id,
+                    username=row.username,
+                    full_name=row.full_name,
+                    profile_image_url=row.profile_image_url,
+                    location=row.location,
+                    similarity_score=min(overlap * 1.2, 1.0),  # Scale up a bit
+                    shared_skills=row.shared_skills or [],
+                    similarity_reasons=[f"{row.shared_count} shared skills"]
+                ))
+
+            return profiles
+        except Exception as e:
+            logger.error(f"Error in skill similarity search: {e}")
             return []
-
-        # Find users with overlapping skills
-        sql = """
-            SELECT
-                u.id as user_id,
-                u.username,
-                up.full_name,
-                up.profile_image_url,
-                up.location,
-                COUNT(DISTINCT us.skill_id) as shared_count,
-                ARRAY_AGG(DISTINCT s.name) as shared_skills
-            FROM users u
-            JOIN user_skills us ON us.user_id = u.id
-            JOIN skills s ON s.id = us.skill_id
-            LEFT JOIN user_profiles up ON up.user_id = u.id
-            WHERE u.is_active = true
-                AND u.id != :user_id
-                AND us.skill_id = ANY(:skill_ids)
-                AND (up.show_in_graph = true OR up.show_in_graph IS NULL)
-            GROUP BY u.id, u.username, up.full_name, up.profile_image_url, up.location
-            HAVING COUNT(DISTINCT us.skill_id) >= 2
-            ORDER BY shared_count DESC
-            LIMIT :limit
-        """
-
-        result = await db.execute(text(sql), {
-            "user_id": str(user_id),
-            "skill_ids": [str(sid) for sid in user_skill_ids],
-            "limit": limit
-        })
-        rows = result.fetchall()
-
-        profiles = []
-        total_skills = len(user_skill_ids)
-        for row in rows:
-            overlap = row.shared_count / total_skills if total_skills > 0 else 0
-            profiles.append(SimilarProfile(
-                user_id=row.user_id,
-                username=row.username,
-                full_name=row.full_name,
-                profile_image_url=row.profile_image_url,
-                location=row.location,
-                similarity_score=min(overlap * 1.2, 1.0),  # Scale up a bit
-                shared_skills=row.shared_skills or [],
-                similarity_reasons=[f"{row.shared_count} shared skills"]
-            ))
-
-        return profiles
 
     async def _find_community_similar(
         self,
@@ -206,48 +214,52 @@ class ProfileSimilarityService:
         limit: int
     ) -> list[SimilarProfile]:
         """Find users in the same communities."""
-        sql = """
-            SELECT
-                u.id as user_id,
-                u.username,
-                up.full_name,
-                up.profile_image_url,
-                up.location,
-                COUNT(DISTINCT cm2.community_id) as shared_count,
-                ARRAY_AGG(DISTINCT c.name) as shared_communities
-            FROM users u
-            JOIN community_members cm2 ON cm2.user_id = u.id
-            JOIN communities c ON c.id = cm2.community_id
-            JOIN community_members cm1 ON cm1.community_id = cm2.community_id AND cm1.user_id = :user_id
-            LEFT JOIN user_profiles up ON up.user_id = u.id
-            WHERE u.is_active = true
-                AND u.id != :user_id
-                AND (up.show_in_graph = true OR up.show_in_graph IS NULL)
-            GROUP BY u.id, u.username, up.full_name, up.profile_image_url, up.location
-            ORDER BY shared_count DESC
-            LIMIT :limit
-        """
+        try:
+            sql = """
+                SELECT
+                    u.id as user_id,
+                    u.username,
+                    up.full_name,
+                    up.profile_image_url,
+                    up.location,
+                    COUNT(DISTINCT cm2.community_id) as shared_count,
+                    ARRAY_AGG(DISTINCT c.name) as shared_communities
+                FROM users u
+                JOIN community_members cm2 ON cm2.user_id = u.id
+                JOIN communities c ON c.id = cm2.community_id
+                JOIN community_members cm1 ON cm1.community_id = cm2.community_id AND cm1.user_id = :user_id
+                LEFT JOIN user_profiles up ON up.user_id = u.id
+                WHERE u.is_active = true
+                    AND u.id != :user_id
+                    AND (up.show_in_graph = true OR up.show_in_graph IS NULL)
+                GROUP BY u.id, u.username, up.full_name, up.profile_image_url, up.location
+                ORDER BY shared_count DESC
+                LIMIT :limit
+            """
 
-        result = await db.execute(text(sql), {
-            "user_id": str(user_id),
-            "limit": limit
-        })
-        rows = result.fetchall()
+            result = await db.execute(text(sql), {
+                "user_id": str(user_id),
+                "limit": limit
+            })
+            rows = result.fetchall()
 
-        profiles = []
-        for row in rows:
-            profiles.append(SimilarProfile(
-                user_id=row.user_id,
-                username=row.username,
-                full_name=row.full_name,
-                profile_image_url=row.profile_image_url,
-                location=row.location,
-                similarity_score=min(row.shared_count * 0.3, 1.0),  # Communities weight
-                shared_communities=row.shared_communities or [],
-                similarity_reasons=[f"Member of {row.shared_count} same communities"]
-            ))
+            profiles = []
+            for row in rows:
+                profiles.append(SimilarProfile(
+                    user_id=row.user_id,
+                    username=row.username,
+                    full_name=row.full_name,
+                    profile_image_url=row.profile_image_url,
+                    location=row.location,
+                    similarity_score=min(row.shared_count * 0.3, 1.0),  # Communities weight
+                    shared_communities=row.shared_communities or [],
+                    similarity_reasons=[f"Member of {row.shared_count} same communities"]
+                ))
 
-        return profiles
+            return profiles
+        except Exception as e:
+            logger.error(f"Error in community similarity search: {e}")
+            return []
 
     def _merge_similarities(
         self,
@@ -289,94 +301,130 @@ class ProfileSimilarityService:
         Build a graph with edges weighted by similarity.
 
         Shows similar users as connected nodes with similarity-based clustering.
+        Uses semantic search with profile embeddings for proper discovery.
         """
-        # Get similar profiles
-        similar_response = await self.compute_user_similarities(
-            db, center_user_id, min_similarity, limit
-        )
-
         nodes = []
         edges = []
 
-        # Add center user
-        center_result = await db.execute(
-            select(User, UserProfile)
-            .outerjoin(UserProfile, User.id == UserProfile.user_id)
-            .where(User.id == center_user_id)
-        )
-        center_row = center_result.first()
-
-        if center_row:
-            center_user, center_profile = center_row
-            nodes.append(GraphNode(
-                id=str(center_user_id),
-                type="user",
-                label=center_profile.full_name if center_profile else center_user.username,
-                properties={
-                    "username": center_user.username,
-                    "is_current_user": True
-                },
-                size=1.5,
-                color="#0969da",
-                image_url=center_profile.profile_image_url if center_profile else None
-            ))
-
-        # Add similar users as nodes with edges to center
-        for profile in similar_response.profiles:
-            nodes.append(GraphNode(
-                id=str(profile.user_id),
-                type="user",
-                label=profile.full_name or profile.username,
-                properties={
-                    "username": profile.username,
-                    "location": profile.location,
-                    "similarity_score": profile.similarity_score,
-                    "shared_skills": profile.shared_skills,
-                    "shared_communities": profile.shared_communities,
-                    "reasons": profile.similarity_reasons
-                },
-                size=0.5 + profile.similarity_score,  # Size by similarity
-                color=self._similarity_to_color(profile.similarity_score),
-                image_url=profile.profile_image_url
-            ))
-
-            # Edge from center to similar user
-            edges.append(GraphEdge(
-                id=f"similar_{center_user_id}_{profile.user_id}",
-                source=str(center_user_id),
-                target=str(profile.user_id),
-                type="SIMILAR_TO",
-                weight=profile.similarity_score,
-                label=f"{int(profile.similarity_score * 100)}% similar"
-            ))
-
-        # Add edges between similar users if they share skills/communities
-        for i, p1 in enumerate(similar_response.profiles):
-            for p2 in similar_response.profiles[i+1:]:
-                shared_skills = set(p1.shared_skills) & set(p2.shared_skills)
-                shared_communities = set(p1.shared_communities) & set(p2.shared_communities)
-
-                if len(shared_skills) >= 2 or shared_communities:
-                    weight = (len(shared_skills) * 0.1 + len(shared_communities) * 0.2)
-                    edges.append(GraphEdge(
-                        id=f"shared_{p1.user_id}_{p2.user_id}",
-                        source=str(p1.user_id),
-                        target=str(p2.user_id),
-                        type="SHARED_INTERESTS",
-                        weight=min(weight, 1.0),
-                        label=f"{len(shared_skills)} skills, {len(shared_communities)} communities"
-                    ))
-
-        return KnowledgeGraph(
-            nodes=nodes,
-            edges=edges,
-            metadata=GraphMetadata(
-                center_node=str(center_user_id),
-                total_nodes=len(nodes),
-                total_edges=len(edges),
-                view_type="similarity"
+        try:
+            # Add center user first
+            center_result = await db.execute(
+                select(User, UserProfile)
+                .outerjoin(UserProfile, User.id == UserProfile.user_id)
+                .where(User.id == center_user_id)
             )
-        )
+            center_row = center_result.first()
+
+            if center_row:
+                center_user, center_profile = center_row
+                nodes.append(GraphNode(
+                    id=str(center_user_id),
+                    type="user",
+                    label=center_profile.full_name if center_profile else center_user.username,
+                    properties={
+                        "username": center_user.username,
+                        "is_current_user": True
+                    },
+                    size=1.5,
+                    color="#0969da",
+                    image_url=center_profile.profile_image_url if center_profile else None
+                ))
+            else:
+                # Center user not found, return empty graph
+                return KnowledgeGraph(
+                    nodes=[],
+                    edges=[],
+                    metadata=GraphMetadata(
+                        center_node=str(center_user_id),
+                        total_nodes=0,
+                        total_edges=0,
+                        view_type="similarity",
+                        error="User not found"
+                    )
+                )
+
+            # Get similar profiles using compute_user_similarities
+            similar_response = await self.compute_user_similarities(
+                db, center_user_id, min_similarity, limit
+            )
+
+            # Add similar users as nodes with edges to center
+            for profile in similar_response.profiles:
+                nodes.append(GraphNode(
+                    id=str(profile.user_id),
+                    type="user",
+                    label=profile.full_name or profile.username,
+                    properties={
+                        "username": profile.username,
+                        "location": profile.location,
+                        "similarity_score": profile.similarity_score,
+                        "shared_skills": profile.shared_skills,
+                        "shared_communities": profile.shared_communities,
+                        "reasons": profile.similarity_reasons
+                    },
+                    size=0.5 + profile.similarity_score,  # Size by similarity
+                    color=self._similarity_to_color(profile.similarity_score),
+                    image_url=profile.profile_image_url
+                ))
+
+                # Edge from center to similar user
+                edges.append(GraphEdge(
+                    id=f"similar_{center_user_id}_{profile.user_id}",
+                    source=str(center_user_id),
+                    target=str(profile.user_id),
+                    type="SIMILAR_TO",
+                    weight=profile.similarity_score,
+                    label=f"{int(profile.similarity_score * 100)}% similar"
+                ))
+
+            # Add edges between similar users if they share skills/communities
+            for i, p1 in enumerate(similar_response.profiles):
+                for p2 in similar_response.profiles[i+1:]:
+                    shared_skills = set(p1.shared_skills) & set(p2.shared_skills)
+                    shared_communities = set(p1.shared_communities) & set(p2.shared_communities)
+
+                    if len(shared_skills) >= 2 or shared_communities:
+                        weight = (len(shared_skills) * 0.1 + len(shared_communities) * 0.2)
+                        edges.append(GraphEdge(
+                            id=f"shared_{p1.user_id}_{p2.user_id}",
+                            source=str(p1.user_id),
+                            target=str(p2.user_id),
+                            type="SHARED_INTERESTS",
+                            weight=min(weight, 1.0),
+                            label=f"{len(shared_skills)} skills, {len(shared_communities)} communities"
+                        ))
+
+            # If no similar profiles found, provide a helpful message
+            error_msg = None
+            if not similar_response.profiles:
+                error_msg = "No similar profiles found. Try updating your profile or skills to find matches."
+
+            return KnowledgeGraph(
+                nodes=nodes,
+                edges=edges,
+                metadata=GraphMetadata(
+                    center_node=str(center_user_id),
+                    total_nodes=len(nodes),
+                    total_edges=len(edges),
+                    view_type="similarity",
+                    error=error_msg
+                )
+            )
+
+        except Exception as e:
+            logger.error(f"Error building similarity graph: {e}")
+            # Return a valid graph with error message instead of throwing
+            return KnowledgeGraph(
+                nodes=nodes if nodes else [],
+                edges=[],
+                metadata=GraphMetadata(
+                    center_node=str(center_user_id),
+                    total_nodes=len(nodes),
+                    total_edges=0,
+                    view_type="similarity",
+                    error=f"Error computing similarities: {str(e)}"
+                )
+            )
 
     async def find_users_with_skill(
         self,

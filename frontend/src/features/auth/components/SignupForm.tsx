@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import Button from '../../../components/common/Button';
 import Input from '../../../components/common/Input';
+import { formatError } from '../../../utils/error';
 import styles from './AuthForm.module.css';
 
 type ContactMethod = 'email' | 'phone';
@@ -43,10 +44,9 @@ export const SignupForm: React.FC = () => {
       };
       await register(data);
       navigate('/events');
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
-      const axiosError = err as { response?: { data?: { detail?: string } } };
-      setError(axiosError.response?.data?.detail || errorMessage);
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError(formatError(err));
     } finally {
       setIsLoading(false);
     }

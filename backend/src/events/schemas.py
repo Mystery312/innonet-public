@@ -24,6 +24,7 @@ class EventResponse(BaseModel):
     is_published: bool
     is_cancelled: bool
     image_url: Optional[str] = None
+    virtual_meeting_url: Optional[str] = None
     company_id: Optional[uuid.UUID] = None
     company_name: Optional[str] = None
     company_logo_url: Optional[str] = None
@@ -80,6 +81,7 @@ class EventCreateRequest(BaseModel):
     price_cents: int = 0
     currency: str = "USD"
     image_url: Optional[str] = None
+    virtual_meeting_url: Optional[str] = None
     company_id: Optional[uuid.UUID] = None
 
 
@@ -99,6 +101,7 @@ class EventUpdateRequest(BaseModel):
     price_cents: Optional[int] = None
     currency: Optional[str] = None
     image_url: Optional[str] = None
+    virtual_meeting_url: Optional[str] = None
     company_id: Optional[uuid.UUID] = None
     is_published: Optional[bool] = None
     is_cancelled: Optional[bool] = None

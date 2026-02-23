@@ -13,6 +13,11 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
+def utc_now_naive() -> datetime:
+    """Return current UTC time as a naive datetime (for PostgreSQL compatibility)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 class EmbeddingService:
     """Service for generating and managing OpenAI embeddings."""
 
@@ -104,7 +109,7 @@ class EmbeddingService:
                 # Update existing
                 profile_embedding.embedding = embedding
                 profile_embedding.embedding_text = profile_text
-                profile_embedding.updated_at = datetime.now(timezone.utc)
+                profile_embedding.updated_at = utc_now_naive()
             else:
                 # Create new
                 profile_embedding = ProfileEmbedding(

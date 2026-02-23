@@ -25,7 +25,7 @@ const emptyProject: ProjectCreate = {
   technologies: [],
 };
 
-export const ProjectsStep: React.FC<ProjectsStepProps> = ({ onNext, onPrevious, onSkip, parsedData }) => {
+export const ProjectsStep: React.FC<ProjectsStepProps> = ({ onNext, onPrevious, onSkip, parsedData: _parsedData }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);

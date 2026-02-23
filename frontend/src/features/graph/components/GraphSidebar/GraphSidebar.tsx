@@ -8,6 +8,7 @@ interface GraphSidebarProps {
   node: GraphNode | null;
   onClose: () => void;
   onConnect?: (userId: string) => void;
+  onViewProfile?: (userId: string) => void;
   relatedNodes?: GraphNode[];
 }
 
@@ -15,6 +16,7 @@ export const GraphSidebar: React.FC<GraphSidebarProps> = ({
   node,
   onClose,
   onConnect,
+  onViewProfile: _onViewProfile,
   relatedNodes = [],
 }) => {
   const navigate = useNavigate();

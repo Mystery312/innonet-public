@@ -17,7 +17,7 @@ export interface UserSkill {
   is_primary: boolean;
   created_at: string;
 }
-
+11
 export interface SkillCreate {
   skill_id: string;
   proficiency_level?: 'beginner' | 'intermediate' | 'advanced' | 'expert';

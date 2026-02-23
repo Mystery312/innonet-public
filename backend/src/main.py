@@ -1,10 +1,12 @@
+import logging
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from contextlib import asynccontextmanager
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.config import get_settings
 from src.database.postgres import init_db
@@ -27,7 +29,49 @@ from src.messaging.router import router as messaging_router
 from src.graph.router import router as graph_router
 from src.database.neo4j import init_neo4j, close_neo4j
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
+
+# Initialize Sentry for error tracking (production only)
+if settings.sentry_dsn and settings.is_production:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+        from sentry_sdk.integrations.logging import LoggingIntegration
+
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            environment=settings.environment,
+            integrations=[
+                FastApiIntegration(transaction_style="endpoint"),
+                SqlalchemyIntegration(),
+                LoggingIntegration(level=logging.INFO, event_level=logging.ERROR),
+            ],
+            traces_sample_rate=settings.sentry_traces_sample_rate,
+            send_default_pii=False,
+        )
+        logger.info("Sentry initialized for error tracking")
+    except ImportError:
+        logger.warning("Sentry SDK not installed, error tracking disabled")
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add security headers to all responses."""
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        response = await call_next(request)
+
+        # Security headers for production
+        if settings.is_production:
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["X-XSS-Protection"] = "1; mode=block"
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+            response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+
+        return response
 
 
 @asynccontextmanager
@@ -102,18 +146,13 @@ async def conflict_error_handler(request: Request, exc: ConflictError):
     )
 
 
-# CORS middleware
-# Allow multiple localhost ports for development
-origins = list(set([
-    settings.frontend_url,
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:5175",
-]))
+# Security headers middleware (production only)
+app.add_middleware(SecurityHeadersMiddleware)
 
+# CORS middleware - uses environment-aware origins from config
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "Accept"],
@@ -137,7 +176,18 @@ app.include_router(graph_router, prefix=f"{settings.api_v1_prefix}", tags=["Grap
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": settings.app_name}
+    """Health check endpoint for load balancers and monitoring."""
+    health_status = {
+        "status": "healthy",
+        "service": settings.app_name,
+        "environment": settings.environment,
+    }
+
+    # In production, add more detailed checks
+    if settings.is_production:
+        health_status["version"] = "1.0.0"
+
+    return health_status
 
 
 @app.get("/")

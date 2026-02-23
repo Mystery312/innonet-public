@@ -9,6 +9,11 @@ from src.messaging.models import (
 )
 
 
+def utc_now_naive() -> datetime:
+    """Return current UTC time as a naive datetime (for PostgreSQL compatibility)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 class MessagingService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -150,7 +155,7 @@ class MessagingService:
         participant = result.scalar_one_or_none()
 
         if participant:
-            participant.last_read_at = datetime.now(timezone.utc)
+            participant.last_read_at = utc_now_naive()
             await self.db.commit()
 
     # Message Methods
@@ -203,7 +208,7 @@ class MessagingService:
         # Update conversation timestamp
         conversation = await self.get_conversation_by_id(conversation_id)
         if conversation:
-            conversation.updated_at = datetime.now(timezone.utc)
+            conversation.updated_at = utc_now_naive()
 
         await self.db.commit()
         await self.db.refresh(message)

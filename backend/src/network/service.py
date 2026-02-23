@@ -118,7 +118,7 @@ class NetworkService:
             raise ValueError("Connection request not found")
 
         connection.status = "accepted"
-        connection.responded_at = datetime.now(timezone.utc)
+        connection.responded_at = utc_now_naive()
         await db.flush()
 
         # Sync to Neo4j
@@ -149,7 +149,7 @@ class NetworkService:
             raise ValueError("Connection request not found")
 
         connection.status = "declined"
-        connection.responded_at = datetime.now(timezone.utc)
+        connection.responded_at = utc_now_naive()
         await db.flush()
 
         # Sync to Neo4j

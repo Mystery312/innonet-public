@@ -418,7 +418,7 @@ class CompanyService:
             return None
 
         application.status = status
-        application.reviewed_at = datetime.now(timezone.utc)
+        application.reviewed_at = utc_now_naive()
         if reviewer_notes:
             application.reviewer_notes = reviewer_notes
 

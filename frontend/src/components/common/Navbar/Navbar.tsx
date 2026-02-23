@@ -46,7 +46,7 @@ export const Navbar: React.FC = () => {
               <Link to="/events" className={styles.link}>
                 Events
               </Link>
-              <Link to="/network" className={styles.link}>
+              <Link to="/roadmap?view=network" className={styles.link}>
                 Network
               </Link>
               <Link to="/roadmap" className={styles.link}>

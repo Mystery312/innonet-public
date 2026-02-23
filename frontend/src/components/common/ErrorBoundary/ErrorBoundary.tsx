@@ -1,4 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 import styles from './ErrorBoundary.module.css';
 
 interface Props {
@@ -44,7 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className={styles.errorMessage}>
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
-            {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
+            {import.meta.env.DEV && this.state.errorInfo && (
               <details className={styles.errorDetails}>
                 <summary>Error details</summary>
                 <pre className={styles.errorStack}>

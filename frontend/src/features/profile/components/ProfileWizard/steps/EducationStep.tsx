@@ -32,7 +32,7 @@ const degreeTypes = [
   { value: 'other', label: 'Other' },
 ];
 
-export const EducationStep: React.FC<EducationStepProps> = ({ onNext, onPrevious, parsedData }) => {
+export const EducationStep: React.FC<EducationStepProps> = ({ onNext, onPrevious, parsedData: _parsedData }) => {
   const [educations, setEducations] = useState<Education[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
