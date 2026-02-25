@@ -25,7 +25,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit("3/minute")
+@limiter.limit("20/minute")
 async def register(
     request: Request,
     data: UserRegisterRequest,
@@ -44,7 +44,7 @@ async def register(
 
 
 @router.post("/login", response_model=AuthResponse)
-@limiter.limit("5/minute")
+@limiter.limit("30/minute")
 async def login(
     request: Request,
     data: UserLoginRequest,

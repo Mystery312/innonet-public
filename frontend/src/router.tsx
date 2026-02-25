@@ -14,7 +14,7 @@ import { ProfilePage } from './pages/Profile/ProfilePage';
 import { ProfileSetupPage } from './pages/Profile/ProfileSetupPage';
 import { SearchPage } from './pages/Search/SearchPage';
 import { NetworkPage, ConnectionsPage } from './pages/Network';
-import { CommunitiesPage, CommunityDetailPage, CreateCommunityPage } from './pages/Communities';
+import { CommunitiesPage, CommunityDetailPage, CreateCommunityPage, PostDetailPage } from './pages/Communities';
 import { ChallengesPage, ChallengeDetailPage } from './pages/Challenges';
 import { MessagesPage } from './pages/Messages';
 import { CompaniesPage, CompanyDetailPage, CreateCompanyPage } from './pages/Companies';
@@ -220,6 +220,14 @@ export const AppRouter: React.FC = () => {
           element={
             <ProtectedRoute>
               <CommunityDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/communities/:communityId/posts/:postId"
+          element={
+            <ProtectedRoute>
+              <PostDetailPage />
             </ProtectedRoute>
           }
         />
