@@ -1,0 +1,44 @@
+# Example Terraform Variables File
+# Copy this file to terraform.tfvars and fill in your values
+# NEVER commit terraform.tfvars to version control
+
+# AWS Configuration
+aws_region  = "ap-southeast-1" # Singapore
+environment = "production"
+
+# Project
+project_name = "innonet"
+
+# Database - IMPORTANT: Change these!
+db_username = "innonet_admin"
+db_password = "CHANGE-ME-TO-STRONG-PASSWORD" # Generate strong password: openssl rand -base64 32
+
+# Database Configuration
+db_instance_class    = "db.t3.small"  # Use db.t3.micro for staging
+db_allocated_storage = 20             # GB
+
+# Redis Configuration
+redis_node_type      = "cache.t3.micro"
+redis_num_cache_nodes = 1
+
+# ECS Configuration
+ecs_task_cpu       = "512"  # 0.5 vCPU
+ecs_task_memory    = "1024" # 1 GB
+ecs_desired_count  = 2      # Number of tasks
+
+# S3 Bucket for Frontend
+# Leave empty to auto-generate, or specify a globally unique name
+frontend_bucket_name = "" # e.g., "my-innonet-frontend-prod"
+
+# Domain (optional - leave empty if not using custom domain)
+domain_name = "" # e.g., "app.yourdomain.com"
+
+# Backup & Protection
+backup_retention_period   = 7
+enable_deletion_protection = true # Set to false for staging/testing
+
+# Additional tags (optional)
+additional_tags = {
+  CostCenter = "Engineering"
+  Owner      = "DevOps Team"
+}

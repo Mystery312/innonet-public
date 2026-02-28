@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: ap-southeast-1  # Singapore region
   ECR_REPOSITORY: innonet-api
   ECS_SERVICE: innonet-api-service
   ECS_CLUSTER: innonet-cluster
