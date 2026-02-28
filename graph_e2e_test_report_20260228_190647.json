@@ -1,0 +1,164 @@
+{
+  "summary": {
+    "date": "2026-02-28T19:06:47.901926",
+    "total": 17,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 1,
+    "pass_rate": 94.11764705882352
+  },
+  "results": [
+    {
+      "name": "Backend Health Check",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2026-02-28T19:06:45.014794"
+    },
+    {
+      "name": "Frontend Availability",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2026-02-28T19:06:45.019292"
+    },
+    {
+      "name": "User Registration",
+      "status": "PASS",
+      "details": "User ID: c8e831b0-50bc-4813-9f4e-1974c1510d51",
+      "timestamp": "2026-02-28T19:06:45.234598",
+      "response_keys": [
+        "user",
+        "access_token",
+        "refresh_token",
+        "token_type"
+      ]
+    },
+    {
+      "name": "Get Full Knowledge Graph",
+      "status": "PASS",
+      "details": "Nodes: 1, Edges: 0, View: ecosystem",
+      "timestamp": "2026-02-28T19:06:45.466950",
+      "response_keys": [
+        "nodes",
+        "edges",
+        "metadata"
+      ]
+    },
+    {
+      "name": "Graph Has Nodes",
+      "status": "PASS",
+      "details": "Count: 1",
+      "timestamp": "2026-02-28T19:06:45.466979"
+    },
+    {
+      "name": "Graph Has Metadata",
+      "status": "PASS",
+      "details": "Keys: ['center_node', 'query', 'total_nodes', 'total_edges', 'view_type', 'error']",
+      "timestamp": "2026-02-28T19:06:45.466992"
+    },
+    {
+      "name": "Get Local Graph (1-hop)",
+      "status": "PASS",
+      "details": "Nodes: 0 (local view around user)",
+      "timestamp": "2026-02-28T19:06:45.966187",
+      "response_keys": [
+        "nodes",
+        "edges",
+        "metadata"
+      ]
+    },
+    {
+      "name": "Find Path Between Nodes",
+      "status": "SKIP",
+      "details": "No target node available in graph",
+      "timestamp": "2026-02-28T19:06:46.221808"
+    },
+    {
+      "name": "Semantic Search as Graph",
+      "status": "PASS",
+      "details": "Query: 'machine learning', Nodes: 0, Edges: 0",
+      "timestamp": "2026-02-28T19:06:47.601975",
+      "response_keys": [
+        "nodes",
+        "edges",
+        "metadata"
+      ]
+    },
+    {
+      "name": "Search Query Node Created",
+      "status": "PASS",
+      "details": "Query represented in metadata",
+      "timestamp": "2026-02-28T19:06:47.602013"
+    },
+    {
+      "name": "Get Clustered Graph (Louvain)",
+      "status": "PASS",
+      "details": "Nodes: 1, Clusters: 0",
+      "timestamp": "2026-02-28T19:06:47.656959",
+      "response_keys": [
+        "nodes",
+        "edges",
+        "metadata",
+        "clusters"
+      ]
+    },
+    {
+      "name": "Clusters Detected",
+      "status": "PASS",
+      "details": "No clusters (expected with new user)",
+      "timestamp": "2026-02-28T19:06:47.656973"
+    },
+    {
+      "name": "Get Skill Roadmap (Python)",
+      "status": "PASS",
+      "details": "Target: Python, Current: 0, Path: 1, Profiles: 5",
+      "timestamp": "2026-02-28T19:06:47.846399",
+      "response_keys": [
+        "target_skill",
+        "current_skills",
+        "path",
+        "graph",
+        "profiles_with_skill",
+        "estimated_progression"
+      ]
+    },
+    {
+      "name": "Roadmap Graph Has Nodes",
+      "status": "PASS",
+      "details": "Count: 1",
+      "timestamp": "2026-02-28T19:06:47.846424"
+    },
+    {
+      "name": "Get Similarity Graph",
+      "status": "PASS",
+      "details": "Nodes: 0, Edges: 0",
+      "timestamp": "2026-02-28T19:06:47.867102",
+      "response_keys": [
+        "nodes",
+        "edges",
+        "metadata"
+      ]
+    },
+    {
+      "name": "Graph Filtering (Node Types)",
+      "status": "PASS",
+      "details": "Filtered types: user",
+      "timestamp": "2026-02-28T19:06:47.895082",
+      "response_keys": [
+        "nodes",
+        "edges",
+        "metadata"
+      ]
+    },
+    {
+      "name": "Get Similar Profiles",
+      "status": "PASS",
+      "details": "Similar profiles: 0",
+      "timestamp": "2026-02-28T19:06:47.901544",
+      "response_keys": [
+        "profiles",
+        "total",
+        "query_user_id"
+      ]
+    }
+  ]
+}
