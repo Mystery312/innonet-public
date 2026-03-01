@@ -2,6 +2,9 @@
 
 AWS is powerful but complex. Here are simpler alternatives to get your site online quickly!
 
+> **🇨🇳 Deploying from China?** Railway, Vercel, and many international services are blocked by the Great Firewall.
+> **See:** [CHINA_DEPLOYMENT_GUIDE.md](CHINA_DEPLOYMENT_GUIDE.md) for Aliyun (阿里云) and Tencent Cloud (腾讯云) deployment.
+
 ---
 
 ## ⚡ OPTION 1: Railway (Recommended - Easiest!)

@@ -19,10 +19,13 @@ Get your website live **right now** without complex AWS setup:
 | Platform | Time | Cost | Difficulty | Best For |
 |----------|------|------|------------|----------|
 | **[Railway + Vercel](DEPLOY_NOW.md)** ⭐ | 15 min | $15-30/mo | ⭐ Easy | Quick MVP |
+| **[Aliyun (阿里云)](CHINA_DEPLOYMENT_GUIDE.md)** 🇨🇳 | 30-60 min | ¥200-500/mo | ⭐⭐⭐ Medium | China users |
 | [Render + Vercel](EASY_DEPLOYMENT_OPTIONS.md) | 20 min | $0-15/mo | ⭐ Easy | Free tier |
 | [AWS Singapore](AWS_SETUP_INSTRUCTIONS.md) | 1-2 hrs | $150-250/mo | ⭐⭐⭐⭐ Hard | Enterprise |
 | [DigitalOcean](EASY_DEPLOYMENT_OPTIONS.md) | 30 min | $12-25/mo | ⭐⭐⭐ Medium | Balanced |
 | [Fly.io](EASY_DEPLOYMENT_OPTIONS.md) | 25 min | $15-20/mo | ⭐⭐⭐ Medium | Edge network |
+
+> **🇨🇳 Note for China Users**: Railway, Vercel, AWS are blocked/slow in China. Use [Aliyun or Tencent Cloud](CHINA_DEPLOYMENT_GUIDE.md) instead.
 
 **Recommended**: Start with Railway + Vercel for MVP, migrate to AWS later if needed.
 
