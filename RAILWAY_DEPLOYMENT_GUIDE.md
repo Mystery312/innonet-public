@@ -49,8 +49,25 @@ This guide will get your Innonet application live in **15-20 minutes** using Rai
 
 1. Click on your main service (it should auto-detect from Dockerfile)
 2. Go to **"Settings"** tab
-3. Set **Root Directory**: `backend`
+3. **CRITICAL:** Scroll down to **"Root Directory"** and type: `backend`
+   - This tells Railway where to find your Dockerfile and source code
+   - Without this, you'll get "alembic.ini not found" errors
 4. Set **Start Command**: `uvicorn src.main:app --host 0.0.0.0 --port $PORT`
+5. Click **"Save Config"** or wait for auto-save
+
+**Why is Root Directory important?**
+Your repository has this structure:
+```
+innonet-public/
+├── backend/          ← Railway needs to build from here
+│   ├── Dockerfile
+│   ├── src/
+│   ├── alembic.ini
+│   └── ...
+└── frontend/
+```
+
+Setting Root Directory to `backend` ensures Railway builds from the correct location.
 
 ### Step 6: Set Environment Variables
 
@@ -278,6 +295,21 @@ Should see the Innonet homepage.
 
 ## Troubleshooting
 
+### "alembic.ini not found" or "failed to compute cache key" Error
+
+**This is the most common error!** It happens when the Root Directory is not set correctly.
+
+**Solution:**
+1. Go to your Railway project
+2. Click on the backend service
+3. Go to **Settings** tab
+4. Find **Root Directory** field
+5. Type: `backend` (lowercase, no slashes)
+6. Save and redeploy
+
+**Why it happens:**
+Railway builds from the repository root by default, but your Dockerfile expects to be in the `backend/` directory where `alembic.ini`, `src/`, and other files exist.
+
 ### Backend won't start
 
 **Check logs in Railway:**
@@ -290,6 +322,7 @@ Common issues:
 - Missing environment variables
 - Database connection failed
 - Port binding (make sure using `$PORT`)
+- Root Directory not set to `backend`
 
 ### Frontend can't connect to backend
 

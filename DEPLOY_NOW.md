@@ -32,9 +32,13 @@ Click "+ New" twice to add:
 - Redis (Railway will auto-provision)
 
 ### 1.4 Configure Your Service
-Click on your backend service:
-- **Settings** → Root Directory: `backend`
-- **Settings** → Start Command: `uvicorn src.main:app --host 0.0.0.0 --port $PORT`
+Click on your backend service, then go to **Settings** tab:
+
+**IMPORTANT:** Set these exactly:
+- **Root Directory**: `backend` (Type this in the field - this is CRITICAL!)
+- **Start Command**: `uvicorn src.main:app --host 0.0.0.0 --port $PORT`
+
+The Root Directory setting tells Railway to build from the `backend/` folder, which fixes the "alembic.ini not found" error.
 
 ### 1.5 Generate Secret Key
 In your terminal:
