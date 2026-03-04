@@ -11,8 +11,8 @@ class Settings(BaseSettings):
     environment: str = "development"  # development, staging, production
 
     # Database
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/innonet"
-    redis_url: str = "redis://localhost:6379/0"
+    database_url: str = "postgresql+asyncpg://postgres:postgres@postgres:5432/innonet"
+    redis_url: str = "redis://:redis_dev_change_me@redis:6379/0"
 
     # Database Pool Settings
     db_pool_size: int = 10
@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     openai_chat_model: str = "gpt-4-turbo-preview"
 
     # Neo4j (for graph networking)
-    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_uri: str = "bolt://neo4j:7687"
     neo4j_user: str = "neo4j"
     neo4j_password: str  # REQUIRED - No default for security
 

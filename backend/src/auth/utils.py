@@ -28,8 +28,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
 
     to_encode.update({
-        "exp": expire,
-        "iat": datetime.now(timezone.utc),
+        "exp": int(expire.timestamp()),
+        "iat": int(datetime.now(timezone.utc).timestamp()),
         "type": "access"
     })
     return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
@@ -43,8 +43,8 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) 
         expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
 
     to_encode.update({
-        "exp": expire,
-        "iat": datetime.now(timezone.utc),
+        "exp": int(expire.timestamp()),
+        "iat": int(datetime.now(timezone.utc).timestamp()),
         "type": "refresh",
         "jti": secrets.token_urlsafe(16)  # Unique token ID for revocation
     })
