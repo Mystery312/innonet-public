@@ -79,3 +79,13 @@ def create_password_reset_token() -> str:
 def get_password_reset_expiry() -> datetime:
     """Get expiry time for password reset token (1 hour from now)."""
     return (datetime.now(timezone.utc) + timedelta(hours=1)).replace(tzinfo=None)
+
+
+def create_email_verification_token() -> str:
+    """Generate a secure random token for email verification (32 bytes = 256 bits)."""
+    return secrets.token_urlsafe(32)
+
+
+def get_email_verification_expiry() -> datetime:
+    """Get expiry time for email verification token (24 hours from now)."""
+    return (datetime.now(timezone.utc) + timedelta(days=1)).replace(tzinfo=None)

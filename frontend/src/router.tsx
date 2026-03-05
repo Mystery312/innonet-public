@@ -8,6 +8,8 @@ import LoginPage from './pages/Auth/LoginPage';
 import SignupPage from './pages/Auth/SignupPage';
 import ForgotPasswordPage from './pages/Auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/Auth/ResetPasswordPage';
+import VerifyEmailPage from './pages/Auth/VerifyEmailPage';
+import CheckEmailPage from './pages/Auth/CheckEmailPage';
 import EventsListPage from './pages/Events/EventsListPage';
 import { EventDetailPage } from './pages/Events/EventDetailPage';
 import { ProfilePage } from './pages/Profile/ProfilePage';
@@ -115,6 +117,8 @@ export const AppRouter: React.FC = () => {
             </PublicOnlyRoute>
           }
         />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/check-email" element={<CheckEmailPage />} />
 
         {/* Protected routes */}
         <Route

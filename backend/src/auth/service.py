@@ -5,7 +5,7 @@ from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.auth.models import User, UserProfile, RefreshToken, PasswordResetToken
+from src.auth.models import User, UserProfile, RefreshToken, PasswordResetToken, EmailVerificationToken
 from src.auth.schemas import UserRegisterRequest
 from src.auth.utils import (
     hash_password,
@@ -17,6 +17,8 @@ from src.auth.utils import (
     get_token_expiry,
     create_password_reset_token,
     get_password_reset_expiry,
+    create_email_verification_token,
+    get_email_verification_expiry,
 )
 
 
@@ -24,7 +26,7 @@ class AuthService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def register(self, data: UserRegisterRequest) -> Tuple[User, str, str]:
+    async def register(self, data: UserRegisterRequest) -> User:
         # Check if username exists
         existing = await self.db.execute(
             select(User).where(User.username == data.username)
@@ -62,17 +64,16 @@ class AuthService:
         profile = UserProfile(user_id=user.id)
         self.db.add(profile)
 
-        # Generate tokens
-        access_token = create_access_token({"sub": str(user.id), "username": user.username})
-        refresh_token = create_refresh_token({"sub": str(user.id)})
-
-        # Store refresh token
-        await self._store_refresh_token(user.id, refresh_token)
-
         await self.db.commit()
         await self.db.refresh(user)
 
-        return user, access_token, refresh_token
+        # Create email verification token if email provided
+        if user.email:
+            verification_token = await self.create_email_verification_token(user.id)
+            # Store token temporarily on user object for router to access
+            user._verification_token = verification_token
+
+        return user
 
     async def login(self, identifier: str, password: str) -> Tuple[User, str, str]:
         # Find user by username, email, or phone
@@ -97,6 +98,10 @@ class AuthService:
 
         if not user.is_active:
             raise ValueError("Account is deactivated")
+
+        # Check if email is verified (only for users with email)
+        if user.email and not user.is_verified:
+            raise ValueError("Email not verified")
 
         # Generate tokens
         access_token = create_access_token({"sub": str(user.id), "username": user.username})
@@ -265,3 +270,91 @@ class AuthService:
 
         await self.db.commit()
         return True
+
+    async def create_email_verification_token(self, user_id: uuid.UUID) -> str:
+        """Create email verification token, invalidating any existing ones."""
+        # Invalidate any existing unused verification tokens for this user
+        existing_tokens = await self.db.execute(
+            select(EmailVerificationToken).where(
+                EmailVerificationToken.user_id == user_id,
+                EmailVerificationToken.verified_at.is_(None),
+            )
+        )
+        for token in existing_tokens.scalars():
+            token.verified_at = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        # Create new verification token
+        token = create_email_verification_token()
+        verification_token = EmailVerificationToken(
+            user_id=user_id,
+            token_hash=hash_token(token),
+            expires_at=get_email_verification_expiry(),
+        )
+        self.db.add(verification_token)
+        await self.db.commit()
+
+        return token
+
+    async def verify_email(self, token: str) -> User:
+        """Verify email using token."""
+        token_hash = hash_token(token)
+        result = await self.db.execute(
+            select(EmailVerificationToken).where(
+                EmailVerificationToken.token_hash == token_hash,
+                EmailVerificationToken.verified_at.is_(None),
+            )
+        )
+        verification_token = result.scalar_one_or_none()
+
+        if not verification_token:
+            raise ValueError("Invalid or expired verification token")
+
+        # Check if token is expired
+        now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+        if verification_token.expires_at < now_naive:
+            raise ValueError("Verification token has expired")
+
+        # Get user and mark as verified
+        result = await self.db.execute(
+            select(User).where(User.id == verification_token.user_id)
+        )
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise ValueError("User not found")
+
+        if user.is_verified:
+            raise ValueError("Email already verified")
+
+        # Mark user as verified
+        user.is_verified = True
+
+        # Mark token as used
+        verification_token.verified_at = now_naive
+
+        await self.db.commit()
+        await self.db.refresh(user)
+
+        return user
+
+    async def resend_verification_email(self, user_id: uuid.UUID) -> str:
+        """Resend verification email (rate limited endpoint)."""
+        # Get user
+        result = await self.db.execute(
+            select(User).where(User.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise ValueError("User not found")
+
+        if user.is_verified:
+            raise ValueError("Email already verified")
+
+        if not user.email:
+            raise ValueError("No email address on account")
+
+        # Create new token (this invalidates old ones)
+        token = await self.create_email_verification_token(user_id)
+
+        return token

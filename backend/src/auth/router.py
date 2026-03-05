@@ -24,7 +24,7 @@ router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
 
-@router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("20/minute")
 async def register(
     request: Request,
@@ -33,11 +33,15 @@ async def register(
 ):
     auth_service = AuthService(db)
     try:
-        user, access_token, refresh_token = await auth_service.register(data)
-        return AuthResponse(
-            user=UserResponse.model_validate(user),
-            access_token=access_token,
-            refresh_token=refresh_token,
+        user = await auth_service.register(data)
+
+        # Send verification email if user has email and verification token
+        if user.email and hasattr(user, '_verification_token'):
+            email_service = EmailService()
+            await email_service.send_email_verification(user.email, user._verification_token)
+
+        return MessageResponse(
+            message="Registration successful! Check your email to verify your account."
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -131,5 +135,43 @@ async def reset_password(
     try:
         await auth_service.reset_password(data.token, data.new_password)
         return MessageResponse(message="Password has been reset successfully.")
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/verify-email", response_model=MessageResponse)
+@limiter.limit("10/minute")
+async def verify_email(
+    request: Request,
+    token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Verify email with token from email link."""
+    auth_service = AuthService(db)
+    try:
+        user = await auth_service.verify_email(token)
+        return MessageResponse(message="Email verified successfully! You can now login.")
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/resend-verification", response_model=MessageResponse)
+@limiter.limit("3/minute")
+async def resend_verification_email(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Resend verification email (requires authentication)."""
+    auth_service = AuthService(db)
+    try:
+        token = await auth_service.resend_verification_email(current_user.id)
+
+        # Send verification email
+        if current_user.email:
+            email_service = EmailService()
+            await email_service.send_email_verification(current_user.email, token)
+
+        return MessageResponse(message="Verification email sent! Please check your inbox.")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

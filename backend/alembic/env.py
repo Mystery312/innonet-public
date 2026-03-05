@@ -7,7 +7,7 @@ from alembic import context
 
 # Import all models to ensure they're registered
 from src.database.postgres import Base
-from src.auth.models import User, UserProfile, RefreshToken
+from src.auth.models import User, UserProfile, RefreshToken, PasswordResetToken, EmailVerificationToken
 from src.events.models import Event, EventRegistration
 from src.payments.models import Payment
 from src.waitlist.models import Waitlist

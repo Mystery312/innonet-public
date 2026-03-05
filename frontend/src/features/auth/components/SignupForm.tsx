@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
+import { api } from '../../../lib/api';
 import Button from '../../../components/common/Button';
 import Input from '../../../components/common/Input';
 import { formatError } from '../../../utils/error';
@@ -17,7 +17,6 @@ export const SignupForm: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,8 +41,19 @@ export const SignupForm: React.FC = () => {
         password,
         ...(contactMethod === 'email' ? { email } : { phone }),
       };
-      await register(data);
-      navigate('/events');
+
+      // Call registration endpoint - now returns message, not tokens
+      await api.post('/auth/register', data);
+
+      // Redirect to check email page if user registered with email
+      if (contactMethod === 'email') {
+        navigate('/check-email', {
+          state: { email }
+        });
+      } else {
+        // For phone registration, redirect to login (no verification needed for phone)
+        navigate('/login');
+      }
     } catch (err) {
       console.error('Registration error:', err);
       setError(formatError(err));

@@ -168,3 +168,59 @@ class EmailService:
         </html>
         """
         return await self.send_email(to_email, subject, html_content)
+
+    async def send_email_verification(self, to_email: str, verification_token: str) -> bool:
+        verification_url = f"{settings.frontend_url}/verify-email?token={verification_token}"
+        subject = "Verify Your Innonet Email Address"
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 40px 20px; }}
+                .header {{ text-align: center; margin-bottom: 30px; }}
+                .logo {{ font-size: 28px; font-weight: bold; color: #2563eb; }}
+                .content {{ background: #f8fafc; border-radius: 8px; padding: 30px; }}
+                h1 {{ color: #1e293b; font-size: 24px; margin-bottom: 16px; }}
+                p {{ color: #475569; margin-bottom: 16px; }}
+                .btn {{ display: inline-block; background: #2563eb; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; }}
+                .link-text {{ word-break: break-all; font-size: 13px; color: #94a3b8; }}
+                .warning {{ background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 4px; }}
+                .footer {{ text-align: center; margin-top: 30px; color: #94a3b8; font-size: 14px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <div class="logo">Innonet</div>
+                </div>
+                <div class="content">
+                    <h1>Welcome to Innonet!</h1>
+                    <p>Thanks for signing up! To get started, please verify your email address by clicking the button below:</p>
+                    <p style="text-align: center; margin: 30px 0;">
+                        <a href="{verification_url}" class="btn">Verify Email Address</a>
+                    </p>
+                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+                    <p class="link-text">{verification_url}</p>
+                    <div class="warning">
+                        <p style="margin: 0;"><strong>⏰ Complete verification within 24 hours</strong></p>
+                        <p style="margin: 8px 0 0 0; font-size: 14px;">This verification link will expire in 24 hours. You won't be able to login until you verify your email.</p>
+                    </div>
+                    <p><strong>What happens after verification?</strong></p>
+                    <ul style="color: #475569;">
+                        <li>Full access to your Innonet account</li>
+                        <li>Connect with innovators and collaborators</li>
+                        <li>Join communities and events</li>
+                        <li>Discover nearby projects and opportunities</li>
+                    </ul>
+                    <p>If you didn't create an account with Innonet, you can safely ignore this email.</p>
+                </div>
+                <div class="footer">
+                    <p>&copy; 2024 Innonet. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        return await self.send_email(to_email, subject, html_content)

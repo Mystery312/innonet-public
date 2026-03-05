@@ -22,9 +22,18 @@ export const LoginForm: React.FC = () => {
     try {
       await login({ identifier, password });
       navigate('/events');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Login error:', err);
-      setError(formatError(err));
+
+      // Check for email verification error
+      const axiosError = err as { response?: { data?: { detail?: string } } };
+      const errorDetail = axiosError.response?.data?.detail;
+
+      if (errorDetail === 'Email not verified') {
+        setError('Please verify your email before logging in. Check your inbox for the verification link.');
+      } else {
+        setError(formatError(err));
+      }
     } finally {
       setIsLoading(false);
     }
