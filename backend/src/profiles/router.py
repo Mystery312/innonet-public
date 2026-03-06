@@ -482,7 +482,8 @@ async def delete_my_education(
 
 # ============== Resume Upload Endpoints ==============
 
-ALLOWED_EXTENSIONS = {"pdf", "docx", "doc"}
+from src.utils.file_validation import validate_resume_file, FileValidationError
+
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 
@@ -505,38 +506,42 @@ async def upload_resume(
     - Education
     - Projects
     - Certifications
+
+    Security: Validates file extension, MIME type, magic number, and size.
     """
-    # Validate file extension
     if not file.filename:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No filename provided"
         )
 
-    file_ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
-    if file_ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
-        )
-
     # Read file content
     content = await file.read()
 
-    # Validate file size
-    if len(content) > MAX_FILE_SIZE:
+    # Comprehensive file validation
+    try:
+        safe_filename, mime_type = validate_resume_file(
+            filename=file.filename,
+            content=content,
+            content_type=file.content_type,
+            max_size=MAX_FILE_SIZE
+        )
+    except FileValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File too large. Maximum size: {MAX_FILE_SIZE // (1024*1024)}MB"
+            detail=str(e)
         )
 
     # Parse resume
     resume_service = get_resume_service()
     try:
+        # Extract file extension from validated filename
+        file_ext = safe_filename.rsplit(".", 1)[-1].lower()
+
         resume = await resume_service.parse_resume(
             db=db,
             user_id=current_user.id,
-            filename=file.filename,
+            filename=safe_filename,  # Use sanitized filename
             file_content=content,
             file_type=file_ext
         )

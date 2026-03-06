@@ -140,34 +140,35 @@ class EventService:
         if event.is_cancelled:
             raise ValidationError("Event has been cancelled")
 
-        # Check capacity with database-level locking to prevent race conditions
-        if event.max_attendees:
-            # Use SELECT FOR UPDATE to lock the event row during transaction
-            async with self.db.begin_nested():
-                # Re-fetch event with lock
-                locked_event_result = await self.db.execute(
-                    select(Event)
-                    .where(Event.id == event_id)
-                    .with_for_update()
-                )
-                locked_event = locked_event_result.scalar_one()
+        # CRITICAL: Use database-level locking for the entire registration process
+        # to prevent race conditions when multiple users register simultaneously
 
-                # Count current confirmed registrations
-                count_result = await self.db.execute(
-                    select(func.count(EventRegistration.id))
-                    .where(
-                        and_(
-                            EventRegistration.event_id == event_id,
-                            EventRegistration.status != "cancelled"
-                        )
+        # Lock event row for the entire transaction
+        locked_event_result = await self.db.execute(
+            select(Event)
+            .where(Event.id == event_id)
+            .with_for_update()
+        )
+        locked_event = locked_event_result.scalar_one()
+
+        # Check capacity with locked event
+        if locked_event.max_attendees:
+            # Count current confirmed registrations (within same transaction)
+            count_result = await self.db.execute(
+                select(func.count(EventRegistration.id))
+                .where(
+                    and_(
+                        EventRegistration.event_id == event_id,
+                        EventRegistration.status != "cancelled"
                     )
                 )
-                current_count = count_result.scalar()
+            )
+            current_count = count_result.scalar()
 
-                if current_count >= locked_event.max_attendees:
-                    raise CapacityExceededError("Event", locked_event.max_attendees)
+            if current_count >= locked_event.max_attendees:
+                raise CapacityExceededError("Event", locked_event.max_attendees)
 
-        # Create registration
+        # Create registration (still within locked transaction)
         ticket_code = self._generate_ticket_code()
 
         # If free event, confirm immediately
@@ -180,7 +181,7 @@ class EventService:
             ticket_code=ticket_code if status == "confirmed" else None,
         )
         self.db.add(registration)
-        await self.db.commit()
+        await self.db.commit()  # This releases the lock
         await self.db.refresh(registration)
 
         return registration

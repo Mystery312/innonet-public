@@ -1,7 +1,9 @@
 from uuid import UUID
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Body, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from src.database.postgres import get_db
 from src.auth.dependencies import get_current_active_user
@@ -15,12 +17,15 @@ from src.profiles.schemas import (
 )
 
 router = APIRouter(prefix="/ai", tags=["AI"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 # ============== Search Endpoints ==============
 
 @router.post("/search", response_model=ProfileSearchResponse)
+@limiter.limit("20/minute")
 async def semantic_search(
+    http_request: Request,
     request: ProfileSearchRequest,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
@@ -91,7 +96,9 @@ async def find_similar_profiles(
 # ============== Analysis Endpoints ==============
 
 @router.get("/analyze/me", response_model=ProfileAnalysisResponse)
+@limiter.limit("5/minute")
 async def analyze_my_profile(
+    request: Request,
     refresh: bool = Query(False, description="Force refresh analysis"),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
@@ -125,7 +132,9 @@ async def analyze_my_profile(
 
 
 @router.post("/compare")
+@limiter.limit("10/minute")
 async def compare_profiles(
+    request: Request,
     user_ids: list[UUID] = Body(..., min_length=2, max_length=2),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
@@ -201,7 +210,9 @@ async def get_people_recommendations(
 # ============== Embedding Management ==============
 
 @router.post("/embeddings/update", status_code=status.HTTP_202_ACCEPTED)
+@limiter.limit("5/minute")
 async def update_my_embedding(
+    request: Request,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):

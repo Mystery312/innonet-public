@@ -1,8 +1,10 @@
 import uuid
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from src.database.postgres import get_db
 from src.auth.dependencies import get_current_user, get_optional_current_user
@@ -28,6 +30,7 @@ from src.config import get_settings
 
 settings = get_settings()
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 def build_event_response(event, company=None) -> EventResponse:
@@ -177,7 +180,9 @@ async def list_company_events(
 
 
 @router.post("/company/{company_id}", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def create_company_event(
+    request: Request,
     company_id: uuid.UUID,
     data: EventCreateRequest,
     db: AsyncSession = Depends(get_db),
@@ -255,7 +260,9 @@ async def get_event(
 
 
 @router.post("/{event_id}/register", response_model=EventRegistrationResponse)
+@limiter.limit("5/minute")
 async def register_for_event(
+    request: Request,
     event_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),

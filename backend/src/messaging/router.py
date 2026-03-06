@@ -1,9 +1,11 @@
 import uuid
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from src.database.postgres import get_db
 from src.auth.dependencies import get_current_user
@@ -22,6 +24,7 @@ from src.messaging.schemas import (
 )
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 # Helper to get user brief info
@@ -97,7 +100,9 @@ async def list_conversations(
 
 
 @router.post("/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def start_conversation(
+    request: Request,
     data: StartConversationRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -246,7 +251,9 @@ async def get_messages(
 
 
 @router.post("/conversations/{conversation_id}/messages", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("30/minute")
 async def send_message(
+    request: Request,
     conversation_id: uuid.UUID,
     data: MessageCreate,
     db: AsyncSession = Depends(get_db),
