@@ -1,7 +1,6 @@
 import uuid
 from typing import Optional
 from fastapi import Depends, HTTPException, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.postgres import get_db
@@ -9,15 +8,30 @@ from src.auth.utils import decode_token
 from src.auth.service import AuthService
 from src.auth.models import User
 
-security = HTTPBearer()
-optional_security = HTTPBearer(auto_error=False)
+# Cookie names for tokens
+ACCESS_TOKEN_COOKIE = "access_token"
+REFRESH_TOKEN_COOKIE = "refresh_token"
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    token = credentials.credentials
+    """
+    Get current user from httpOnly cookie.
+
+    Security: Reads JWT token from httpOnly cookie which cannot be accessed
+    by JavaScript, preventing XSS attacks from stealing tokens.
+    """
+    # Get token from cookie
+    token = request.cookies.get(ACCESS_TOKEN_COOKIE)
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated - no token found",
+        )
+
     payload = decode_token(token)
 
     if not payload:
@@ -73,14 +87,16 @@ async def get_current_active_user(
 
 
 async def get_optional_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security),
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> Optional[User]:
-    """Get current user if authenticated, otherwise return None."""
-    if not credentials:
+    """Get current user from cookie if authenticated, otherwise return None."""
+    # Get token from cookie
+    token = request.cookies.get(ACCESS_TOKEN_COOKIE)
+
+    if not token:
         return None
 
-    token = credentials.credentials
     payload = decode_token(token)
 
     if not payload or payload.get("type") != "access":

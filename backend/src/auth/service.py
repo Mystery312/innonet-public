@@ -20,6 +20,7 @@ from src.auth.utils import (
     create_email_verification_token,
     get_email_verification_expiry,
 )
+from src.utils.account_lockout import lockout_manager
 
 
 class AuthService:
@@ -76,6 +77,16 @@ class AuthService:
         return user
 
     async def login(self, identifier: str, password: str) -> Tuple[User, str, str]:
+        # Check if account is locked out due to failed attempts
+        is_locked = await lockout_manager.is_locked_out(identifier)
+        if is_locked:
+            lockout_expiry = await lockout_manager.get_lockout_expiry(identifier)
+            remaining_minutes = int((lockout_expiry - datetime.utcnow()).total_seconds() / 60) if lockout_expiry else 15
+            raise ValueError(
+                f"Account temporarily locked due to multiple failed login attempts. "
+                f"Please try again in {remaining_minutes} minutes."
+            )
+
         # Find user by username, email, or phone
         result = await self.db.execute(
             select(User)
@@ -91,10 +102,27 @@ class AuthService:
         user = result.scalar_one_or_none()
 
         if not user:
+            # Record failed attempt
+            await lockout_manager.record_failed_attempt(identifier)
             raise ValueError("Invalid credentials")
 
         if not verify_password(password, user.password_hash):
-            raise ValueError("Invalid credentials")
+            # Record failed attempt
+            lockout_info = await lockout_manager.record_failed_attempt(identifier)
+
+            # If account is now locked, raise specific error
+            if lockout_info.get("locked"):
+                raise ValueError(
+                    f"Account locked due to multiple failed login attempts. "
+                    f"Please try again in 15 minutes."
+                )
+
+            # Otherwise, inform about remaining attempts
+            remaining = lockout_info.get("remaining_attempts", 0)
+            if remaining > 0:
+                raise ValueError(f"Invalid credentials. {remaining} attempts remaining before lockout.")
+            else:
+                raise ValueError("Invalid credentials")
 
         if not user.is_active:
             raise ValueError("Account is deactivated")
@@ -102,6 +130,9 @@ class AuthService:
         # Check if email is verified (only for users with email)
         if user.email and not user.is_verified:
             raise ValueError("Email not verified")
+
+        # Successful login - clear any failed attempts
+        await lockout_manager.clear_failed_attempts(identifier)
 
         # Generate tokens
         access_token = create_access_token({"sub": str(user.id), "username": user.username})

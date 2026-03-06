@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -19,9 +19,16 @@ from src.auth.service import AuthService
 from src.auth.dependencies import get_current_user
 from src.auth.models import User
 from src.email.service import EmailService
+from src.config import get_settings
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
+settings = get_settings()
+
+# Cookie configuration for tokens
+ACCESS_TOKEN_COOKIE = "access_token"
+REFRESH_TOKEN_COOKIE = "refresh_token"
+TOKEN_COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days (matches refresh token)
 
 
 @router.post("/register", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
@@ -47,23 +54,49 @@ async def register(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/login", response_model=AuthResponse)
+@router.post("/login", response_model=UserResponse)
 @limiter.limit("30/minute")
 async def login(
     request: Request,
+    response: Response,
     data: UserLoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Login endpoint that sets JWT tokens in httpOnly cookies.
+
+    Security: Tokens are stored in httpOnly cookies which cannot be accessed
+    by JavaScript, preventing XSS attacks from stealing tokens.
+    """
     auth_service = AuthService(db)
     try:
         user, access_token, refresh_token = await auth_service.login(
             data.identifier, data.password
         )
-        return AuthResponse(
-            user=UserResponse.model_validate(user),
-            access_token=access_token,
-            refresh_token=refresh_token,
+
+        # Set tokens in httpOnly cookies
+        response.set_cookie(
+            key=ACCESS_TOKEN_COOKIE,
+            value=access_token,
+            max_age=TOKEN_COOKIE_MAX_AGE,
+            httponly=True,  # Cannot be accessed by JavaScript
+            secure=settings.is_production,  # Only sent over HTTPS in production
+            samesite="lax",  # CSRF protection
+            path="/",
         )
+
+        response.set_cookie(
+            key=REFRESH_TOKEN_COOKIE,
+            value=refresh_token,
+            max_age=TOKEN_COOKIE_MAX_AGE,
+            httponly=True,
+            secure=settings.is_production,
+            samesite="lax",
+            path="/",
+        )
+
+        # Return only user data, not tokens
+        return UserResponse.model_validate(user)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
@@ -88,12 +121,23 @@ async def refresh_token(
 
 @router.post("/logout", response_model=MessageResponse)
 async def logout(
-    data: RefreshTokenRequest,
+    request: Request,
+    response: Response,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Logout endpoint that clears httpOnly cookies."""
     auth_service = AuthService(db)
-    await auth_service.logout(data.refresh_token)
+
+    # Get refresh token from cookie
+    refresh_token = request.cookies.get(REFRESH_TOKEN_COOKIE)
+    if refresh_token:
+        await auth_service.logout(refresh_token)
+
+    # Clear cookies
+    response.delete_cookie(key=ACCESS_TOKEN_COOKIE, path="/")
+    response.delete_cookie(key=REFRESH_TOKEN_COOKIE, path="/")
+
     return MessageResponse(message="Successfully logged out")
 
 
