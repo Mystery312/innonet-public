@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 from typing import Optional
+from urllib.parse import quote_plus
 
 
 class Settings(BaseSettings):
@@ -10,9 +11,21 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
     environment: str = "development"  # development, staging, production
 
-    # Database
-    database_url: str = "postgresql+asyncpg://postgres:postgres@postgres:5432/innonet"
-    redis_url: str = "redis://:redis_dev_change_me@redis:6379/0"
+    # Database - supports both connection string and individual variables
+    database_url: Optional[str] = None
+    db_host: str = "postgres"
+    db_port: int = 5432
+    db_name: str = "innonet"
+    db_user: str = "postgres"
+    db_password: str = ""
+    db_driver: str = "postgresql+asyncpg"
+
+    # Redis - supports both connection string and individual variables
+    redis_url: Optional[str] = None
+    redis_host: str = "redis"
+    redis_port: int = 6379
+    redis_db: int = 0
+    redis_password: str = ""
 
     # Database Pool Settings
     db_pool_size: int = 10
@@ -24,6 +37,9 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
+
+    # Data Encryption at Rest
+    encryption_key: Optional[str] = None  # Fernet key for field-level encryption
 
     # Stripe
     stripe_secret_key: str = ""
@@ -59,6 +75,35 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+
+    def get_database_url(self) -> str:
+        """
+        Get database connection URL.
+
+        Prefers DATABASE_URL if set, otherwise constructs from individual variables.
+        This allows for secure credential management via secret services.
+        """
+        if self.database_url:
+            return self.database_url
+
+        # Build URL from individual components
+        password = quote_plus(self.db_password) if self.db_password else ""
+        auth = f"{self.db_user}:{password}" if password else self.db_user
+
+        return f"{self.db_driver}://{auth}@{self.db_host}:{self.db_port}/{self.db_name}"
+
+    def get_redis_url(self) -> str:
+        """
+        Get Redis connection URL.
+
+        Prefers REDIS_URL if set, otherwise constructs from individual variables.
+        """
+        if self.redis_url:
+            return self.redis_url
+
+        # Build URL from individual components
+        auth = f":{quote_plus(self.redis_password)}@" if self.redis_password else ""
+        return f"redis://{auth}{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
     @property
     def is_production(self) -> bool:
