@@ -5,11 +5,20 @@ __pycache__/
 .venv/
 venv/
 
-# Environment
+# Environment - NEVER commit real credentials!
 .env
 .env.local
 .env.*.local
 .env.production
+.env.development
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+*.env
+!.env.example
+!backend/.env.example
+!frontend/.env.example
 
 # Build outputs
 dist/

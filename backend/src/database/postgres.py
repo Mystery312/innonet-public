@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 engine = create_async_engine(
-    settings.database_url,
+    settings.get_database_url(),  # Use method to support both connection string and individual vars
     echo=settings.debug,
     pool_pre_ping=True,
     pool_size=10,
