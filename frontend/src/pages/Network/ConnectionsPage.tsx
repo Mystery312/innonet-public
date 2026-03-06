@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabPanel } from '../../components/common/Tabs';
 import { ConnectionCard } from '../../features/network/components/ConnectionCard';
 import { networkApi } from '../../features/network/api/networkApi';
+import { messagingApi } from '../../features/messaging/api/messagingApi';
 import type { Connection, PendingRequest } from '../../types/network';
 import styles from './ConnectionsPage.module.css';
 
 export const ConnectionsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('connections');
   const [connections, setConnections] = useState<Connection[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<PendingRequest[]>([]);
@@ -82,6 +85,21 @@ export const ConnectionsPage: React.FC = () => {
     }
   };
 
+  const handleMessage = async (userId: string) => {
+    setActionLoading(userId);
+    try {
+      const conversation = await messagingApi.startConversation({
+        user_id: userId,
+        message: "Hi! Let's connect and chat.",
+      });
+      navigate(`/messages/${conversation.id}`);
+    } catch (error) {
+      console.error('Failed to start conversation:', error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const tabs = [
     { id: 'connections', label: 'Connections', count: connections.length },
     { id: 'received', label: 'Received', count: receivedRequests.length },
@@ -122,7 +140,8 @@ export const ConnectionsPage: React.FC = () => {
                 connection={connection}
                 type="connected"
                 onRemove={handleRemove}
-                isLoading={actionLoading === connection.connection_id}
+                onMessage={handleMessage}
+                isLoading={actionLoading === connection.connection_id || actionLoading === connection.user.id}
               />
             ))}
           </div>

@@ -12,6 +12,7 @@ interface ConnectionCardProps {
   onDecline?: (connectionId: string) => void;
   onRemove?: (connectionId: string) => void;
   onCancel?: (connectionId: string) => void;
+  onMessage?: (userId: string) => void;
   isLoading?: boolean;
 }
 
@@ -22,6 +23,7 @@ export const ConnectionCard: React.FC<ConnectionCardProps> = ({
   onDecline,
   onRemove,
   onCancel,
+  onMessage,
   isLoading = false,
 }) => {
   const { user, connection_id, message } = connection;
@@ -68,6 +70,16 @@ export const ConnectionCard: React.FC<ConnectionCardProps> = ({
             <Link to={`/profile/${user.id}`}>
               <Button variant="secondary" size="sm">View Profile</Button>
             </Link>
+            {onMessage && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => onMessage(user.id)}
+                disabled={isLoading}
+              >
+                Message
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="sm"
