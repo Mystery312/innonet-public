@@ -33,8 +33,8 @@ export const WaitlistSection: React.FC = () => {
         <div className={styles.content}>
           <h2 className={styles.title}>Get early access</h2>
           <p className={styles.description}>
-            Be the first to experience Innonet's AI-powered networking features.
-            Join the waitlist and we'll notify you when early access is available.
+            Be the first to experience AI-powered networking.
+            Join the waitlist and we'll notify you when it's ready.
           </p>
 
           {isSuccess ? (
@@ -46,21 +46,24 @@ export const WaitlistSection: React.FC = () => {
               <span>You're on the list! Check your email for confirmation.</span>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className={styles.form}>
-              <div className={styles.inputWrapper}>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  error={error}
-                  required
-                />
-              </div>
-              <Button type="submit" isLoading={isLoading}>
-                Join the waitlist
-              </Button>
-            </form>
+            <>
+              <form onSubmit={handleSubmit} className={styles.form}>
+                <div className={styles.inputWrapper}>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    error={error}
+                    required
+                  />
+                </div>
+                <Button type="submit" isLoading={isLoading}>
+                  Join the waitlist
+                </Button>
+              </form>
+              <p className={styles.trustLine}>Join 500+ builders already on the waitlist</p>
+            </>
           )}
         </div>
       </div>

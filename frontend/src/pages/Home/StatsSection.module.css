@@ -1,0 +1,44 @@
+.section {
+  padding: 3.5rem 0;
+  background: var(--color-background-secondary, var(--color-gray-50, #f9fafb));
+}
+
+[data-theme="dark"] .section {
+  background: var(--color-background-secondary, rgba(255, 255, 255, 0.03));
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  gap: 5rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.label {
+  font-size: 0.875rem;
+  color: var(--color-text-muted, var(--color-text-secondary));
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .container {
+    gap: 3rem;
+  }
+
+  .value {
+    font-size: 2rem;
+  }
+}

@@ -20,49 +20,69 @@ export const HeroSection: React.FC = () => {
     <section className={styles.hero}>
       <div className={`container ${styles.container}`}>
         <div className={styles.content}>
+          <span className={styles.badge}>AI-Powered Networking</span>
           <h1 className={styles.title}>
             From ideas to impact, faster
           </h1>
           <p className={styles.subtitle}>
-            With Innonet, discover nearby projects, hackathons, and builders (like you)—so
-            collaboration happens faster and smarter for your ideas to happen today.
+            Discover nearby builders, hackathons, and projects — so collaboration happens faster and smarter.
           </p>
           <div className={styles.cta}>
-            <Button size="lg" onClick={handleCTA}>
-              {isAuthenticated ? 'Browse Events' : 'Create your account'}
+            <Button size="lg" onClick={handleCTA} className={styles.ctaButton}>
+              {isAuthenticated ? 'Browse Events' : 'Get started free'}
             </Button>
+            <a href="#features" className={styles.ctaLink}>
+              Learn more
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
           </div>
         </div>
         <div className={styles.visual}>
-          <div className={styles.visualCard}>
-            <div className={styles.visualIcon}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          <div className={styles.previewCard}>
+            <div className={styles.previewHeader}>
+              <div className={styles.previewAvatar} />
+              <div className={styles.previewMeta}>
+                <div className={styles.previewName} />
+                <div className={styles.previewRole} />
+              </div>
+              <div className={styles.previewBadge}>92% match</div>
+            </div>
+            <div className={styles.previewTags}>
+              <span className={styles.previewTag}>React</span>
+              <span className={styles.previewTag}>AI/ML</span>
+              <span className={styles.previewTag}>Design</span>
+            </div>
+            <div className={styles.previewGraph}>
+              <svg viewBox="0 0 200 80" className={styles.graphSvg}>
+                <circle cx="40" cy="40" r="6" fill="var(--color-primary)" opacity="0.6" />
+                <circle cx="100" cy="25" r="8" fill="var(--color-primary)" opacity="0.8" />
+                <circle cx="160" cy="45" r="5" fill="var(--color-primary)" opacity="0.5" />
+                <circle cx="70" cy="60" r="4" fill="var(--color-primary)" opacity="0.4" />
+                <circle cx="140" cy="65" r="6" fill="var(--color-primary)" opacity="0.6" />
+                <line x1="40" y1="40" x2="100" y2="25" stroke="var(--color-primary)" strokeWidth="1" opacity="0.3" />
+                <line x1="100" y1="25" x2="160" y2="45" stroke="var(--color-primary)" strokeWidth="1" opacity="0.3" />
+                <line x1="40" y1="40" x2="70" y2="60" stroke="var(--color-primary)" strokeWidth="1" opacity="0.3" />
+                <line x1="70" y1="60" x2="140" y2="65" stroke="var(--color-primary)" strokeWidth="1" opacity="0.3" />
+                <line x1="140" y1="65" x2="160" y2="45" stroke="var(--color-primary)" strokeWidth="1" opacity="0.3" />
               </svg>
             </div>
-            <span className={styles.visualLabel}>Connect with builders</span>
-          </div>
-          <div className={styles.visualCard}>
-            <div className={styles.visualIcon}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
+            <div className={styles.previewFooter}>
+              <div className={styles.previewStat}>
+                <span className={styles.previewStatValue}>12</span>
+                <span className={styles.previewStatLabel}>mutual</span>
+              </div>
+              <div className={styles.previewStat}>
+                <span className={styles.previewStatValue}>3</span>
+                <span className={styles.previewStatLabel}>events</span>
+              </div>
+              <div className={styles.previewStat}>
+                <span className={styles.previewStatValue}>5</span>
+                <span className={styles.previewStatLabel}>projects</span>
+              </div>
             </div>
-            <span className={styles.visualLabel}>Discover events</span>
-          </div>
-          <div className={styles.visualCard}>
-            <div className={styles.visualIcon}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-            </div>
-            <span className={styles.visualLabel}>Launch projects</span>
           </div>
         </div>
       </div>
