@@ -60,6 +60,7 @@ async def init_db():
         from src.communities.models import Community, CommunityMember, Post, Comment, PostVote
         from src.companies.models import Company, CompanyMember, Challenge, ChallengeApplication
         from src.messaging.models import Conversation, ConversationParticipant, Message, Notification
+        from src.discover.models import DiscoverSwipe
 
         async with engine.begin() as conn:
             # Create pgvector extension if not exists

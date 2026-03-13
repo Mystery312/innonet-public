@@ -29,6 +29,7 @@ from src.communities.router import router as communities_router
 from src.companies.router import router as companies_router
 from src.messaging.router import router as messaging_router
 from src.graph.router import router as graph_router
+from src.discover.router import router as discover_router
 from src.database.neo4j import init_neo4j, close_neo4j
 
 logger = logging.getLogger(__name__)
@@ -303,6 +304,7 @@ app.include_router(communities_router, prefix=f"{settings.api_v1_prefix}/communi
 app.include_router(companies_router, prefix=f"{settings.api_v1_prefix}", tags=["Companies"])
 app.include_router(messaging_router, prefix=f"{settings.api_v1_prefix}", tags=["Messaging"])
 app.include_router(graph_router, prefix=f"{settings.api_v1_prefix}", tags=["Graph"])
+app.include_router(discover_router, prefix=f"{settings.api_v1_prefix}", tags=["Discovery"])
 
 
 @app.get("/health")
