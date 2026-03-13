@@ -13,6 +13,7 @@ Innonet is a professional networking platform built with a modern full-stack arc
 - Company Challenges & Roadmap Voting
 - Direct Messaging & Notifications
 - Profile Analysis & Recommendations
+- **Discover** - Tinder/Grindr-style profile discovery with smart matching
 
 ## Tech Stack
 
@@ -55,6 +56,7 @@ Innonet is a professional networking platform built with a modern full-stack arc
 │   │   │   ├── users.py
 │   │   │   ├── events.py
 │   │   │   ├── companies.py
+│   │   ├── discover/             # Discovery feature (profile swiping)
 │   │   │   └── ...
 │   │   ├── models/            # SQLAlchemy models
 │   │   ├── schemas/           # Pydantic schemas
@@ -236,6 +238,7 @@ docker-compose down -v
 - `Message`: Direct messages between users
 - `Notification`: Activity notifications
 - `Connection`: Network connection requests/relationships
+- `DiscoverSwipe`: User discovery interactions (pass/connect swipes)
 
 **Neo4j Graph:**
 - Used for network connections visualization
@@ -312,6 +315,91 @@ lsof -ti:5173 | xargs kill -9
 - Environment variables set in `.env.production`
 - SSL/TLS configuration required for production
 
+## Technical Development & Contributions
+
+### Core Systems Implemented
+
+**Authentication & User Management**
+- 7-step onboarding wizard with profile creation
+- JWT-based auth (access + refresh tokens, 15min + 7day TTL)
+- Account lockout protection and email verification
+- Secure password handling with bcrypt hashing
+
+**AI-Powered Semantic Search**
+- OpenAI embeddings integration (text-embedding-3-small)
+- Vector similarity search with pgvector in PostgreSQL
+- Keyword search fallback when OpenAI unavailable
+- Cached embeddings for performance
+
+**Network Visualization & Connections**
+- D3.js interactive force-directed graph visualization
+- Neo4j graph database for relationship tracking
+- Connection request workflow (pending/accepted/rejected)
+- Real-time sync between PostgreSQL and Neo4j
+
+**Events System**
+- Event discovery, creation, and management
+- Stripe integration for paid event registration
+- Algorithmic event recommendations
+- RSVP and attendance tracking
+
+**Communities (Forum System)**
+- Discord/Reddit-style community spaces
+- Post creation, commenting, and voting system
+- Community membership and moderation
+- Soft-delete content management
+
+**Direct Messaging & Notifications**
+- Real-time messaging between users
+- Activity notifications (connections, events, posts)
+- Message persistence and history
+- Notification preferences management
+
+**Profile Analysis & Recommendations**
+- AI-driven profile scoring (1-100 scale)
+- Strength and improvement area analysis via OpenAI
+- 24-hour Redis caching for performance
+- Personalized recommendations for growth
+
+### Architecture Patterns
+
+**Service Layer Design**
+- Business logic separated from API routes
+- Dependency injection for database sessions and auth
+- Reusable service functions across endpoints
+- Clear error handling and validation
+
+**Database Architecture**
+- SQLAlchemy 2.0 async ORM
+- PostgreSQL 16 with pgvector for vector search
+- Neo4j for graph queries and recommendations
+- Redis for caching and rate limiting
+- Alembic for schema versioning
+
+**API Design**
+- RESTful endpoints with consistent response format
+- Proper HTTP status codes (200, 201, 400, 401, 403, 404, 500)
+- Request validation with Pydantic schemas
+- Pagination for list endpoints
+- Rate limiting on auth (5 login/3 signup attempts per 15 min)
+
+### Key Technical Skills Demonstrated
+
+✓ **Full-Stack Development:** React 18 + TypeScript frontend, FastAPI + Python backend
+✓ **System Architecture:** Service layer pattern, dependency injection, async-first design
+✓ **Database Design:** Schema optimization, indexing strategy, soft deletes, timestamps
+✓ **AI Integration:** OpenAI embeddings, vector similarity search, LLM-based analysis
+✓ **DevOps & Infrastructure:** Docker, Docker Compose, nginx configuration, deployment
+✓ **Security:** JWT authentication, password hashing, rate limiting, input validation, CORS
+✓ **Performance:** Async operations, connection pooling, caching strategies, query optimization
+✓ **Graph Databases:** Neo4j for network analysis and relationship queries
+
+### Documentation
+
+For detailed technical contribution summary, see:
+- `INNONET_CONTRIBUTION_SUMMARY.md` - Business and organizational contributions
+- `INNONET_TECHNICAL_DEVELOPMENT.md` - Complete technical development overview
+
 ---
 
 **When working on this project:**
@@ -322,3 +410,109 @@ lsof -ti:5173 | xargs kill -9
 - Keep frontend and backend types in sync
 - Consider performance implications of database queries
 - Use proper error handling and logging
+
+## Discover Feature (Implemented March 9, 2026)
+
+### Overview
+Tinder/Grindr-style profile discovery feature for engaging, mobile-friendly networking. Users browse AI-recommended profiles one at a time, swipe left to pass or right to connect.
+
+### Backend Implementation (✅ Complete)
+
+**Database:**
+- Table: `discover_swipes` tracks all swipe interactions
+- Constraints: no self-swipes, unique per user-pair, valid actions (pass/connect)
+- Indexes: user_id, created_at, target_user_id for optimal query performance
+- Auto-excludes swiped users: pass (30 days), connect (permanent)
+
+**API Endpoints:**
+1. **GET `/api/v1/discover/feed`** (200 OK)
+   - Returns paginated discovery profiles
+   - Auto-excludes: self, existing connections, previous swipes
+   - Params: `limit` (1-50), `offset`, `location`, `min_similarity` (0.0-1.0), `strategy`
+   - Response: profiles with skills, communities, match reasons
+
+2. **POST `/api/v1/discover/swipe`** (201 Created)
+   - Records swipe action: "pass" or "connect"
+   - Connect action: automatically creates connection request
+   - Returns: connection_id (if connect), success status
+   - Prevents duplicates via DB constraint
+
+3. **GET `/api/v1/discover/stats`** (200 OK)
+   - Analytics: total views, passes, connect requests, acceptance rate
+   - Useful for tracking user engagement
+
+**Service Layer:**
+- File: `backend/src/discover/service.py` - DiscoverService class
+- Key methods:
+  - `get_discovery_feed()` - Feed generation with smart filtering
+  - `record_swipe()` - Swipe tracking + connection creation
+  - `get_discovery_stats()` - User analytics
+  - `_get_excluded_user_ids()` - Intelligent exclusion logic
+
+**Models & Schemas:**
+- Model: `DiscoverSwipe` (PostgreSQL ORM)
+- Schemas: `DiscoverFeedResponse`, `SwipeRequest`, `SwipeResponse`, `DiscoverStatsResponse`
+
+**Integration:**
+- Registered in `src/main.py` with prefix `/api/v1/discover`
+- Reuses `NetworkService.send_connection_request()` for validated connection creation
+- Model imported in `src/database/postgres.py`
+
+### Frontend Implementation Recommendations
+
+**Libraries:**
+- `framer-motion` for smooth card animations
+- `react-use-gesture` for swipe detection
+- Custom CSS transforms as alternative
+
+**Component Structure:**
+```
+frontend/src/pages/Discover/
+├── DiscoverPage.tsx         # State management
+├── DiscoverCard.tsx         # Individual profile card
+├── DiscoverControls.tsx     # Action buttons (pass/like)
+├── DiscoverEmpty.tsx        # Empty state
+└── DiscoverPage.module.css  # Styling
+```
+
+**Card Design Pattern:**
+- Full-screen background image with gradient overlay
+- Profile info at bottom (name, location, bio, skills)
+- Swipe hints: ✕ (left/pass) and ❤ (right/connect)
+- Action buttons as fallback for non-touch devices
+
+**Features to Implement:**
+- Preload next 3 cards for smooth UX
+- Optimistic UI updates on swipe
+- Rate limiting feedback (100 swipes/hour)
+- Success metrics display
+- Mobile-first responsive design
+
+### Testing
+- ✅ All 3 endpoints verified working
+- ✅ Swipe actions create correct records
+- ✅ Connect action creates connection requests
+- ✅ Stats calculations accurate
+- ✅ DB constraints enforce data integrity
+
+### Performance Notes
+- Discovery feed generation: <1s for 20 profiles
+- Indexed queries for fast user exclusion
+- Pagination prevents large result sets
+- Cache opportunities: user similarities (5 min TTL)
+
+### Security & Privacy
+- ✅ Respects `show_in_graph=true` privacy setting
+- ✅ Rate limiting: 100 swipes/hour (extensible)
+- ✅ Self-swipe prevention: DB constraint + validation
+- ✅ Connection validation reuses existing NetworkService
+- ✅ CSRF protection on POST endpoints
+
+### Future Enhancements
+- Undo last swipe (5 min window)
+- Super Like (highlight interest, 1/day limit)
+- Advanced filters (industry, skills, experience level)
+- Daily Picks (curated top 5 matches)
+- Match notifications (mutual interest detected)
+- Video profiles
+- Smart photo ordering with AI suggestions

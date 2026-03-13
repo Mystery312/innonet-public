@@ -49,3 +49,6 @@ htmlcov/
 tmp/
 temp/
 DEMO_CREDENTIALS.md
+
+# Local certificates
+certs/

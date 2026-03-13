@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Feature Parity Test Report</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .summary-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .summary-card.critical {
+            border-left-color: #dc3545;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .summary-card.critical .summary-value {
+            color: #dc3545;
+        }
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .pass { color: #28a745; }
+        .fail { color: #dc3545; }
+        .skip { color: #ffc107; }
+        .timestamp {
+            color: #999;
+            font-size: 12px;
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Feature Parity Test Report</h1>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="summary-label">Parity Score</div>
+                <div class="summary-value">100.0%</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Total Tests</div>
+                <div class="summary-value">9</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Matching</div>
+                <div class="summary-value">9</div>
+            </div>
+            <div class="summary-card critical">
+                <div class="summary-label">Issues</div>
+                <div class="summary-value">9</div>
+            </div>
+        </div>
+
+        <h2>Environment Results</h2>
+        <table>
+            <tr>
+                <th>Environment</th>
+                <th>Total Tests</th>
+                <th>Passed</th>
+                <th>Failed</th>
+                <th>Skipped</th>
+            </tr>
+            <tr>
+                <td>Local Development</td>
+                <td>9</td>
+                <td class="pass">0</td>
+                <td class="fail">2</td>
+                <td class="skip">7</td>
+            </tr>
+        </table>
+
+        <h2>Discrepancies</h2>
+        <table>
+            <tr>
+                <th>Test</th>
+                <th>Issue Type</th>
+                <th>Local</th>
+                <th>Production</th>
+                <th>Details</th>
+            </tr>
+            <tr>
+                <td>Duplicate Swipe Prevention</td>
+                <td>status_mismatch</td>
+                <td>SKIP</td>
+                <td>SKIP</td>
+                <td>Same failure in all environments</td>
+            </tr>
+            <tr>
+                <td>Get Discovery Feed</td>
+                <td>status_mismatch</td>
+                <td>SKIP</td>
+                <td>SKIP</td>
+                <td>Same failure in all environments</td>
+            </tr>
+            <tr>
+                <td>Get Discovery Feed (params)</td>
+                <td>status_mismatch</td>
+                <td>SKIP</td>
+                <td>SKIP</td>
+                <td>Same failure in all environments</td>
+            </tr>
+            <tr>
+                <td>Get Discovery Stats</td>
+                <td>status_mismatch</td>
+                <td>SKIP</td>
+                <td>SKIP</td>
+                <td>Same failure in all environments</td>
+            </tr>
+            <tr>
+                <td>Invalid Swipe Action</td>
+                <td>status_mismatch</td>
+                <td>FAIL</td>
+                <td>FAIL</td>
+                <td>Same failure in all environments</td>
+            </tr>
+            <tr>
+                <td>Self-Swipe Prevention</td>
+                <td>status_mismatch</td>
+                <td>SKIP</td>
+                <td>SKIP</td>
+                <td>Same failure in all environments</td>
+            </tr>
+            <tr>
+                <td>Stats After Swipes</td>
+                <td>status_mismatch</td>
+                <td>FAIL</td>
+                <td>FAIL</td>
+                <td>Same failure in all environments</td>
+            </tr>
+            <tr>
+                <td>Swipe Connect</td>
+                <td>status_mismatch</td>
+                <td>SKIP</td>
+                <td>SKIP</td>
+                <td>Same failure in all environments</td>
+            </tr>
+            <tr>
+                <td>Swipe Pass</td>
+                <td>status_mismatch</td>
+                <td>SKIP</td>
+                <td>SKIP</td>
+                <td>Same failure in all environments</td>
+            </tr>
+        </table>
+
+        <div class="timestamp">
+            Generated: 2026-03-10T11:43:47.928411
+        </div>
+    </div>
+</body>
+</html>

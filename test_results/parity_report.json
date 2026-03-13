@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-03-10T11:43:47.927692",
+  "environments": [
+    {
+      "name": "Local Development",
+      "total_tests": 9,
+      "passed": 0,
+      "failed": 2,
+      "skipped": 7,
+      "tests": [
+        {
+          "suite": "DiscoverTestSuite",
+          "test_name": "Get Discovery Feed",
+          "status": "SKIP",
+          "details": "Authentication required",
+          "error": null,
+          "timestamp": "2026-03-10T11:43:47.916890",
+          "response_keys": null
+        },
+        {
+          "suite": "DiscoverTestSuite",
+          "test_name": "Get Discovery Feed (params)",
+          "status": "SKIP",
+          "details": "Authentication required",
+          "error": null,
+          "timestamp": "2026-03-10T11:43:47.919664",
+          "response_keys": null
+        },
+        {
+          "suite": "DiscoverTestSuite",
+          "test_name": "Get Discovery Stats",
+          "status": "SKIP",
+          "details": "Authentication required",
+          "error": null,
+          "timestamp": "2026-03-10T11:43:47.922517",
+          "response_keys": null
+        },
+        {
+          "suite": "DiscoverTestSuite",
+          "test_name": "Swipe Pass",
+          "status": "SKIP",
+          "details": "No profiles available in feed",
+          "error": null,
+          "timestamp": "2026-03-10T11:43:47.922528",
+          "response_keys": null
+        },
+        {
+          "suite": "DiscoverTestSuite",
+          "test_name": "Swipe Connect",
+          "status": "SKIP",
+          "details": "Not enough profiles in feed (need 2+)",
+          "error": null,
+          "timestamp": "2026-03-10T11:43:47.922533",
+          "response_keys": null
+        },
+        {
+          "suite": "DiscoverTestSuite",
+          "test_name": "Stats After Swipes",
+          "status": "FAIL",
+          "details": "Status: 401",
+          "error": null,
+          "timestamp": "2026-03-10T11:43:47.924971",
+          "response_keys": [
+            "detail"
+          ]
+        },
+        {
+          "suite": "DiscoverTestSuite",
+          "test_name": "Duplicate Swipe Prevention",
+          "status": "SKIP",
+          "details": "No previous pass swipe to duplicate",
+          "error": null,
+          "timestamp": "2026-03-10T11:43:47.924979",
+          "response_keys": null
+        },
+        {
+          "suite": "DiscoverTestSuite",
+          "test_name": "Invalid Swipe Action",
+          "status": "FAIL",
+          "details": "Unexpected status: 401",
+          "error": null,
+          "timestamp": "2026-03-10T11:43:47.927477",
+          "response_keys": [
+            "detail"
+          ]
+        },
+        {
+          "suite": "DiscoverTestSuite",
+          "test_name": "Self-Swipe Prevention",
+          "status": "SKIP",
+          "details": "No authenticated user",
+          "error": null,
+          "timestamp": "2026-03-10T11:43:47.927483",
+          "response_keys": null
+        }
+      ]
+    }
+  ],
+  "parity_analysis": {
+    "parity_score": 100.0,
+    "total_tests": 9,
+    "matching_tests": 9,
+    "discrepancies": 9,
+    "critical_issues": 0
+  }
+}
