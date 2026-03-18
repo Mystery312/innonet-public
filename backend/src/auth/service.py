@@ -106,6 +106,10 @@ class AuthService:
             await lockout_manager.record_failed_attempt(identifier)
             raise ValueError("Invalid credentials")
 
+        # OAuth-only users don't have a password
+        if not user.password_hash:
+            raise ValueError("This account uses social login. Please sign in with Google or Microsoft.")
+
         if not verify_password(password, user.password_hash):
             # Record failed attempt
             lockout_info = await lockout_manager.record_failed_attempt(identifier)

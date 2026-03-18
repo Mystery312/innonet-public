@@ -41,6 +41,8 @@ EXEMPT_PATHS = {
     "/api/v1/auth/register",  # Registration creates session
     "/api/v1/auth/refresh",  # Token refresh
     "/api/v1/payments/webhook",  # External webhook (verified via signature)
+    "/api/v1/auth/oauth/google/callback",  # OAuth callback (protected by state param)
+    "/api/v1/auth/oauth/microsoft/callback",  # OAuth callback (protected by state param)
 }
 
 

@@ -48,7 +48,7 @@ async def init_db():
     """Initialize database by creating all tables and extensions."""
     try:
         # Import all models to ensure they're registered with Base.metadata
-        from src.auth.models import User, UserProfile, RefreshToken
+        from src.auth.models import User, UserProfile, RefreshToken, OAuthAccount
         from src.events.models import Event, EventRegistration
         from src.payments.models import Payment
         from src.waitlist.models import Waitlist

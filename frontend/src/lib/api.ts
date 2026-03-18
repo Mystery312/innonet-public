@@ -50,6 +50,7 @@ export const getStoredRefreshToken = (): string | null => {
 
 export const api: AxiosInstance = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },

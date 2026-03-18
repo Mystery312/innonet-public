@@ -1,4 +1,8 @@
+import logging
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -16,11 +20,13 @@ from src.auth.schemas import (
     PasswordResetConfirm,
 )
 from src.auth.service import AuthService
+from src.auth.oauth import OAuthService, OAUTH_PROVIDERS
 from src.auth.dependencies import get_current_user
 from src.auth.models import User
 from src.email.service import EmailService
 from src.config import get_settings
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 settings = get_settings()
@@ -219,3 +225,126 @@ async def resend_verification_email(
         return MessageResponse(message="Verification email sent! Please check your inbox.")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+# ─── OAuth Endpoints ─────────────────────────────────────────────────────────
+
+
+VALID_PROVIDERS = set(OAUTH_PROVIDERS.keys())
+
+
+@router.get("/oauth/{provider}/authorize")
+async def oauth_authorize(
+    request: Request,
+    provider: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Redirect user to OAuth provider's consent screen."""
+    if provider not in VALID_PROVIDERS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported provider: {provider}. Supported: {', '.join(VALID_PROVIDERS)}"
+        )
+
+    # Generate CSRF state token and store in cookie
+    state = secrets.token_urlsafe(32)
+    oauth_service = OAuthService(db)
+
+    # Build the callback redirect URI from the current request
+    redirect_uri = str(request.url_for("oauth_callback", provider=provider))
+    authorize_url = oauth_service.get_authorize_url(provider, state, redirect_uri)
+
+    response = RedirectResponse(url=authorize_url, status_code=status.HTTP_302_FOUND)
+    response.set_cookie(
+        key="oauth_state",
+        value=state,
+        max_age=600,  # 10 minutes
+        httponly=True,
+        secure=settings.is_production,
+        samesite="lax",
+        path="/",
+    )
+    return response
+
+
+@router.get("/oauth/{provider}/callback")
+async def oauth_callback(
+    request: Request,
+    provider: str,
+    code: str = "",
+    state: str = "",
+    error: str = "",
+    db: AsyncSession = Depends(get_db),
+):
+    """Handle OAuth provider callback, issue tokens, redirect to frontend."""
+    frontend_url = settings.frontend_url.rstrip("/")
+
+    # Handle provider errors
+    if error:
+        return RedirectResponse(
+            url=f"{frontend_url}/auth/callback?error={error}",
+            status_code=status.HTTP_302_FOUND,
+        )
+
+    if provider not in VALID_PROVIDERS:
+        return RedirectResponse(
+            url=f"{frontend_url}/auth/callback?error=invalid_provider",
+            status_code=status.HTTP_302_FOUND,
+        )
+
+    # Validate CSRF state
+    stored_state = request.cookies.get("oauth_state")
+    if not stored_state or not secrets.compare_digest(stored_state, state):
+        return RedirectResponse(
+            url=f"{frontend_url}/auth/callback?error=invalid_state",
+            status_code=status.HTTP_302_FOUND,
+        )
+
+    if not code:
+        return RedirectResponse(
+            url=f"{frontend_url}/auth/callback?error=no_code",
+            status_code=status.HTTP_302_FOUND,
+        )
+
+    try:
+        oauth_service = OAuthService(db)
+        redirect_uri = str(request.url_for("oauth_callback", provider=provider))
+        user, access_token, refresh_token = await oauth_service.handle_callback(provider, code, redirect_uri)
+
+        # Redirect to frontend with tokens set in cookies
+        response = RedirectResponse(
+            url=f"{frontend_url}/auth/callback?success=true",
+            status_code=status.HTTP_302_FOUND,
+        )
+
+        # Set auth tokens in httpOnly cookies (same as login endpoint)
+        response.set_cookie(
+            key=ACCESS_TOKEN_COOKIE,
+            value=access_token,
+            max_age=TOKEN_COOKIE_MAX_AGE,
+            httponly=True,
+            secure=settings.is_production,
+            samesite="lax",
+            path="/",
+        )
+        response.set_cookie(
+            key=REFRESH_TOKEN_COOKIE,
+            value=refresh_token,
+            max_age=TOKEN_COOKIE_MAX_AGE,
+            httponly=True,
+            secure=settings.is_production,
+            samesite="lax",
+            path="/",
+        )
+
+        # Clear the OAuth state cookie
+        response.delete_cookie(key="oauth_state", path="/")
+
+        return response
+
+    except ValueError as e:
+        logger.error(f"OAuth callback error for {provider}: {e}")
+        return RedirectResponse(
+            url=f"{frontend_url}/auth/callback?error=auth_failed",
+            status_code=status.HTTP_302_FOUND,
+        )

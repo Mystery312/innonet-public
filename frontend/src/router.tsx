@@ -10,6 +10,7 @@ import ForgotPasswordPage from './pages/Auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/Auth/ResetPasswordPage';
 import VerifyEmailPage from './pages/Auth/VerifyEmailPage';
 import CheckEmailPage from './pages/Auth/CheckEmailPage';
+import OAuthCallbackPage from './pages/Auth/OAuthCallbackPage';
 import EventsListPage from './pages/Events/EventsListPage';
 import { EventDetailPage } from './pages/Events/EventDetailPage';
 import { ProfilePage } from './pages/Profile/ProfilePage';
@@ -119,6 +120,7 @@ export const AppRouter: React.FC = () => {
         />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/check-email" element={<CheckEmailPage />} />
+        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
 
         {/* Protected routes */}
         <Route

@@ -60,6 +60,12 @@ class Settings(BaseSettings):
     neo4j_user: str = "neo4j"
     neo4j_password: str  # REQUIRED - No default for security
 
+    # OAuth Providers
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    microsoft_client_id: str = ""
+    microsoft_client_secret: str = ""
+
     # Frontend URL (for CORS and redirects)
     frontend_url: str = "http://localhost:5173"
 
