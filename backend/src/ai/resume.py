@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config import get_settings
 from src.profiles.models import ResumeUpload
 from src.profiles.schemas import ResumeParseResult
+from src.utils.encryption import encryption_service
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -104,6 +105,7 @@ class ResumeParsingService:
                 raise ValueError(f"Unsupported file type: {file_type}")
 
             resume_upload.raw_text = raw_text
+            resume_upload.raw_text_ct = encryption_service.encrypt(raw_text) if raw_text else None
 
             if not raw_text or len(raw_text.strip()) < 50:
                 raise ValueError("Could not extract sufficient text from resume")
@@ -111,7 +113,15 @@ class ResumeParsingService:
             # Parse with GPT-4
             parsed_data = await self._parse_with_gpt(raw_text)
 
+            # SECURITY FIX: parsed_data now uses EncryptedJSON TypeDecorator (automatic encryption)
             resume_upload.parsed_data = parsed_data
+            # Legacy dual-write (deprecated) - parsed_data_ct no longer needed with TypeDecorator
+            # TODO Phase 3: Remove this line and drop parsed_data_ct column
+            resume_upload.parsed_data_ct = (
+                encryption_service.encrypt(json.dumps(parsed_data, default=str, separators=(",", ":")))
+                if parsed_data is not None
+                else None
+            )
             resume_upload.status = "completed"
             resume_upload.processed_at = utc_now_naive()
 

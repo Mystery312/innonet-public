@@ -10,6 +10,7 @@ from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from pgvector.sqlalchemy import Vector
 
 from src.database.postgres import Base
+from src.utils.encryption import EncryptedText, EncryptedJSON
 
 
 def utc_now() -> datetime:
@@ -227,8 +228,19 @@ class ResumeUpload(Base):
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     file_type: Mapped[str] = mapped_column(String(50), nullable=False)  # 'pdf', 'docx'
     file_size: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Phase 1 dual-write for raw_text
     raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
-    parsed_data: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    raw_text_ct: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # SECURITY FIX: parsed_data now uses EncryptedJSON TypeDecorator for transparent encryption
+    # Contains high-PII: email, phone, full name, work history, education, skills
+    # The TypeDecorator automatically encrypts on write and decrypts on read
+    parsed_data: Mapped[dict | None] = mapped_column(
+        EncryptedJSON,
+        nullable=True,
+        comment="Encrypted resume parsed data (education, experience, skills, contact info)"
+    )
+    # Legacy dual-write column - deprecated, to be dropped in Phase 3
+    parsed_data_ct: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(
         String(20), default="pending"
     )  # 'pending', 'processing', 'completed', 'failed'
@@ -254,6 +266,8 @@ class Connection(Base):
         String(20), default="pending"
     )  # 'pending', 'accepted', 'declined'
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Phase 1 encrypted dual-write for the personal connection-request note.
+    message_ct: Mapped[str | None] = mapped_column(Text, nullable=True)
     requested_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     responded_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from src.database.postgres import Base
+from src.utils.encryption import EncryptedText
 
 
 def utc_now() -> datetime:
@@ -20,8 +21,22 @@ class User(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    # Plaintext columns retained during Phase 1 dual-write. Phase 2 will drop
+    # these and read exclusively from the *_ct columns below.
     email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True, index=True)
     phone: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True, index=True)
+    # Encrypted ciphertext columns (Fernet, v1: prefix). Written on every
+    # insert/update via dual-write in AuthService / OAuthService.
+    email_ct: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    phone_ct: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Deterministic HMAC-SHA256 lookup hashes for exact-match queries on
+    # encrypted fields. Unique-indexed to preserve signup-uniqueness semantics.
+    email_lookup_hash: Mapped[str | None] = mapped_column(
+        String(64), unique=True, nullable=True, index=True
+    )
+    phone_lookup_hash: Mapped[str | None] = mapped_column(
+        String(64), unique=True, nullable=True, index=True
+    )
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -55,6 +70,11 @@ class UserProfile(Base):
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
     location: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Phase 1 encrypted companions (dual-write). Ciphertext is ~4/3× plaintext
+    # plus a fixed Fernet envelope (~73 bytes) and the ``v{N}:`` prefix.
+    full_name_ct: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    bio_ct: Mapped[str | None] = mapped_column(Text, nullable=True)
+    location_ct: Mapped[str | None] = mapped_column(String(500), nullable=True)
     profile_image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     linkedin_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     github_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -129,9 +149,15 @@ class OAuthAccount(Base):
     )
     provider: Mapped[str] = mapped_column(String(50), nullable=False)
     provider_user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Phase 1 Dual-Write: provider_email stored in both plaintext and encrypted
     provider_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
-    refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    provider_email_ct: Mapped[str | None] = mapped_column(String(500), nullable=True, comment="Encrypted provider email (Fernet)")
+    provider_email_lookup_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True, comment="HMAC lookup hash for provider_email")
+    # OAuth tokens are encrypted transparently via EncryptedText TypeDecorator.
+    # Legacy values written by the old encrypt_field() helper remain decryptable
+    # via the unversioned-token fallback path in EncryptionService.decrypt.
+    access_token: Mapped[str | None] = mapped_column(EncryptedText, nullable=True)
+    refresh_token: Mapped[str | None] = mapped_column(EncryptedText, nullable=True)
     token_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
