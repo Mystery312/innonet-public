@@ -1,518 +1,269 @@
-# Innonet Platform - Claude Code Guide
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-Innonet is a professional networking platform built with a modern full-stack architecture. It features AI-powered search, network visualization, events, communities, and real-time messaging.
+Innonet is a professional networking platform with AI-powered search, network visualization, events, communities, messaging, and profile discovery. Full-stack: React 19 + TypeScript frontend, FastAPI + Python backend, PostgreSQL + Neo4j + Redis infrastructure.
 
-**Key Features:**
-- Authentication & Profile Management (7-step wizard)
-- AI-Powered Semantic Search (OpenAI integration)
-- Network Connections & Graph Visualization (D3.js + Neo4j)
-- Events System with Recommendations & Paid Registration (Stripe)
-- Communities (Discord/Reddit-style forums)
-- Company Challenges & Roadmap Voting
-- Direct Messaging & Notifications
-- Profile Analysis & Recommendations
-- **Discover** - Tinder/Grindr-style profile discovery with smart matching
+## Commands
 
-## Tech Stack
-
-### Frontend (`/frontend`)
-- **Framework:** React 18 + TypeScript
-- **Build Tool:** Vite
-- **Routing:** React Router v6
-- **State Management:** React Context + hooks
-- **UI Components:** shadcn/ui + Radix UI
-- **Styling:** Tailwind CSS
-- **Forms:** React Hook Form + Zod validation
-- **Network Graph:** D3.js
-- **HTTP Client:** Axios
-
-### Backend (`/backend`)
-- **Framework:** FastAPI (Python 3.11+)
-- **ORM:** SQLAlchemy 2.0 (async)
-- **Database:** PostgreSQL 16 + pgvector extension
-- **Cache:** Redis
-- **Graph DB:** Neo4j (for network connections)
-- **Migrations:** Alembic
-- **Authentication:** JWT tokens (access + refresh)
-- **AI:** OpenAI API (embeddings + chat)
-- **Payments:** Stripe
-- **Email:** SendGrid (optional)
-
-### Infrastructure
-- **Containers:** Docker + Docker Compose
-- **Production:** Configured with nginx reverse proxy
-- **Deployment:** Automated with `start.sh` script
-
-## Directory Structure
-
-```
-.
-├── backend/                    # FastAPI backend
-│   ├── src/
-│   │   ├── api/               # API route handlers
-│   │   │   ├── auth.py
-│   │   │   ├── users.py
-│   │   │   ├── events.py
-│   │   │   ├── companies.py
-│   │   ├── discover/             # Discovery feature (profile swiping)
-│   │   │   └── ...
-│   │   ├── models/            # SQLAlchemy models
-│   │   ├── schemas/           # Pydantic schemas
-│   │   ├── services/          # Business logic layer
-│   │   ├── core/              # Config, security, deps
-│   │   └── main.py            # FastAPI app entry point
-│   ├── alembic/               # Database migrations
-│   ├── requirements.txt       # Python dependencies
-│   └── .env                   # Backend environment variables
-├── frontend/                  # React frontend
-│   ├── src/
-│   │   ├── components/        # Reusable UI components
-│   │   ├── pages/             # Page components
-│   │   ├── contexts/          # React contexts
-│   │   ├── hooks/             # Custom hooks
-│   │   ├── lib/               # Utilities & API client
-│   │   └── types/             # TypeScript type definitions
-│   ├── public/                # Static assets
-│   └── package.json           # Frontend dependencies
-├── infrastructure/            # Deployment configs
-├── docs/                      # Documentation
-├── docker-compose.yml         # Local development
-├── docker-compose.prod.yml    # Production setup
-└── start.sh                   # Quick start script
-```
-
-## Development Guidelines
-
-### Code Style & Conventions
-
-1. **Backend (Python):**
-   - Follow PEP 8 style guide
-   - Use async/await for all database operations
-   - Implement proper error handling with HTTPException
-   - Service layer pattern: API routes call service functions
-   - Models define database schema, schemas define API contracts
-   - Use dependency injection for database sessions and auth
-
-2. **Frontend (TypeScript):**
-   - Use functional components with hooks (no class components)
-   - Prefer named exports over default exports
-   - Use TypeScript strictly (no `any` types unless absolutely necessary)
-   - Component file structure: imports, types, component, exports
-   - Keep components focused and single-responsibility
-   - Extract reusable logic into custom hooks
-
-3. **API Design:**
-   - RESTful conventions for routes
-   - Consistent response format: `{ data: ..., message?: string }`
-   - Use proper HTTP status codes
-   - Include pagination for list endpoints
-   - Rate limiting enabled on auth endpoints
-
-4. **Database:**
-   - Always use Alembic migrations (never manual schema changes)
-   - Use indexes for frequently queried columns
-   - Soft deletes where appropriate (deleted_at column)
-   - Timestamps on all models (created_at, updated_at)
-
-### Starting the Application
-
-**Quick Start (Recommended):**
+### Backend (run from `backend/`)
 ```bash
-./start.sh
-```
-
-**Manual Start:**
-```bash
-# 1. Start Docker services
-docker-compose up -d
-
-# 2. Backend (in backend directory)
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn src.main:app --reload --port 8000
-
-# 3. Frontend (in frontend directory)
-npm install
-npm run dev
-```
-
-**Access Points:**
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-- Neo4j Browser: http://localhost:7474
-
-### Common Development Tasks
-
-**Backend:**
-```bash
-cd backend
-
-# Create new migration
-alembic revision --autogenerate -m "description"
-
-# Apply migrations
-alembic upgrade head
-
-# Rollback migration
-alembic downgrade -1
-
-# Run with auto-reload
-uvicorn src.main:app --reload --port 8000
-```
-
-**Frontend:**
-```bash
-cd frontend
-
 # Start dev server
-npm run dev
+uvicorn src.main:app --reload --port 8000
 
-# Type check
-npm run type-check
+# Database migrations (run with venv activated)
+alembic revision --autogenerate -m "description"   # Create migration
+alembic upgrade head                                # Apply all pending migrations
+alembic downgrade -1                                # Rollback one migration
+alembic current                                      # Show current revision
+alembic history                                      # Show migration history
 
-# Lint
-npm run lint
+# After creating a migration, always review the generated file in backend/alembic/versions/
+# Never edit migrations after committing them to git
 
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
+# Verify encryption setup
+python -m scripts.verify_encryption
 ```
 
-**Docker:**
+### Frontend (run from `frontend/`)
 ```bash
-# Start services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f [service_name]
-
-# Stop services
-docker-compose down
-
-# Reset volumes (clean database)
-docker-compose down -v
+npm run dev          # Start dev server (Vite, port 5173)
+npm run build        # Type-check (tsc -b) then Vite build
+npm run lint         # ESLint
+npm run preview      # Preview production build
 ```
-
-### Authentication Flow
-
-1. User signs up/logs in via `/api/auth/signup` or `/api/auth/login`
-2. Backend returns access token (15min TTL) and refresh token (7 days TTL)
-3. Frontend stores tokens in localStorage and sets Authorization header
-4. Protected routes use `get_current_user` dependency
-5. Refresh token endpoint: `/api/auth/refresh`
-
-**Rate Limiting:**
-- Login: 5 attempts per 15 minutes per IP
-- Signup: 3 attempts per 15 minutes per IP
-- Implemented with Redis backend
-
-### AI Features
-
-**Search (Semantic):**
-- User query → OpenAI embeddings (text-embedding-3-small)
-- Vector similarity search in PostgreSQL (pgvector)
-- Fallback to keyword search if no OpenAI key
-
-**Profile Analysis:**
-- Profile data → OpenAI chat (gpt-3.5-turbo)
-- Returns: score (1-100), strengths, improvement areas
-- Cached in Redis for 24 hours
-
-**Enable AI:** Set `OPENAI_API_KEY` in `backend/.env`
-
-### Database Models
-
-**Key Models:**
-- `User`: Core user account & profile data
-- `Company`: Company profiles (admin users can manage)
-- `Event`: Events with registration & paid tickets
-- `Community`: Forum/discussion communities
-- `Post`: Community posts with voting
-- `Message`: Direct messages between users
-- `Notification`: Activity notifications
-- `Connection`: Network connection requests/relationships
-- `DiscoverSwipe`: User discovery interactions (pass/connect swipes)
-
-**Neo4j Graph:**
-- Used for network connections visualization
-- Synced with PostgreSQL connection data
-- Accessed via Neo4j Bolt driver
-
-### Important Notes
-
-1. **Environment Variables:**
-   - Backend `.env` is required (copy from `.env.example` if exists)
-   - OpenAI key optional but disables AI features if missing
-   - Stripe keys optional (only needed for paid events)
-
-2. **Migrations:**
-   - Always create migrations for schema changes
-   - Review auto-generated migrations before applying
-   - Never edit migrations after they're committed
-
-3. **Vector Extension:**
-   - Docker uses `pgvector/pgvector:pg16` image
-   - If "type vector does not exist" error: `docker-compose down -v && docker-compose up -d`
-
-4. **CORS:**
-   - Configured in backend to allow frontend origin
-   - Update `FRONTEND_URL` in backend `.env` if frontend port changes
-
-5. **File Uploads:**
-   - Profile photos stored in `/backend/uploads/profiles/`
-   - Event images stored in `/backend/uploads/events/`
-   - Ensure directories exist and have write permissions
-
-6. **Testing:**
-   - No automated test suite currently implemented
-   - E2E test reports available in root directory
-   - Manual testing workflow documented in `E2E_TEST_REPORT.md`
-
-### Troubleshooting
-
-**Port conflicts:**
-```bash
-# Kill process on port 8000 (backend)
-lsof -ti:8000 | xargs kill -9
-
-# Kill process on port 5173 (frontend)
-lsof -ti:5173 | xargs kill -9
-```
-
-**Database connection errors:**
-- Check Docker services: `docker-compose ps`
-- Verify `DATABASE_URL` in backend `.env`
-- Ensure PostgreSQL is running on port 5432
-
-**"Module not found" errors:**
-- Backend: `pip install -r requirements.txt`
-- Frontend: `npm install`
-- May need to delete and recreate venv/node_modules
-
-**CORS errors:**
-- Check `FRONTEND_URL` in `backend/.env` matches frontend URL
-- Verify CORS middleware configuration in `backend/src/main.py`
-
-### Git Workflow
-
-- Main branch: `main`
-- Create feature branches for new work
-- Commit messages should be clear and descriptive
-- Include co-authored-by tag when working with AI assistance
-
-### Production Deployment
-
-- Production configs in `docker-compose.prod.yml`
-- Uses nginx reverse proxy
-- Deployment script: `start.sh` with production flag
-- Environment variables set in `.env.production`
-- SSL/TLS configuration required for production
-
-## Technical Development & Contributions
-
-### Core Systems Implemented
-
-**Authentication & User Management**
-- 7-step onboarding wizard with profile creation
-- JWT-based auth (access + refresh tokens, 15min + 7day TTL)
-- Account lockout protection and email verification
-- Secure password handling with bcrypt hashing
-
-**AI-Powered Semantic Search**
-- OpenAI embeddings integration (text-embedding-3-small)
-- Vector similarity search with pgvector in PostgreSQL
-- Keyword search fallback when OpenAI unavailable
-- Cached embeddings for performance
-
-**Network Visualization & Connections**
-- D3.js interactive force-directed graph visualization
-- Neo4j graph database for relationship tracking
-- Connection request workflow (pending/accepted/rejected)
-- Real-time sync between PostgreSQL and Neo4j
-
-**Events System**
-- Event discovery, creation, and management
-- Stripe integration for paid event registration
-- Algorithmic event recommendations
-- RSVP and attendance tracking
-
-**Communities (Forum System)**
-- Discord/Reddit-style community spaces
-- Post creation, commenting, and voting system
-- Community membership and moderation
-- Soft-delete content management
-
-**Direct Messaging & Notifications**
-- Real-time messaging between users
-- Activity notifications (connections, events, posts)
-- Message persistence and history
-- Notification preferences management
-
-**Profile Analysis & Recommendations**
-- AI-driven profile scoring (1-100 scale)
-- Strength and improvement area analysis via OpenAI
-- 24-hour Redis caching for performance
-- Personalized recommendations for growth
-
-### Architecture Patterns
-
-**Service Layer Design**
-- Business logic separated from API routes
-- Dependency injection for database sessions and auth
-- Reusable service functions across endpoints
-- Clear error handling and validation
-
-**Database Architecture**
-- SQLAlchemy 2.0 async ORM
-- PostgreSQL 16 with pgvector for vector search
-- Neo4j for graph queries and recommendations
-- Redis for caching and rate limiting
-- Alembic for schema versioning
-
-**API Design**
-- RESTful endpoints with consistent response format
-- Proper HTTP status codes (200, 201, 400, 401, 403, 404, 500)
-- Request validation with Pydantic schemas
-- Pagination for list endpoints
-- Rate limiting on auth (5 login/3 signup attempts per 15 min)
-
-### Key Technical Skills Demonstrated
-
-✓ **Full-Stack Development:** React 18 + TypeScript frontend, FastAPI + Python backend
-✓ **System Architecture:** Service layer pattern, dependency injection, async-first design
-✓ **Database Design:** Schema optimization, indexing strategy, soft deletes, timestamps
-✓ **AI Integration:** OpenAI embeddings, vector similarity search, LLM-based analysis
-✓ **DevOps & Infrastructure:** Docker, Docker Compose, nginx configuration, deployment
-✓ **Security:** JWT authentication, password hashing, rate limiting, input validation, CORS
-✓ **Performance:** Async operations, connection pooling, caching strategies, query optimization
-✓ **Graph Databases:** Neo4j for network analysis and relationship queries
-
-### Documentation
-
-For detailed technical contribution summary, see:
-- `INNONET_CONTRIBUTION_SUMMARY.md` - Business and organizational contributions
-- `INNONET_TECHNICAL_DEVELOPMENT.md` - Complete technical development overview
-
----
-
-**When working on this project:**
-- Read existing code before making changes
-- Follow established patterns and conventions
-- Test changes locally before committing
-- Update migrations when changing database schema
-- Keep frontend and backend types in sync
-- Consider performance implications of database queries
-- Use proper error handling and logging
-
-## Discover Feature (Implemented March 9, 2026)
-
-### Overview
-Tinder/Grindr-style profile discovery feature for engaging, mobile-friendly networking. Users browse AI-recommended profiles one at a time, swipe left to pass or right to connect.
-
-### Backend Implementation (✅ Complete)
-
-**Database:**
-- Table: `discover_swipes` tracks all swipe interactions
-- Constraints: no self-swipes, unique per user-pair, valid actions (pass/connect)
-- Indexes: user_id, created_at, target_user_id for optimal query performance
-- Auto-excludes swiped users: pass (30 days), connect (permanent)
-
-**API Endpoints:**
-1. **GET `/api/v1/discover/feed`** (200 OK)
-   - Returns paginated discovery profiles
-   - Auto-excludes: self, existing connections, previous swipes
-   - Params: `limit` (1-50), `offset`, `location`, `min_similarity` (0.0-1.0), `strategy`
-   - Response: profiles with skills, communities, match reasons
-
-2. **POST `/api/v1/discover/swipe`** (201 Created)
-   - Records swipe action: "pass" or "connect"
-   - Connect action: automatically creates connection request
-   - Returns: connection_id (if connect), success status
-   - Prevents duplicates via DB constraint
-
-3. **GET `/api/v1/discover/stats`** (200 OK)
-   - Analytics: total views, passes, connect requests, acceptance rate
-   - Useful for tracking user engagement
-
-**Service Layer:**
-- File: `backend/src/discover/service.py` - DiscoverService class
-- Key methods:
-  - `get_discovery_feed()` - Feed generation with smart filtering
-  - `record_swipe()` - Swipe tracking + connection creation
-  - `get_discovery_stats()` - User analytics
-  - `_get_excluded_user_ids()` - Intelligent exclusion logic
-
-**Models & Schemas:**
-- Model: `DiscoverSwipe` (PostgreSQL ORM)
-- Schemas: `DiscoverFeedResponse`, `SwipeRequest`, `SwipeResponse`, `DiscoverStatsResponse`
-
-**Integration:**
-- Registered in `src/main.py` with prefix `/api/v1/discover`
-- Reuses `NetworkService.send_connection_request()` for validated connection creation
-- Model imported in `src/database/postgres.py`
-
-### Frontend Implementation Recommendations
-
-**Libraries:**
-- `framer-motion` for smooth card animations
-- `react-use-gesture` for swipe detection
-- Custom CSS transforms as alternative
-
-**Component Structure:**
-```
-frontend/src/pages/Discover/
-├── DiscoverPage.tsx         # State management
-├── DiscoverCard.tsx         # Individual profile card
-├── DiscoverControls.tsx     # Action buttons (pass/like)
-├── DiscoverEmpty.tsx        # Empty state
-└── DiscoverPage.module.css  # Styling
-```
-
-**Card Design Pattern:**
-- Full-screen background image with gradient overlay
-- Profile info at bottom (name, location, bio, skills)
-- Swipe hints: ✕ (left/pass) and ❤ (right/connect)
-- Action buttons as fallback for non-touch devices
-
-**Features to Implement:**
-- Preload next 3 cards for smooth UX
-- Optimistic UI updates on swipe
-- Rate limiting feedback (100 swipes/hour)
-- Success metrics display
-- Mobile-first responsive design
 
 ### Testing
-- ✅ All 3 endpoints verified working
-- ✅ Swipe actions create correct records
-- ✅ Connect action creates connection requests
-- ✅ Stats calculations accurate
-- ✅ DB constraints enforce data integrity
 
-### Performance Notes
-- Discovery feed generation: <1s for 20 profiles
-- Indexed queries for fast user exclusion
-- Pagination prevents large result sets
-- Cache opportunities: user similarities (5 min TTL)
+#### Backend Tests (run from `backend/`)
+```bash
+# Run all tests with pytest
+pytest tests/ -v
 
-### Security & Privacy
-- ✅ Respects `show_in_graph=true` privacy setting
-- ✅ Rate limiting: 100 swipes/hour (extensible)
-- ✅ Self-swipe prevention: DB constraint + validation
-- ✅ Connection validation reuses existing NetworkService
-- ✅ CSRF protection on POST endpoints
+# Run specific test suite
+pytest tests/suites/auth_tests.py -v
 
-### Future Enhancements
-- Undo last swipe (5 min window)
-- Super Like (highlight interest, 1/day limit)
-- Advanced filters (industry, skills, experience level)
-- Daily Picks (curated top 5 matches)
-- Match notifications (mutual interest detected)
-- Video profiles
-- Smart photo ordering with AI suggestions
+# Run custom test runner (feature parity tests across environments)
+python -m tests.test_runner
+
+# Run with coverage
+pytest --cov=src tests/
+```
+
+**Test Structure:** Backend uses a custom test runner (`backend/tests/test_runner.py`) that orchestrates feature parity testing across environments. Test suites are in `backend/tests/suites/` organized by domain (auth, profiles, events, network, graph, communities, messaging, companies, discover).
+
+#### Frontend Tests (run from `frontend/`)
+```bash
+npm run test           # Run all tests
+npm run test:watch     # Run tests in watch mode
+```
+
+### Docker (run from project root)
+```bash
+docker-compose up -d          # Start all services (postgres, redis, neo4j)
+docker-compose down -v        # Reset all volumes (clean database)
+```
+
+### Quick Start
+```bash
+./start.sh                    # Development mode: Starts Docker + backend + frontend
+./start.sh --prod             # Production mode: Docker Compose with production config
+./start.sh --prod --build     # Production mode with forced rebuild
+
+# Manual startup (alternative to ./start.sh):
+docker-compose up -d          # Start infrastructure
+cd backend && source venv/bin/activate && uvicorn src.main:app --reload
+cd frontend && npm run dev
+```
+
+**start.sh features:** Auto-creates `.env` files from templates, generates `SECRET_KEY`, starts Docker services, waits for health checks, seeds sample data, starts backend and frontend with proper cleanup on Ctrl+C.
+
+### Access Points
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API Docs (Swagger): http://localhost:8000/docs
+- Neo4j Browser: http://localhost:7474
+- Health check: http://localhost:8000/health
+
+### Debugging & Logs
+```bash
+# View Docker service logs
+docker-compose logs -f                    # All services
+docker-compose logs -f postgres           # PostgreSQL only
+docker-compose logs -f redis              # Redis only
+
+# Production logs
+docker compose -f docker-compose.prod.yml logs -f
+
+# Check service health
+curl http://localhost:8000/health         # Backend health
+docker exec innonet-postgres pg_isready  # PostgreSQL
+docker exec innonet-redis redis-cli ping # Redis
+```
+
+## Architecture
+
+### Backend: Domain-Based Modules
+
+The backend uses a **domain-driven module architecture** — each feature is a self-contained package under `backend/src/` with its own models, schemas, service, and router:
+
+```
+backend/src/
+├── auth/           # Authentication (JWT, OAuth, account lockout)
+│   ├── models.py       # User, UserProfile, RefreshToken, OAuthAccount
+│   ├── schemas.py      # Pydantic request/response models
+│   ├── service.py      # Business logic
+│   ├── router.py       # API endpoints
+│   ├── dependencies.py # get_current_user, get_current_active_user
+│   ├── oauth.py        # Google & Microsoft OAuth providers
+│   └── utils.py
+├── profiles/       # Profile management, skills, work experience
+├── events/         # Events with RSVP and recommendations
+├── companies/      # Company profiles and challenges
+├── communities/    # Forum-style communities, posts, voting
+├── messaging/      # Direct messages and notifications
+├── network/        # Connection requests and relationships
+├── discover/       # Tinder-style profile discovery (swipe to connect)
+├── graph/          # D3.js network graph data endpoints
+├── payments/       # Stripe integration
+├── ai/             # OpenAI embeddings + profile analysis
+├── users/          # User management
+├── waitlist/       # Pre-launch waitlist
+├── database/
+│   ├── postgres.py # Async SQLAlchemy engine, session, init_db()
+│   └── neo4j.py    # Neo4j driver init/close
+├── middleware/
+│   └── csrf.py     # CSRF protection
+├── utils/
+│   ├── encryption.py      # Field-level Fernet encryption + HMAC hashes
+│   ├── account_lockout.py
+│   └── file_validation.py
+├── config.py       # Pydantic BaseSettings (env vars)
+├── exceptions.py   # Custom exception hierarchy
+└── main.py         # FastAPI app, middleware stack, router registration
+```
+
+**Pattern for new modules:** Create a package with `models.py`, `schemas.py`, `service.py`, `router.py`, then register the router in `main.py`.
+
+**Key architectural details:**
+- All database operations use async/await (SQLAlchemy 2.0 async + asyncpg)
+- Service layer pattern: routers call service functions, never query DB directly
+- `get_current_user` dependency injection for auth on protected routes
+- `get_db()` yields an `AsyncSession` with auto-commit/rollback
+- Custom exception hierarchy in `exceptions.py` (NotFoundError, ValidationError, AuthorizationError, etc.) with handlers in `main.py`
+- Middleware stack (order in `main.py`): CSRF → SecurityHeaders → CORS → RateLimiting
+
+### Frontend Architecture
+
+```
+frontend/src/
+├── components/
+│   ├── common/     # Legacy components (CSS Modules): Avatar, Button, Badge, Card, Modal, Navbar, etc.
+│   ├── ui/         # shadcn/ui components (Tailwind): avatar, badge, button, dialog, input, label, tabs
+│   └── layout/     # Layout wrappers
+├── pages/          # Route page components (Auth/, Home/, Profile/, Events/, Network/, etc.)
+├── features/       # Feature modules mirroring backend domains
+│   ├── auth/       # API calls, hooks, types for auth
+│   ├── events/     # API calls, hooks for events
+│   ├── graph/      # D3.js network graph visualization
+│   ├── messaging/  # Chat/messaging logic
+│   └── ...         # communities, companies, network, payment, profile, search, waitlist
+├── context/        # React contexts (AuthContext, ThemeContext)
+├── lib/
+│   ├── api.ts      # Axios client with auth interceptors
+│   └── utils.ts    # cn() utility (clsx + tailwind-merge)
+├── types/          # Shared TypeScript type definitions
+├── utils/          # Utility functions
+├── router.tsx      # React Router v7 route definitions
+├── App.tsx
+└── index.css       # Tailwind v4 theme + CSS Module design tokens
+```
+
+**Dual styling system:**
+- **New code:** Tailwind CSS v4 + shadcn/ui components (`components/ui/`)
+- **Legacy code:** CSS Modules + custom components (`components/common/`)
+- Both systems coexist; new pages should use Tailwind + shadcn/ui
+
+**Routing:** React Router v7, `ProtectedRoute` wrapper redirects to `/login` if unauthenticated, `PublicOnlyRoute` redirects authenticated users to `/events`.
+
+**State management:** React Context (AuthContext for auth state, ThemeContext for dark mode via `data-theme` attribute) + TanStack React Query for server state.
+
+**Path alias:** `@/` maps to `src/` (configured in tsconfig + vite).
+
+**shadcn/ui note:** The shadcn CLI hangs in this environment — create shadcn components manually instead of using `npx shadcn@latest add`.
+
+## Tech Stack Versions
+
+- React 19, React Router 7, Vite 7, TypeScript 5.9
+- Tailwind CSS 4 (using `@theme` directive, not `tailwind.config.js`)
+- FastAPI, SQLAlchemy 2.0 (async), Python 3.11+
+- PostgreSQL 16 + pgvector, Redis 7, Neo4j 5
+- Docker images: `pgvector/pgvector:pg16`, `redis:7-alpine`, `neo4j:5-community`
+
+## Database
+
+**PostgreSQL** — Primary store with pgvector extension for vector similarity search. Key models: User, UserProfile, Event, Community, Post, Company, Message, Connection, DiscoverSwipe.
+
+**Neo4j** — Graph database for network connections visualization. Synced with PostgreSQL connection data.
+
+**Redis** — Caching (profile analysis, embeddings) and rate limiting.
+
+**Migrations:** Always use Alembic. Never edit migrations after they're committed. If "type vector does not exist" error occurs: `docker-compose down -v && docker-compose up -d`.
+
+**Database Seeding:** The `./start.sh` script automatically seeds the database with sample data from `backend/init-db.sql`. To manually seed: `docker exec -i innonet-postgres psql -U postgres -d innonet < backend/init-db.sql`
+
+## Authentication
+
+- JWT tokens: access (15min) + refresh (7 days), stored in localStorage
+- OAuth: Google and Microsoft providers (`auth/oauth.py`)
+- Rate limiting: 5 login / 3 signup attempts per 15 min per IP (Redis-backed)
+- Account lockout protection
+- Protected routes use `get_current_user` dependency
+
+## Field-Level Encryption (Phase 1: Dual-Write)
+
+Sensitive PII is encrypted at rest using versioned Fernet encryption. Currently in dual-write mode: both plaintext and ciphertext columns are populated, reads serve plaintext.
+
+- `EncryptedString`, `EncryptedText`, `EncryptedJSON` TypeDecorators in `utils/encryption.py`
+- HMAC-SHA256 lookup hashes for exact-match queries (email, phone)
+- Encrypted fields: user email/phone, profile bio/name/location, messages, notifications, OAuth tokens
+- Key rotation: add `ENCRYPTION_KEY_V2`, bump `ENCRYPTION_CURRENT_VERSION`, run re-encryption backfill
+
+## Required Environment Variables (backend/.env)
+
+```bash
+SECRET_KEY=           # Required — JWT signing key
+NEO4J_PASSWORD=       # Required — Neo4j auth
+DATABASE_URL=         # Or individual: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+REDIS_URL=            # Or individual: REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
+ENCRYPTION_KEY_V1=    # Fernet key for field-level encryption
+ENCRYPTION_LOOKUP_HASH_KEY=  # HMAC key for deterministic lookup hashes
+
+# Optional
+OPENAI_API_KEY=       # Enables AI search + profile analysis
+STRIPE_SECRET_KEY=    # Enables paid events
+GOOGLE_CLIENT_ID=     # OAuth
+MICROSOFT_CLIENT_ID=  # OAuth
+SENTRY_DSN=           # Error tracking (production)
+FRONTEND_URL=         # CORS origin (default: http://localhost:5173)
+```
+
+## TypeScript Notes
+
+- `verbatimModuleSyntax: true` in tsconfig — use `import * as X from 'y'` for default CJS exports
+- Dark mode uses `data-theme="dark"` attribute; Tailwind configured with `@custom-variant dark`
+- Design tokens defined in both `@theme` block (Tailwind) and `:root` vars (CSS Modules) in `index.css`
+
+## Agent Orchestration
+
+Specialized agents and skill commands are available:
+
+**Agents:** `backend-developer`, `frontend-developer`, `database-architect`, `security-reviewer`, `api-tester`
+
+**Skill commands:** `/full-stack-test`, `/new-feature`, `/db-migrate`, `/deploy-check`, `/security-audit`
+
+**Hooks (`.claude/settings.json`):**
+- PostToolUse: Auto-formats Python with `black`, TypeScript/JS with `prettier`
+- PreToolUse: Blocks destructive bash commands (`rm -rf /`, `DROP DATABASE`)
