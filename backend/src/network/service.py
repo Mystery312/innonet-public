@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from src.auth.models import User, UserProfile
 from src.profiles.models import Connection
 from src.database.neo4j import neo4j_client
+from src.utils.encryption import encryption_service, read_encrypted_field
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,7 @@ class NetworkService:
                 existing_connection.requester_id = requester_id
                 existing_connection.addressee_id = addressee_id
                 existing_connection.message = message
+                existing_connection.message_ct = encryption_service.encrypt(message) if message else None
                 existing_connection.requested_at = utc_now_naive()
                 existing_connection.responded_at = None
                 await db.flush()
@@ -81,12 +83,13 @@ class NetworkService:
 
                 return existing_connection
 
-        # Create new connection request
+        # Create new connection request (Phase 1 dual-write of message ciphertext)
         connection = Connection(
             requester_id=requester_id,
             addressee_id=addressee_id,
             status="pending",
-            message=message
+            message=message,
+            message_ct=encryption_service.encrypt(message) if message else None,
         )
         db.add(connection)
         await db.flush()
@@ -260,12 +263,14 @@ class NetworkService:
                     "user": {
                         "id": other_user.id,
                         "username": other_user.username,
-                        "full_name": other_user.profile.full_name if other_user.profile else None,
+                        # Phase 2: Read encrypted profile fields
+                        "full_name": read_encrypted_field(other_user.profile, "full_name", "full_name_ct") if other_user.profile else None,
                         "profile_image_url": other_user.profile.profile_image_url if other_user.profile else None,
-                        "location": other_user.profile.location if other_user.profile else None
+                        "location": read_encrypted_field(other_user.profile, "location", "location_ct") if other_user.profile else None
                     },
                     "connected_at": conn.responded_at,
-                    "message": conn.message
+                    # Phase 2: Read from encrypted column when feature flag enabled
+                    "message": read_encrypted_field(conn, "message", "message_ct")
                 })
 
         return connection_list, total
@@ -309,10 +314,12 @@ class NetworkService:
                     "user": {
                         "id": requester.id,
                         "username": requester.username,
-                        "full_name": requester.profile.full_name if requester.profile else None,
+                        # Phase 2: Read encrypted profile fields
+                        "full_name": read_encrypted_field(requester.profile, "full_name", "full_name_ct") if requester.profile else None,
                         "profile_image_url": requester.profile.profile_image_url if requester.profile else None
                     },
-                    "message": conn.message,
+                    # Phase 2: Read from encrypted column when feature flag enabled
+                    "message": read_encrypted_field(conn, "message", "message_ct"),
                     "requested_at": conn.requested_at
                 })
 
@@ -330,10 +337,12 @@ class NetworkService:
                     "user": {
                         "id": addressee.id,
                         "username": addressee.username,
-                        "full_name": addressee.profile.full_name if addressee.profile else None,
+                        # Phase 2: Read encrypted profile fields
+                        "full_name": read_encrypted_field(addressee.profile, "full_name", "full_name_ct") if addressee.profile else None,
                         "profile_image_url": addressee.profile.profile_image_url if addressee.profile else None
                     },
-                    "message": conn.message,
+                    # Phase 2: Read from encrypted column when feature flag enabled
+                    "message": read_encrypted_field(conn, "message", "message_ct"),
                     "requested_at": conn.requested_at
                 })
 

@@ -2,7 +2,7 @@ import uuid
 import re
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
-from typing import Optional
+from typing import Optional, Any
 
 
 def validate_password_strength(password: str) -> str:
@@ -78,6 +78,37 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+    @model_validator(mode="before")
+    @classmethod
+    def decrypt_fields(cls, data: Any) -> Any:
+        """
+        Phase 2: Read from encrypted columns when USE_ENCRYPTED_COLUMNS=true.
+
+        This validator intercepts the User model and reads from encrypted columns
+        (*_ct) instead of plaintext when the feature flag is enabled.
+        """
+        from src.utils.encryption import read_encrypted_field
+
+        # Only process if data is a model instance (not a dict)
+        if not hasattr(data, "__dict__"):
+            return data
+
+        # Create a dict to return with decrypted values
+        result = {}
+
+        # Copy all attributes first
+        for key, value in data.__dict__.items():
+            if not key.startswith("_"):
+                result[key] = value
+
+        # Decrypt sensitive fields if using encrypted columns
+        if hasattr(data, "email_ct"):
+            result["email"] = read_encrypted_field(data, "email", "email_ct")
+        if hasattr(data, "phone_ct"):
+            result["phone"] = read_encrypted_field(data, "phone", "phone_ct")
+
+        return result
+
 
 class AuthResponse(BaseModel):
     user: UserResponse
@@ -105,6 +136,30 @@ class UserProfileResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def decrypt_fields(cls, data: Any) -> Any:
+        """Phase 2: Read from encrypted profile columns when feature flag enabled."""
+        from src.utils.encryption import read_encrypted_field
+
+        if not hasattr(data, "__dict__"):
+            return data
+
+        result = {}
+        for key, value in data.__dict__.items():
+            if not key.startswith("_"):
+                result[key] = value
+
+        # Decrypt profile fields
+        if hasattr(data, "full_name_ct"):
+            result["full_name"] = read_encrypted_field(data, "full_name", "full_name_ct")
+        if hasattr(data, "bio_ct"):
+            result["bio"] = read_encrypted_field(data, "bio", "bio_ct")
+        if hasattr(data, "location_ct"):
+            result["location"] = read_encrypted_field(data, "location", "location_ct")
+
+        return result
 
 
 class UserWithProfileResponse(UserResponse):

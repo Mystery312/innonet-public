@@ -58,6 +58,14 @@ class Settings(BaseSettings):
     # Generate with: openssl rand -hex 32
     encryption_lookup_hash_key: Optional[str] = None
 
+    # Phase 2: Feature flag to switch reads from plaintext to encrypted columns
+    # Set to True to enable reading from *_ct columns (encrypted data)
+    # Gradual rollout: 0.0 (disabled) -> 0.1 (10%) -> 0.5 (50%) -> 1.0 (100%)
+    use_encrypted_columns: bool = False
+    # Percentage of requests to use encrypted columns (0.0 to 1.0)
+    # Used for gradual rollout monitoring before full switch
+    encrypted_columns_rollout_percentage: float = 1.0
+
     # Stripe
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""

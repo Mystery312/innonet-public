@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from pydantic import BaseModel, Field, model_validator
+from typing import Optional, List, Any
 
 from .models import NotificationType
 
@@ -31,6 +31,26 @@ class MessageResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def decrypt_fields(cls, data: Any) -> Any:
+        """Phase 2: Read encrypted message content."""
+        from src.utils.encryption import read_encrypted_field
+
+        if not hasattr(data, "__dict__"):
+            return data
+
+        result = {}
+        for key, value in data.__dict__.items():
+            if not key.startswith("_"):
+                result[key] = value
+
+        # Decrypt message content
+        if hasattr(data, "content_ct"):
+            result["content"] = read_encrypted_field(data, "content", "content_ct")
+
+        return result
 
 
 class MessageListResponse(BaseModel):
@@ -75,6 +95,26 @@ class NotificationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def decrypt_fields(cls, data: Any) -> Any:
+        """Phase 2: Read encrypted notification message."""
+        from src.utils.encryption import read_encrypted_field
+
+        if not hasattr(data, "__dict__"):
+            return data
+
+        result = {}
+        for key, value in data.__dict__.items():
+            if not key.startswith("_"):
+                result[key] = value
+
+        # Decrypt notification message
+        if hasattr(data, "message_ct"):
+            result["message"] = read_encrypted_field(data, "message", "message_ct")
+
+        return result
 
 
 class NotificationListResponse(BaseModel):
