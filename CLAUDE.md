@@ -60,6 +60,15 @@ npm run test           # Run all tests
 npm run test:watch     # Run tests in watch mode
 ```
 
+#### Phase 2 Encryption Testing (run from project root)
+```bash
+# Test Phase 2 encryption/decryption via API
+./test_phase2_simple.sh
+
+# Note: Requires Docker running and backend started with USE_ENCRYPTED_COLUMNS=true
+# Tests: user registration, login, profile updates, email/phone/profile field decryption
+```
+
 ### Docker (run from project root)
 ```bash
 docker-compose up -d          # Start all services (postgres, redis, neo4j)
@@ -212,6 +221,13 @@ frontend/src/
 
 **Migrations:** Always use Alembic. Never edit migrations after they're committed. If "type vector does not exist" error occurs: `docker-compose down -v && docker-compose up -d`.
 
+**Encrypted Columns Schema:**
+- Plaintext: `email`, `phone`, `full_name`, `bio`, `location`, `content`, `message`
+- Ciphertext: `email_ct`, `phone_ct`, `full_name_ct`, `bio_ct`, `location_ct`, `content_ct`, `message_ct`
+- Lookup hashes: `email_lookup_hash`, `phone_lookup_hash` (indexed for fast searches)
+- Phase 2: Reads from `*_ct` columns when `USE_ENCRYPTED_COLUMNS=true`
+- Phase 3 (planned): Drop plaintext columns, rename `*_ct` → canonical names
+
 **Database Seeding:** The `./start.sh` script automatically seeds the database with sample data from `backend/init-db.sql`. To manually seed: `docker exec -i innonet-postgres psql -U postgres -d innonet < backend/init-db.sql`
 
 ## Authentication
@@ -222,32 +238,103 @@ frontend/src/
 - Account lockout protection
 - Protected routes use `get_current_user` dependency
 
-## Field-Level Encryption (Phase 1: Dual-Write)
+## Security
 
-Sensitive PII is encrypted at rest using versioned Fernet encryption. Currently in dual-write mode: both plaintext and ciphertext columns are populated, reads serve plaintext.
+**Production Config Validation:**
+The application validates security settings on startup when `environment=production`:
+- Requires `ENCRYPTION_KEY_V1` (44-char Fernet key)
+- Requires `ENCRYPTION_LOOKUP_HASH_KEY` (64-char hex)
+- Requires `SECRET_KEY` ≥64 characters
+- Blocks placeholder values ("change-me", "your-key-here", "localhost")
+- Enforces `DB_SSL_MODE` ≠ "disable" (requires TLS for database)
+- Validates encryption key formats (automatic on Settings instantiation)
 
-- `EncryptedString`, `EncryptedText`, `EncryptedJSON` TypeDecorators in `utils/encryption.py`
-- HMAC-SHA256 lookup hashes for exact-match queries (email, phone)
-- Encrypted fields: user email/phone, profile bio/name/location, messages, notifications, OAuth tokens
-- Key rotation: add `ENCRYPTION_KEY_V2`, bump `ENCRYPTION_CURRENT_VERSION`, run re-encryption backfill
+**Encryption Security:**
+- Versioned Fernet encryption (AES-128-CBC + HMAC-SHA256)
+- Separate HMAC key for lookup hashes (blind indexing)
+- Automatic decryption via Pydantic validators and helper functions
+- Feature flag controls for safe rollout (`USE_ENCRYPTED_COLUMNS`)
+- No plaintext exposure in API responses (decrypted values only)
+
+**OWASP Compliance:**
+- ✅ A02 (Cryptographic Failures): Field-level encryption active
+- ✅ A03 (Injection): SQLAlchemy ORM + Pydantic validation
+- ✅ A07 (Auth Failures): bcrypt + JWT + rate limiting + lockout
+
+## Field-Level Encryption (Phase 2: Active)
+
+**Status:** Phase 2 complete - sensitive PII is encrypted at rest and reads use encrypted columns.
+
+Sensitive data is encrypted using versioned Fernet encryption with automatic decryption on read. The system supports gradual rollout via feature flags.
+
+**Encrypted Fields (100% coverage):**
+- User: `email`, `phone` (with lookup hashes)
+- UserProfile: `full_name`, `bio`, `location`
+- Message: `content`
+- Notification: `message`
+- Connection: `message`
+- OAuthAccount: `provider_email`, `access_token`, `refresh_token`
+- ResumeUpload: `raw_text`, `parsed_data` (EncryptedJSON)
+- Waitlist: `email` (with lookup hash)
+- ChallengeApplication: `cover_letter`, `reviewer_notes`
+
+**Implementation:**
+- TypeDecorators: `EncryptedString`, `EncryptedText`, `EncryptedJSON` in `utils/encryption.py`
+- Lookup hashes: HMAC-SHA256 for exact-match queries (email/phone searches)
+- Dual-write: Both plaintext and `*_ct` columns populated (Phase 3 will drop plaintext)
+- Auto-decryption: Response schemas use `@model_validator` to decrypt fields
+- Helper function: `read_encrypted_field()` reads from `*_ct` or falls back to plaintext
+
+**Configuration:**
+```bash
+# Phase 2 feature flags (backend/.env)
+USE_ENCRYPTED_COLUMNS=true                      # Enable Phase 2 (read from *_ct)
+ENCRYPTED_COLUMNS_ROLLOUT_PERCENTAGE=1.0        # Gradual rollout: 0.0 to 1.0
+
+# Encryption keys (required in production)
+ENCRYPTION_KEY_V1=<44-char-fernet-key>         # Generate: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+ENCRYPTION_LOOKUP_HASH_KEY=<64-char-hex>       # Generate: openssl rand -hex 32
+ENCRYPTION_CURRENT_VERSION=1                    # Bump for key rotation
+```
+
+**Key Rotation:**
+1. Add `ENCRYPTION_KEY_V2` to environment
+2. Bump `ENCRYPTION_CURRENT_VERSION=2`
+3. Run backfill script to re-encrypt existing data
+4. Remove old keys after validation
+
+**Documentation:**
+- `SECURITY_ROADMAP.md` — Phase 1-3 implementation plan, timeline, metrics
+- `PHASE2_IMPLEMENTATION.md` — Rollout guide, testing checklist, monitoring
+
+**Next:** Phase 3 (drop plaintext columns) after 2+ weeks of Phase 2 validation
 
 ## Required Environment Variables (backend/.env)
 
 ```bash
-SECRET_KEY=           # Required — JWT signing key
+# Core (Required)
+SECRET_KEY=           # Required — JWT signing key (min 64 chars in production)
 NEO4J_PASSWORD=       # Required — Neo4j auth
 DATABASE_URL=         # Or individual: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 REDIS_URL=            # Or individual: REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
-ENCRYPTION_KEY_V1=    # Fernet key for field-level encryption
-ENCRYPTION_LOOKUP_HASH_KEY=  # HMAC key for deterministic lookup hashes
+
+# Encryption (Required in production)
+ENCRYPTION_KEY_V1=                      # Fernet key for field-level encryption
+ENCRYPTION_LOOKUP_HASH_KEY=             # HMAC key for deterministic lookup hashes
+ENCRYPTION_CURRENT_VERSION=1            # Active encryption version
+USE_ENCRYPTED_COLUMNS=true              # Phase 2: Read from encrypted columns
+ENCRYPTED_COLUMNS_ROLLOUT_PERCENTAGE=1.0  # Gradual rollout (0.0 to 1.0)
 
 # Optional
 OPENAI_API_KEY=       # Enables AI search + profile analysis
 STRIPE_SECRET_KEY=    # Enables paid events
-GOOGLE_CLIENT_ID=     # OAuth
-MICROSOFT_CLIENT_ID=  # OAuth
+GOOGLE_CLIENT_ID=     # OAuth - Google login
+GOOGLE_CLIENT_SECRET= # OAuth - Google login
+MICROSOFT_CLIENT_ID=  # OAuth - Microsoft login
+MICROSOFT_CLIENT_SECRET=  # OAuth - Microsoft login
 SENTRY_DSN=           # Error tracking (production)
 FRONTEND_URL=         # CORS origin (default: http://localhost:5173)
+DB_SSL_MODE=          # Database TLS: prefer (dev), require/verify-full (prod)
 ```
 
 ## TypeScript Notes
