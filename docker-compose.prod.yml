@@ -63,6 +63,17 @@ services:
     container_name: innonet-backend
     env_file:
       - .env.production
+    # Make encryption & DB TLS settings explicit at the compose layer. These
+    # fall through to .env.production via env_file, but listing them here
+    # documents what the backend service requires in production.
+    environment:
+      ENCRYPTION_KEY_V1: ${ENCRYPTION_KEY_V1:-}
+      ENCRYPTION_KEY_V2: ${ENCRYPTION_KEY_V2:-}
+      ENCRYPTION_KEY_V3: ${ENCRYPTION_KEY_V3:-}
+      ENCRYPTION_CURRENT_VERSION: ${ENCRYPTION_CURRENT_VERSION:-1}
+      ENCRYPTION_LOOKUP_HASH_KEY: ${ENCRYPTION_LOOKUP_HASH_KEY:-}
+      DB_SSL_MODE: ${DB_SSL_MODE:-require}
+      DB_SSL_ROOT_CERT: ${DB_SSL_ROOT_CERT:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -93,14 +104,19 @@ services:
     networks:
       - innonet
 
-  nginx:
-    build:
-      context: ./infrastructure/nginx
-      dockerfile: Dockerfile
-    container_name: innonet-nginx
+  caddy:
+    image: caddy:2-alpine
+    container_name: innonet-caddy
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - backend
       - frontend
@@ -115,6 +131,8 @@ volumes:
   postgres_data:
   redis_data:
   neo4j_data:
+  caddy_data:
+  caddy_config:
 
 networks:
   innonet:

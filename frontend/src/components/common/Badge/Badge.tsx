@@ -1,9 +1,11 @@
 import React from 'react';
 import styles from './Badge.module.css';
 
+export type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: BadgeVariant;
   size?: 'small' | 'medium';
   removable?: boolean;
   onRemove?: () => void;

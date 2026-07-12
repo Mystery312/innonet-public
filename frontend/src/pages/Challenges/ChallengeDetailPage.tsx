@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Navbar } from '../../components/common/Navbar';
-import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
@@ -105,11 +103,9 @@ export const ChallengeDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className={styles.page}>
-        <Navbar />
         <main className={styles.main}>
           <div className={styles.loading}>Loading challenge...</div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -117,7 +113,6 @@ export const ChallengeDetailPage: React.FC = () => {
   if (error || !challenge) {
     return (
       <div className={styles.page}>
-        <Navbar />
         <main className={styles.main}>
           <div className={styles.error}>
             <h2>Challenge not found</h2>
@@ -125,14 +120,12 @@ export const ChallengeDetailPage: React.FC = () => {
             <Button onClick={() => navigate('/challenges')}>Browse Challenges</Button>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className={styles.page}>
-      <Navbar />
       <main className={styles.main}>
         <div className={styles.container}>
           <div className={styles.breadcrumb}>
@@ -286,8 +279,6 @@ export const ChallengeDetailPage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
-
       {/* Apply Modal */}
       <Modal
         isOpen={isApplyModalOpen}

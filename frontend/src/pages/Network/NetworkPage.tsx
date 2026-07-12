@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { NetworkGraph } from '../../features/network/components/NetworkGraph';
 import { BackButton } from '../../components/common/BackButton';
 import { networkApi } from '../../features/network/api/networkApi';
+import { Button } from '@/components/ui/button';
 import type { NetworkGraph as NetworkGraphType, NetworkGraphNode, NetworkStats } from '../../types/network';
-import styles from './NetworkPage.module.css';
 
 export const NetworkPage: React.FC = () => {
   const navigate = useNavigate();
@@ -42,16 +42,12 @@ export const NetworkPage: React.FC = () => {
     }
   }, [navigate]);
 
-  const handleDepthChange = (newDepth: number) => {
-    setDepth(newDepth);
-  };
-
   if (isLoading) {
     return (
-      <div className={styles.container}>
-        <div className={styles.loading}>
-          <div className={styles.spinner} />
-          <p>Loading your network...</p>
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-sm">Loading your network...</p>
         </div>
       </div>
     );
@@ -59,53 +55,61 @@ export const NetworkPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className={styles.container}>
-        <div className={styles.error}>
-          <p>{error}</p>
-          <button onClick={loadData} className={styles.retryButton}>
-            Retry
-          </button>
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-3">
+          <p className="text-muted-foreground">{error}</p>
+          <Button variant="outline" size="sm" onClick={loadData}>Retry</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.backNav}>
-        <BackButton fallbackPath="/events" />
-      </div>
-      <div className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1>Your Network</h1>
-          <p>Visualize your professional connections and discover paths to new contacts.</p>
-        </div>
-        {stats && (
-          <div className={styles.stats}>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>{stats.total_connections}</span>
-              <span className={styles.statLabel}>Connections</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>{stats.pending_requests}</span>
-              <span className={styles.statLabel}>Pending</span>
-            </div>
+    <div className="h-screen flex flex-col bg-background">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+        <div className="flex items-center gap-3">
+          <BackButton fallbackPath="/events" />
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">Your Network</h1>
+            <p className="text-xs text-muted-foreground hidden sm:block">
+              Visualize your professional connections
+            </p>
           </div>
-        )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground hidden sm:block">Depth:</span>
+          {[1, 2, 3].map((d) => (
+            <Button
+              key={d}
+              variant={depth === d ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setDepth(d)}
+              className="w-8 h-8 p-0 text-xs"
+            >
+              {d}
+            </Button>
+          ))}
+        </div>
       </div>
 
-      <div className={styles.controls}>
-        <label className={styles.depthControl}>
-          <span>Network Depth:</span>
-          <select value={depth} onChange={(e) => handleDepthChange(Number(e.target.value))}>
-            <option value={1}>1st degree only</option>
-            <option value={2}>Up to 2nd degree</option>
-            <option value={3}>Up to 3rd degree</option>
-          </select>
-        </label>
-      </div>
+      {/* Stats strip */}
+      {stats && (
+        <div className="flex gap-6 px-4 py-2 border-b bg-muted/30 text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-foreground">{stats.total_connections}</span>
+            <span className="text-muted-foreground">Connections</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-foreground">{stats.pending_requests}</span>
+            <span className="text-muted-foreground">Pending</span>
+          </div>
+        </div>
+      )}
 
-      <div className={styles.graphContainer}>
+      {/* Graph canvas */}
+      <div className="flex-1 relative overflow-hidden">
         {graphData && (
           <NetworkGraph
             data={graphData}

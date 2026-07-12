@@ -6,9 +6,9 @@
 # Deploy code updates to a remote server
 #
 # Usage:
-#   ./update.sh                              # Uses env vars or prompts for credentials
-#   ./update.sh 47.86.249.5                  # Specify server IP
-#   ./update.sh 47.86.249.5 password123      # Specify IP and password
+#   ./update.sh                                    # Uses env vars or prompts for credentials
+#   ./update.sh <server-ip>                        # Specify server IP
+#   ./update.sh <server-ip> <ssh-password>         # Specify IP and password
 #
 # Environment Variables (optional):
 #   - INNONET_SERVER: Server IP address
@@ -31,6 +31,7 @@ PASSWORD="${2:-${INNONET_PASSWORD:-}}"
 SSH_USER="${INNONET_USER:-root}"
 APP_DIR="/root/innonet"
 DOCKER_COMPOSE_FILE="docker-compose.yml"
+GENERATED_SECRET_KEY="$(openssl rand -hex 32)"
 
 # Helper functions
 error() {
@@ -105,7 +106,7 @@ fi
 if [ ! -f $APP_DIR/backend/.env ]; then
     cat > $APP_DIR/backend/.env << 'ENVEOF'
 # Development Environment Configuration
-SECRET_KEY=e67b54532c16b96deda55fddec71acdaf77d3ee61fb573d09efe780bfca33252
+SECRET_KEY=$GENERATED_SECRET_KEY
 NEO4J_PASSWORD=neo4j_dev_change_me
 OPENAI_API_KEY=sk-test-key
 

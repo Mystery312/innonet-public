@@ -1,6 +1,9 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+
+// Layout
+import { AppShell } from './components/layout/AppShell';
 
 // Pages
 import HomePage from './pages/Home/HomePage';
@@ -16,6 +19,7 @@ import { EventDetailPage } from './pages/Events/EventDetailPage';
 import { ProfilePage } from './pages/Profile/ProfilePage';
 import { ProfileSetupPage } from './pages/Profile/ProfileSetupPage';
 import { SearchPage } from './pages/Search/SearchPage';
+import DiscoverPage from './pages/Discover/DiscoverPage';
 import { NetworkPage, ConnectionsPage } from './pages/Network';
 import { CommunitiesPage, CommunityDetailPage, CreateCommunityPage, PostDetailPage } from './pages/Communities';
 import { ChallengesPage, ChallengeDetailPage } from './pages/Challenges';
@@ -24,293 +28,106 @@ import { CompaniesPage, CompanyDetailPage, CreateCompanyPage } from './pages/Com
 import { RoadmapPage } from './pages/Roadmap';
 import { NotificationsPage } from './pages/Notifications';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
+// ──────────────────────────────────────────────────────────────────
+// Auth guards
+// ──────────────────────────────────────────────────────────────────
+const LoadingFallback: React.FC = () => (
+  <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+  }}>
+    Loading...
+  </div>
+);
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+/** Gate: requires auth. Renders its children (or <Outlet/> when used as a layout route). */
+const RequireAuth: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <LoadingFallback />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <>{children ?? <Outlet />}</>;
+};
 
-  if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh'
-      }}>
-        Loading...
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
+/** Gate: only for unauthenticated users (login/signup pages). */
+const PublicOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <LoadingFallback />;
+  if (isAuthenticated) return <Navigate to="/events" replace />;
   return <>{children}</>;
 };
 
-interface PublicOnlyRouteProps {
-  children: React.ReactNode;
-}
+/** Layout route: auth + sidebar/topbar shell, then renders the matched child route. */
+const ProtectedShell: React.FC = () => (
+  <RequireAuth>
+    <AppShell />
+  </RequireAuth>
+);
 
-const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+// Legacy alias — kept so any imports from outside still resolve.
+// You can delete this once nothing else imports ProtectedRoute.
+export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <RequireAuth>{children}</RequireAuth>
+);
 
-  if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh'
-      }}>
-        Loading...
-      </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/events" replace />;
-  }
-
-  return <>{children}</>;
-};
-
+// ──────────────────────────────────────────────────────────────────
+// Router
+// ──────────────────────────────────────────────────────────────────
 export const AppRouter: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
+        {/* Public marketing home */}
         <Route path="/" element={<HomePage />} />
 
-        {/* Auth routes (redirect if already logged in) */}
-        <Route
-          path="/login"
-          element={
-            <PublicOnlyRoute>
-              <LoginPage />
-            </PublicOnlyRoute>
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            <PublicOnlyRoute>
-              <SignupPage />
-            </PublicOnlyRoute>
-          }
-        />
-        <Route
-          path="/forgot-password"
-          element={
-            <PublicOnlyRoute>
-              <ForgotPasswordPage />
-            </PublicOnlyRoute>
-          }
-        />
-        <Route
-          path="/reset-password"
-          element={
-            <PublicOnlyRoute>
-              <ResetPasswordPage />
-            </PublicOnlyRoute>
-          }
-        />
-        <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/check-email" element={<CheckEmailPage />} />
-        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
+        {/* Auth (redirect away if already signed in) */}
+        <Route path="/login"            element={<PublicOnly><LoginPage /></PublicOnly>} />
+        <Route path="/signup"           element={<PublicOnly><SignupPage /></PublicOnly>} />
+        <Route path="/forgot-password"  element={<PublicOnly><ForgotPasswordPage /></PublicOnly>} />
+        <Route path="/reset-password"   element={<PublicOnly><ResetPasswordPage /></PublicOnly>} />
+        <Route path="/verify-email"     element={<VerifyEmailPage />} />
+        <Route path="/check-email"      element={<CheckEmailPage />} />
+        <Route path="/auth/callback"    element={<OAuthCallbackPage />} />
 
-        {/* Protected routes */}
-        <Route
-          path="/events"
-          element={
-            <ProtectedRoute>
-              <EventsListPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/events/:eventId"
-          element={
-            <ProtectedRoute>
-              <EventDetailPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Profile setup runs OUTSIDE the shell (full-screen onboarding flow) */}
+        <Route path="/profile/setup" element={<RequireAuth><ProfileSetupPage /></RequireAuth>} />
 
-        {/* Profile routes */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile/setup"
-          element={
-            <ProtectedRoute>
-              <ProfileSetupPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile/:userId"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+        {/* All other authenticated routes live inside the AppShell layout */}
+        <Route element={<ProtectedShell />}>
+          <Route path="/events"                       element={<EventsListPage />} />
+          <Route path="/events/:eventId"              element={<EventDetailPage />} />
 
-        {/* Search/Discovery route */}
-        <Route
-          path="/discover"
-          element={
-            <ProtectedRoute>
-              <SearchPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route path="/profile"                      element={<ProfilePage />} />
+          <Route path="/profile/:userId"              element={<ProfilePage />} />
 
-        {/* Network routes */}
-        <Route
-          path="/network"
-          element={
-            <ProtectedRoute>
-              <NetworkPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/connections"
-          element={
-            <ProtectedRoute>
-              <ConnectionsPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route path="/search"                       element={<SearchPage />} />
+          <Route path="/discover"                     element={<DiscoverPage />} />
 
-        {/* Roadmap routes */}
-        <Route
-          path="/roadmap"
-          element={
-            <ProtectedRoute>
-              <RoadmapPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route path="/network"                      element={<NetworkPage />} />
+          <Route path="/connections"                  element={<ConnectionsPage />} />
 
-        {/* Communities routes */}
-        <Route
-          path="/communities"
-          element={
-            <ProtectedRoute>
-              <CommunitiesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/communities/create"
-          element={
-            <ProtectedRoute>
-              <CreateCommunityPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/communities/:communityId"
-          element={
-            <ProtectedRoute>
-              <CommunityDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/communities/:communityId/posts/:postId"
-          element={
-            <ProtectedRoute>
-              <PostDetailPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route path="/roadmap"                      element={<RoadmapPage />} />
 
-        {/* Companies routes */}
-        <Route
-          path="/companies"
-          element={
-            <ProtectedRoute>
-              <CompaniesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/companies/create"
-          element={
-            <ProtectedRoute>
-              <CreateCompanyPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/companies/:companyId"
-          element={
-            <ProtectedRoute>
-              <CompanyDetailPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route path="/communities"                  element={<CommunitiesPage />} />
+          <Route path="/communities/create"           element={<CreateCommunityPage />} />
+          <Route path="/communities/:communityId"     element={<CommunityDetailPage />} />
+          <Route path="/communities/:communityId/posts/:postId" element={<PostDetailPage />} />
 
-        {/* Challenges routes */}
-        <Route
-          path="/challenges"
-          element={
-            <ProtectedRoute>
-              <ChallengesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/challenges/:challengeId"
-          element={
-            <ProtectedRoute>
-              <ChallengeDetailPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route path="/companies"                    element={<CompaniesPage />} />
+          <Route path="/companies/create"             element={<CreateCompanyPage />} />
+          <Route path="/companies/:companyId"         element={<CompanyDetailPage />} />
 
-        {/* Messages routes */}
-        <Route
-          path="/messages"
-          element={
-            <ProtectedRoute>
-              <MessagesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/messages/:conversationId"
-          element={
-            <ProtectedRoute>
-              <MessagesPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route path="/challenges"                   element={<ChallengesPage />} />
+          <Route path="/challenges/:challengeId"      element={<ChallengeDetailPage />} />
 
-        {/* Notifications route */}
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedRoute>
-              <NotificationsPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route path="/messages"                     element={<MessagesPage />} />
+          <Route path="/messages/:conversationId"     element={<MessagesPage />} />
 
-        {/* Catch all - redirect to home */}
+          <Route path="/notifications"                element={<NotificationsPage />} />
+        </Route>
+
+        {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

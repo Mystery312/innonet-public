@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { SearchBar } from '../../features/search/components/SearchBar';
 import { SearchResults } from '../../features/search/components/SearchResults';
 import { KnowledgeGraph } from '../../features/graph/components/KnowledgeGraph';
 import { GraphSidebar } from '../../features/graph/components/GraphSidebar';
-import { BackButton } from '../../components/common/BackButton';
 import { aiApi } from '../../features/profile/api/profileApi';
 import { networkApi } from '../../features/network/api/networkApi';
 import { graphApi } from '../../features/graph/api/graphApi';
@@ -14,6 +14,7 @@ import styles from './SearchPage.module.css';
 type ViewMode = 'list' | 'graph';
 
 export const SearchPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [results, setResults] = useState<ProfileSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuery, setCurrentQuery] = useState('');
@@ -23,9 +24,12 @@ export const SearchPage: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [graphLoading, setGraphLoading] = useState(false);
 
-  const handleSearch = useCallback(async (query: string) => {
+  const handleSearch = useCallback(async (query: string, syncUrl = true) => {
     setIsLoading(true);
     setCurrentQuery(query);
+    // Keep the URL in sync so the search is shareable / reload-safe and the
+    // AppShell topbar field pre-fills from it.
+    if (syncUrl) setSearchParams({ q: query }, { replace: true });
     try {
       const searchResults = await aiApi.search({ query, limit: 20 });
       setResults(searchResults.results);
@@ -35,15 +39,21 @@ export const SearchPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [setSearchParams]);
+
+  // On arrival (or when the ?q= param changes from the topbar), run the search.
+  const urlQuery = searchParams.get('q') || '';
+  useEffect(() => {
+    if (urlQuery && urlQuery !== currentQuery) {
+      handleSearch(urlQuery, false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQuery]);
 
   const handleConnect = useCallback(async (userId: string) => {
     setConnectingUserId(userId);
     try {
-      // Use networkApi instead of raw fetch
       await networkApi.sendConnectionRequest(userId);
-
-      // Update the UI to show connection was sent
       setResults((prev) =>
         prev.map((r) =>
           r.user_id === userId
@@ -82,15 +92,12 @@ export const SearchPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.backNav}>
-        <BackButton fallbackPath="/events" />
-      </div>
       <div className={styles.header}>
         <h1>Discover Professionals</h1>
         <p>Use AI-powered search to find the right people based on skills, experience, and interests.</p>
       </div>
 
-      <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+      <SearchBar onSearch={handleSearch} isLoading={isLoading} initialValue={urlQuery} />
 
       {currentQuery && (
         <div className={styles.viewToggle}>

@@ -55,9 +55,9 @@
 }
 
 .step.active .stepIndicator {
-  background-color: var(--color-accent-emphasis, #0969da);
+  background-color: var(--color-primary);
   color: white;
-  border-color: var(--color-accent-emphasis, #0969da);
+  border-color: var(--color-primary);
 }
 
 .step.completed .stepIndicator {

@@ -87,7 +87,7 @@
 }
 
 .today .dayNumber {
-  color: var(--color-primary, #0969da);
+  color: var(--color-primary, #3232FF);
   font-weight: 700;
 }
 
@@ -107,7 +107,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-primary, #0969da);
+  background: var(--color-primary, #3232FF);
   display: block;
 }
 
@@ -160,7 +160,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--color-primary, #0969da);
+  background: var(--color-primary, #3232FF);
 }
 
 .legendDot.registeredDot {

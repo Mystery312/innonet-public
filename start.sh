@@ -1,45 +1,34 @@
 #!/bin/bash
-
 # Innonet - Launch Script
-# Starts the entire application stack
 #
 # Usage:
-#   ./start.sh           # Development mode (local processes)
-#   ./start.sh --prod    # Production mode (Docker Compose)
-#   ./start.sh --prod --build   # Production mode with forced rebuild
+#   ./start.sh              # Development mode (local processes)
+#   ./start.sh --prod       # Production mode (Docker Compose)
+#   ./start.sh --prod --build   # Production + forced rebuild
 
-set -e  # Exit on error
+set -e
 
-# Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Get the project root directory
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Parse arguments
 MODE="dev"
 BUILD_FLAG=""
 for arg in "$@"; do
     case $arg in
-        --prod|--production)
-            MODE="prod"
-            ;;
-        --build)
-            BUILD_FLAG="--build"
-            ;;
+        --prod|--production) MODE="prod" ;;
+        --build) BUILD_FLAG="--build" ;;
     esac
 done
 
-# PID tracking (dev mode only)
 BACKEND_PID=""
 FRONTEND_PID=""
 
-# Docker compose helper
 docker_compose() {
     if command -v docker-compose &> /dev/null; then
         docker-compose "$@"
@@ -48,39 +37,19 @@ docker_compose() {
     fi
 }
 
-if [ "$MODE" = "prod" ]; then
-    echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║  Innonet - Production Launch Script  ║${NC}"
-    echo -e "${BLUE}╚══════════════════════════════════════╝${NC}\n"
-else
-    echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║  Innonet - Development Launch Script ║${NC}"
-    echo -e "${BLUE}╚══════════════════════════════════════╝${NC}\n"
-fi
+print_status() { echo -e "${GREEN}✓${NC} $1"; }
+print_step()   { echo -e "${YELLOW}→${NC} $1"; }
+print_error()  { echo -e "${RED}✗${NC} $1"; }
+print_info()   { echo -e "${CYAN}ℹ${NC} $1"; }
 
-# Helper functions
-print_status() {
-    echo -e "${GREEN}✓${NC} $1"
-}
-
-print_step() {
-    echo -e "${YELLOW}→${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}✗${NC} $1"
-}
-
-print_info() {
-    echo -e "${CYAN}ℹ${NC} $1"
-}
-
-# ============================================
+# ============================================================
 # Production Mode
-# ============================================
+# ============================================================
 if [ "$MODE" = "prod" ]; then
+    echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║  Innonet — Production Launch Script  ║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════╝${NC}\n"
 
-    # Cleanup for production
     cleanup_prod() {
         echo -e "\n${YELLOW}Shutting down production services...${NC}"
         cd "$PROJECT_ROOT"
@@ -91,133 +60,93 @@ if [ "$MODE" = "prod" ]; then
     }
     trap cleanup_prod SIGINT SIGTERM
 
-    # Step 1: Check prerequisites
-    echo -e "${CYAN}[1/4]${NC} Checking prerequisites..."
+    echo -e "${CYAN}[1/3]${NC} Checking prerequisites..."
 
     if ! command -v docker &> /dev/null; then
-        print_error "Docker is not installed"
-        exit 1
+        print_error "Docker is not installed"; exit 1
     fi
-
     if ! docker info &> /dev/null; then
-        print_error "Docker daemon is not running. Please start Docker and try again."
-        exit 1
+        print_error "Docker daemon is not running. Please start Docker."; exit 1
     fi
+    print_status "Docker available"
 
-    print_status "Docker is available"
-
-    # Step 2: Check .env.production
-    echo -e "\n${CYAN}[2/4]${NC} Checking production environment..."
+    echo -e "\n${CYAN}[2/3]${NC} Checking production environment..."
 
     if [ ! -f "$PROJECT_ROOT/.env.production" ]; then
         print_error ".env.production not found"
-        print_info "Create it from the template and fill in your secrets:"
-        print_info "  cp .env.production.example .env.production"
+        print_info "Create it: cp .env.production.example .env.production"
         exit 1
     fi
 
-    # Warn if CHANGE_ME values are still present
     if grep -q "CHANGE_ME" "$PROJECT_ROOT/.env.production"; then
         echo ""
         print_error "WARNING: .env.production still contains CHANGE_ME placeholder values!"
-        print_info "Edit .env.production and replace all CHANGE_ME values before deploying."
+        print_info "Replace all CHANGE_ME values before deploying to production."
         echo ""
         read -p "Continue anyway? (for local testing) [y/N]: " -n 1 -r
         echo ""
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            exit 1
-        fi
+        [[ ! $REPLY =~ ^[Yy]$ ]] && exit 1
     fi
-
     print_status "Production environment file found"
 
-    # Step 3: Build and start
-    echo -e "\n${CYAN}[3/4]${NC} Building and starting all services..."
-
+    echo -e "\n${CYAN}[3/3]${NC} Building and starting all services..."
     cd "$PROJECT_ROOT"
-    print_step "Running docker compose up (this may take a few minutes on first build)..."
     docker_compose -f docker-compose.prod.yml --env-file .env.production up -d $BUILD_FLAG
 
-    # Step 4: Wait for health and display status
-    echo -e "\n${CYAN}[4/4]${NC} Waiting for services to be healthy..."
-
-    MAX_RETRIES=60
-    RETRY_COUNT=0
-
-    # Wait for backend health check
-    print_step "Waiting for backend..."
-    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-        if docker exec innonet-backend curl -sf http://localhost:8000/health &> /dev/null; then
-            break
-        fi
-        RETRY_COUNT=$((RETRY_COUNT + 1))
+    # Wait for backend
+    print_step "Waiting for backend to be healthy..."
+    for i in $(seq 1 60); do
+        docker exec innonet-backend curl -sf http://localhost:8000/health &> /dev/null && break
         sleep 2
     done
-
-    if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+    if ! docker exec innonet-backend curl -sf http://localhost:8000/health &> /dev/null; then
         print_error "Backend failed to become healthy"
-        print_info "Check logs with: docker compose -f docker-compose.prod.yml logs backend"
+        print_info "Check logs: docker compose -f docker-compose.prod.yml logs backend"
         exit 1
     fi
-    print_status "Backend is healthy"
+    print_status "Backend healthy"
 
-    # Quick check that nginx is responding
-    RETRY_COUNT=0
+    # Wait for nginx
     print_step "Waiting for nginx..."
-    while [ $RETRY_COUNT -lt 15 ]; do
-        if curl -sf http://localhost/health &> /dev/null; then
-            break
-        fi
-        RETRY_COUNT=$((RETRY_COUNT + 1))
+    for i in $(seq 1 15); do
+        curl -sf http://localhost/health &> /dev/null && break
         sleep 2
     done
-
-    if [ $RETRY_COUNT -eq 15 ]; then
-        print_error "Nginx is not responding on port 80"
-        print_info "Check logs with: docker compose -f docker-compose.prod.yml logs nginx"
+    if ! curl -sf http://localhost/health &> /dev/null; then
+        print_error "Nginx not responding on port 80"
+        print_info "Check logs: docker compose -f docker-compose.prod.yml logs nginx"
         exit 1
     fi
-    print_status "Nginx is healthy"
+    print_status "Nginx healthy"
 
-    # Display summary
     echo ""
     echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║    ${GREEN}Production Started Successfully${BLUE}    ║${NC}"
+    echo -e "${BLUE}║   ${GREEN}Production Started Successfully${BLUE}    ║${NC}"
     echo -e "${BLUE}╚══════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${GREEN}Application:${NC}"
-    echo -e "  App:         ${CYAN}http://localhost${NC}"
-    echo -e "  API Health:  ${CYAN}http://localhost/health${NC}"
+    echo -e "  App:      ${CYAN}http://localhost${NC}"
+    echo -e "  Health:   ${CYAN}http://localhost/health${NC}"
     echo ""
-    echo -e "${GREEN}Useful commands:${NC}"
-    echo -e "  Logs:     ${CYAN}docker compose -f docker-compose.prod.yml logs -f${NC}"
-    echo -e "  Stop:     ${CYAN}docker compose -f docker-compose.prod.yml --env-file .env.production down${NC}"
-    echo -e "  Rebuild:  ${CYAN}./start.sh --prod --build${NC}"
-    echo ""
-    echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"
-    echo ""
+    echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}\n"
 
-    # Follow logs
     docker_compose -f docker-compose.prod.yml --env-file .env.production logs -f
-
     exit 0
 fi
 
-# ============================================
-# Development Mode (original behavior)
-# ============================================
+# ============================================================
+# Development Mode
+# ============================================================
+echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
+echo -e "${BLUE}║  Innonet — Development Launch Script ║${NC}"
+echo -e "${BLUE}╚══════════════════════════════════════╝${NC}\n"
 
-# Cleanup function
 cleanup() {
     echo -e "\n${YELLOW}Shutting down services...${NC}"
 
-    # Kill backend if running
     if [ -n "$BACKEND_PID" ] && kill -0 "$BACKEND_PID" 2>/dev/null; then
         kill "$BACKEND_PID" 2>/dev/null || true
         print_status "Backend stopped"
     fi
-
-    # Kill frontend if running
     if [ -n "$FRONTEND_PID" ] && kill -0 "$FRONTEND_PID" 2>/dev/null; then
         kill "$FRONTEND_PID" 2>/dev/null || true
         print_status "Frontend stopped"
@@ -238,286 +167,201 @@ cleanup() {
     echo -e "\n${GREEN}Goodbye!${NC}\n"
     exit 0
 }
-
-# Set trap for cleanup
 trap cleanup SIGINT SIGTERM
 
-# ============================================
-# Step 1: Check Prerequisites
-# ============================================
-echo -e "${CYAN}[1/6]${NC} Checking prerequisites..."
+# ============================================================
+# Step 1: Prerequisites
+# ============================================================
+echo -e "${CYAN}[1/5]${NC} Checking prerequisites..."
 
 MISSING_DEPS=()
-
-if ! command -v docker &> /dev/null; then
-    MISSING_DEPS+=("Docker")
-fi
-
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-    MISSING_DEPS+=("Docker Compose")
-fi
-
-if ! command -v python3 &> /dev/null; then
-    MISSING_DEPS+=("Python 3")
-fi
-
-if ! command -v node &> /dev/null; then
-    MISSING_DEPS+=("Node.js")
-fi
-
-if ! command -v npm &> /dev/null; then
-    MISSING_DEPS+=("npm")
-fi
+command -v docker   &> /dev/null || MISSING_DEPS+=("Docker")
+command -v python3  &> /dev/null || MISSING_DEPS+=("Python 3")
+command -v node     &> /dev/null || MISSING_DEPS+=("Node.js")
+command -v npm      &> /dev/null || MISSING_DEPS+=("npm")
+(command -v docker-compose &> /dev/null || docker compose version &> /dev/null) || MISSING_DEPS+=("Docker Compose")
 
 if [ ${#MISSING_DEPS[@]} -ne 0 ]; then
-    print_error "Missing prerequisites:"
-    for dep in "${MISSING_DEPS[@]}"; do
-        echo -e "       - $dep"
-    done
-    echo ""
-    print_info "Please install the missing dependencies and try again."
+    print_error "Missing prerequisites: ${MISSING_DEPS[*]}"
     exit 1
 fi
-
 print_status "All prerequisites found"
 
-# ============================================
-# Step 2: Setup Environment Files
-# ============================================
-echo -e "\n${CYAN}[2/6]${NC} Checking environment configuration..."
+# ============================================================
+# Step 2: Environment Files
+# ============================================================
+echo -e "\n${CYAN}[2/5]${NC} Checking environment configuration..."
+
+# Root .env for docker-compose
+if [ ! -f "$PROJECT_ROOT/.env" ]; then
+    print_step "Creating root .env for Docker..."
+    cat > "$PROJECT_ROOT/.env" << 'EOF'
+POSTGRES_PASSWORD=postgres_dev_change_me
+REDIS_PASSWORD=redis_dev_change_me
+NEO4J_PASSWORD=neo4j_dev_change_me
+EOF
+    print_status "Root .env created"
+fi
 
 # Backend .env
 if [ ! -f "$PROJECT_ROOT/backend/.env" ]; then
     print_step "Creating backend/.env from template..."
     cp "$PROJECT_ROOT/backend/.env.example" "$PROJECT_ROOT/backend/.env"
 
-    # Generate a random SECRET_KEY
+    # Generate SECRET_KEY
     SECRET_KEY=$(openssl rand -hex 32 2>/dev/null || python3 -c "import secrets; print(secrets.token_hex(32))")
 
-    # Update SECRET_KEY in .env (macOS compatible sed)
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s/your-secret-key-here-generate-with-openssl-rand-hex-32/$SECRET_KEY/" "$PROJECT_ROOT/backend/.env"
-        sed -i '' "s/your-neo4j-password-here/neo4j_dev_change_me/" "$PROJECT_ROOT/backend/.env"
-    else
-        sed -i "s/your-secret-key-here-generate-with-openssl-rand-hex-32/$SECRET_KEY/" "$PROJECT_ROOT/backend/.env"
-        sed -i "s/your-neo4j-password-here/neo4j_dev_change_me/" "$PROJECT_ROOT/backend/.env"
-    fi
+    # Generate ENCRYPTION_KEY_V1 (Fernet key)
+    ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())" 2>/dev/null || openssl rand -base64 32)
 
-    print_status "Backend .env created with generated SECRET_KEY"
-    print_info "Edit backend/.env to add your OPENAI_API_KEY for AI features"
+    # Generate ENCRYPTION_LOOKUP_HASH_KEY (64-char hex)
+    HASH_KEY=$(openssl rand -hex 32)
+
+    SED_I="sed -i"
+    [[ "$OSTYPE" == "darwin"* ]] && SED_I="sed -i ''"
+
+    $SED_I "s/your-secret-key-here-generate-with-openssl-rand-hex-32/$SECRET_KEY/" "$PROJECT_ROOT/backend/.env"
+    $SED_I "s/your-neo4j-password-here/neo4j_dev_change_me/" "$PROJECT_ROOT/backend/.env"
+    # Append encryption keys if not already present
+    grep -q "ENCRYPTION_KEY_V1" "$PROJECT_ROOT/backend/.env" || \
+        echo "ENCRYPTION_KEY_V1=$ENCRYPTION_KEY" >> "$PROJECT_ROOT/backend/.env"
+    grep -q "ENCRYPTION_LOOKUP_HASH_KEY" "$PROJECT_ROOT/backend/.env" || \
+        echo "ENCRYPTION_LOOKUP_HASH_KEY=$HASH_KEY" >> "$PROJECT_ROOT/backend/.env"
+    grep -q "ENCRYPTION_CURRENT_VERSION" "$PROJECT_ROOT/backend/.env" || \
+        echo "ENCRYPTION_CURRENT_VERSION=1" >> "$PROJECT_ROOT/backend/.env"
+
+    print_status "Backend .env created with generated keys"
+    print_info "Add OPENAI_API_KEY to backend/.env to enable AI features"
 else
+    # Ensure encryption keys exist even if .env was created before they were required
+    BACKEND_ENV="$PROJECT_ROOT/backend/.env"
+    if ! grep -q "ENCRYPTION_KEY_V1" "$BACKEND_ENV" || grep -q "^ENCRYPTION_KEY_V1=$" "$BACKEND_ENV"; then
+        ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())" 2>/dev/null || openssl rand -base64 32)
+        echo "ENCRYPTION_KEY_V1=$ENCRYPTION_KEY" >> "$BACKEND_ENV"
+        print_status "Generated missing ENCRYPTION_KEY_V1"
+    fi
+    if ! grep -q "ENCRYPTION_LOOKUP_HASH_KEY" "$BACKEND_ENV" || grep -q "^ENCRYPTION_LOOKUP_HASH_KEY=$" "$BACKEND_ENV"; then
+        HASH_KEY=$(openssl rand -hex 32)
+        echo "ENCRYPTION_LOOKUP_HASH_KEY=$HASH_KEY" >> "$BACKEND_ENV"
+        print_status "Generated missing ENCRYPTION_LOOKUP_HASH_KEY"
+    fi
+    grep -q "ENCRYPTION_CURRENT_VERSION" "$BACKEND_ENV" || \
+        echo "ENCRYPTION_CURRENT_VERSION=1" >> "$BACKEND_ENV"
     print_status "Backend .env exists"
 fi
 
-# Frontend .env
-if [ ! -f "$PROJECT_ROOT/frontend/.env" ]; then
-    print_step "Creating frontend/.env from template..."
-    cp "$PROJECT_ROOT/frontend/.env.example" "$PROJECT_ROOT/frontend/.env"
-    print_status "Frontend .env created"
-else
-    print_status "Frontend .env exists"
-fi
+# ============================================================
+# Step 3: Docker Services
+# ============================================================
+echo -e "\n${CYAN}[3/5]${NC} Starting Docker services..."
 
-# Root .env for docker-compose
-if [ ! -f "$PROJECT_ROOT/.env" ]; then
-    print_step "Creating root .env for Docker..."
-    cat > "$PROJECT_ROOT/.env" << 'EOF'
-# Docker Compose Environment Variables
-POSTGRES_PASSWORD=postgres_dev_change_me
-REDIS_PASSWORD=redis_dev_change_me
-NEO4J_PASSWORD=neo4j_dev_change_me
-EOF
-    print_status "Root .env created"
-else
-    print_status "Root .env exists"
+if ! docker info &> /dev/null; then
+    print_error "Docker daemon is not running. Please start Docker."; exit 1
 fi
-
-# ============================================
-# Step 3: Start Docker Services
-# ============================================
-echo -e "\n${CYAN}[3/6]${NC} Starting Docker services..."
 
 cd "$PROJECT_ROOT"
-
-# Check if Docker daemon is running
-if ! docker info &> /dev/null; then
-    print_error "Docker daemon is not running. Please start Docker and try again."
-    exit 1
-fi
-
-# Start containers
 print_step "Starting PostgreSQL, Redis, and Neo4j..."
-
 docker_compose up -d
 
-# Wait for services to be healthy
 print_step "Waiting for services to be healthy..."
 
-MAX_RETRIES=30
-RETRY_COUNT=0
-
-# Wait for PostgreSQL
-while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if docker exec innonet-postgres pg_isready -U postgres &> /dev/null; then
-        break
-    fi
-    RETRY_COUNT=$((RETRY_COUNT + 1))
+# PostgreSQL
+for i in $(seq 1 30); do
+    docker exec innonet-postgres pg_isready -U postgres &> /dev/null && break
     sleep 1
 done
-
-if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    print_error "PostgreSQL failed to start"
-    exit 1
-fi
+docker exec innonet-postgres pg_isready -U postgres &> /dev/null || { print_error "PostgreSQL failed to start"; exit 1; }
 print_status "PostgreSQL ready"
 
-# Wait for Redis
-RETRY_COUNT=0
-while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if docker exec innonet-redis redis-cli -a redis_dev_change_me ping &> /dev/null; then
-        break
-    fi
-    RETRY_COUNT=$((RETRY_COUNT + 1))
+# Redis (read password from .env)
+REDIS_PASS=$(grep "^REDIS_PASSWORD=" "$PROJECT_ROOT/.env" | cut -d= -f2 || echo "redis_dev_change_me")
+for i in $(seq 1 30); do
+    docker exec innonet-redis redis-cli -a "$REDIS_PASS" ping &> /dev/null && break
     sleep 1
 done
-
-if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    print_error "Redis failed to start"
-    exit 1
-fi
+docker exec innonet-redis redis-cli -a "$REDIS_PASS" ping &> /dev/null || { print_error "Redis failed to start"; exit 1; }
 print_status "Redis ready"
 
-# Wait for Neo4j
-RETRY_COUNT=0
-while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if curl -s http://localhost:7474 &> /dev/null; then
-        break
-    fi
-    RETRY_COUNT=$((RETRY_COUNT + 1))
+# Neo4j
+for i in $(seq 1 30); do
+    curl -s http://localhost:7474 &> /dev/null && break
     sleep 1
 done
-
-if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    print_error "Neo4j failed to start"
-    exit 1
-fi
+curl -s http://localhost:7474 &> /dev/null || { print_error "Neo4j failed to start"; exit 1; }
 print_status "Neo4j ready"
 
-print_status "All Docker services are healthy"
-
-# ============================================
-# Step 4: Setup Backend
-# ============================================
-echo -e "\n${CYAN}[4/6]${NC} Setting up backend..."
+# ============================================================
+# Step 4: Backend
+# ============================================================
+echo -e "\n${CYAN}[4/5]${NC} Setting up and starting backend..."
 
 cd "$PROJECT_ROOT/backend"
 
-# Create virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
     print_step "Creating Python virtual environment..."
     python3 -m venv venv
-    print_status "Virtual environment created"
 fi
 
-# Activate virtual environment
 source venv/bin/activate
+print_step "Installing Python dependencies..."
+pip install --upgrade pip -q
+pip install -r requirements.txt -q
+print_status "Dependencies ready"
 
-# Upgrade pip
-print_step "Upgrading pip..."
-pip install --upgrade pip > /dev/null 2>&1
+print_step "Applying database migrations..."
+alembic upgrade head 2>&1 | tail -5 || print_info "Migrations already up to date"
 
-# Install dependencies
-print_step "Installing Python dependencies (this may take a moment)..."
-pip install -r requirements.txt > /dev/null 2>&1
-print_status "Python dependencies installed"
-
-# Database tables will be created on app startup via SQLAlchemy create_all
-print_status "Database will be initialized on app startup"
-
-# ============================================
-# Step 5: Setup Frontend
-# ============================================
-echo -e "\n${CYAN}[5/6]${NC} Setting up frontend..."
-
-cd "$PROJECT_ROOT/frontend"
-
-# Install dependencies if needed
-if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
-    print_step "Installing Node.js dependencies..."
-    npm install > /dev/null 2>&1
-    print_status "Node.js dependencies installed"
-else
-    print_status "Node.js dependencies up to date"
-fi
-
-# ============================================
-# Step 6: Start Application Services
-# ============================================
-echo -e "\n${CYAN}[6/6]${NC} Starting application services..."
-
-# Start backend
-print_step "Starting FastAPI backend on port 8000..."
-cd "$PROJECT_ROOT/backend"
-source venv/bin/activate
+print_step "Starting FastAPI backend on :8000..."
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
-# Wait for backend to be ready
-sleep 3
-RETRY_COUNT=0
-while [ $RETRY_COUNT -lt 20 ]; do
-    if curl -s http://localhost:8000/health &> /dev/null; then
-        break
-    fi
-    RETRY_COUNT=$((RETRY_COUNT + 1))
+for i in $(seq 1 20); do
+    curl -s http://localhost:8000/health &> /dev/null && break
     sleep 1
 done
-
-if ! curl -s http://localhost:8000/health &> /dev/null; then
-    print_error "Backend failed to start. Check logs above for errors."
-    exit 1
-fi
+curl -s http://localhost:8000/health &> /dev/null || { print_error "Backend failed to start — check output above"; exit 1; }
 print_status "Backend started (PID: $BACKEND_PID)"
 
-# Seed the database with sample data
-print_step "Seeding database with sample data..."
-if docker exec -i innonet-postgres psql -U postgres -d innonet < "$PROJECT_ROOT/backend/init-db.sql" > /dev/null 2>&1; then
-    print_status "Database seeded with sample data"
-else
-    print_info "Database seeding skipped (may already have data)"
+# Seed sample data (skips silently if DB already has data)
+if [ -f "$PROJECT_ROOT/backend/init-db.sql" ]; then
+    docker exec -i innonet-postgres psql -U postgres -d innonet \
+        < "$PROJECT_ROOT/backend/init-db.sql" > /dev/null 2>&1 \
+        && print_status "Sample data seeded" \
+        || print_info "Sample data skipped (DB already populated)"
 fi
 
-# Start frontend
-print_step "Starting React frontend on port 5173..."
+# ============================================================
+# Step 5: Frontend
+# ============================================================
+echo -e "\n${CYAN}[5/5]${NC} Setting up and starting frontend..."
+
 cd "$PROJECT_ROOT/frontend"
+
+if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
+    print_step "Installing Node.js dependencies..."
+    npm install -q
+fi
+print_status "Node dependencies ready"
+
+print_step "Starting React frontend on :5173..."
 npm run dev &
 FRONTEND_PID=$!
-
-# Wait for frontend to be ready
-sleep 3
+sleep 2
 print_status "Frontend started (PID: $FRONTEND_PID)"
 
-# ============================================
-# Display Summary
-# ============================================
+# ============================================================
+# Summary
+# ============================================================
 echo ""
 echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║    ${GREEN}Application Started Successfully${BLUE}   ║${NC}"
+echo -e "${BLUE}║   ${GREEN}Application Started Successfully${BLUE}   ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${GREEN}Application URLs:${NC}"
-echo -e "  Frontend:    ${CYAN}http://localhost:5173${NC}"
-echo -e "  Backend:     ${CYAN}http://localhost:8000${NC}"
-echo -e "  API Docs:    ${CYAN}http://localhost:8000/docs${NC}"
+echo -e "  Frontend:  ${CYAN}http://localhost:5173${NC}"
+echo -e "  API:       ${CYAN}http://localhost:8000${NC}"
+echo -e "  Docs:      ${CYAN}http://localhost:8000/docs${NC}"
+echo -e "  Neo4j:     ${CYAN}http://localhost:7474${NC}"
 echo ""
-echo -e "${GREEN}Database Services:${NC}"
-echo -e "  PostgreSQL:  ${CYAN}localhost:5432${NC}"
-echo -e "  Redis:       ${CYAN}localhost:6379${NC}"
-echo -e "  Neo4j:       ${CYAN}http://localhost:7474${NC} (browser)"
-echo -e "               ${CYAN}bolt://localhost:7687${NC} (driver)"
-echo ""
-echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"
-echo ""
+echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}\n"
 
-# Wait for both processes
 wait

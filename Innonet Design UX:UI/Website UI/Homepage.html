@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-density="default">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>InnoNet — From ideas to impact, faster</title>
+  <link rel="icon" href="assets/favicon.svg"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="HeroVisuals.jsx"></script>
+  <script type="text/babel" src="LiveGraph.jsx"></script>
+  <script type="text/babel" src="Sections.jsx"></script>
+
+  <script type="text/babel">
+    const { useEffect } = React;
+
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "theme": "dark",
+      "density": "default",
+      "heroVariant": "constellation"
+    }/*EDITMODE-END*/;
+
+    const HERO_VARIANTS = [
+      { k: 'constellation', label: 'Constellation', sub: 'graph metaphor — the default' },
+      { k: 'orbits',        label: 'Orbits',        sub: 'concentric, kinetic' },
+      { k: 'flow',          label: 'Flow field',    sub: 'concentric arcs, layered' },
+      { k: 'grid',          label: 'Grid',          sub: 'modular, technical' },
+    ];
+
+    function HeroVisualSwitch({ variant }) {
+      switch (variant) {
+        case 'orbits':       return <HeroVisualOrbits/>;
+        case 'flow':         return <HeroVisualFlowField/>;
+        case 'grid':         return <HeroVisualGrid/>;
+        default:             return <HeroVisualConstellation/>;
+      }
+    }
+
+    function Nav({ tweaks, setTweak }) {
+      const dark = tweaks.theme === 'dark';
+      return (
+        <nav className="nav">
+          <div className="nav-inner">
+            <a className="nav-logo">
+              <img src="assets/logo.svg" alt="InnoNet"/>
+            </a>
+            <div className="nav-links">
+              <a className="nav-link">Discover</a>
+              <a className="nav-link">Projects</a>
+              <a className="nav-link">Events</a>
+              <a className="nav-link">Communities</a>
+              <a className="nav-link">About</a>
+            </div>
+            <div className="nav-cta">
+              <button className="theme-toggle"
+                      onClick={() => setTweak('theme', dark ? 'light' : 'dark')}
+                      title={dark ? 'Switch to light' : 'Switch to dark'}
+                      aria-label="Toggle theme">
+                {dark ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                )}
+              </button>
+              <a className="btn btn-ghost btn-sm">Log in</a>
+              <a className="btn btn-primary btn-sm">Get early access</a>
+            </div>
+          </div>
+        </nav>
+      );
+    }
+
+    function Hero({ tweaks }) {
+      const variantMeta = HERO_VARIANTS.find(v => v.k === tweaks.heroVariant) || HERO_VARIANTS[0];
+      return (
+        <section className="hero" data-screen-label="Hero">
+          <div className="container hero-inner">
+            <div className="hero-copy">
+              <span className="eyebrow"><span className="pulse"></span>now in private beta · seoul, sf, shanghai</span>
+              <h1 className="hero-title">
+                From ideas<br/>
+                to impact, <span className="accent">faster.</span>
+              </h1>
+              <p className="hero-lead">
+                InnoNet is a network for young builders. Find collaborators, hackathons, and projects in one graph — built for people who actually ship.
+              </p>
+              <div className="hero-cta-row">
+                <button className="btn btn-primary btn-lg">Get early access</button>
+                <button className="btn btn-outline btn-lg">Watch the demo</button>
+              </div>
+              <div className="hero-trust">
+                <div className="stack">
+                  <span className="av">M</span>
+                  <span className="av">A</span>
+                  <span className="av">R</span>
+                  <span className="av">N</span>
+                </div>
+                <span>487 builders shipping right now</span>
+              </div>
+            </div>
+            <div className="hero-visual">
+              <div className="hero-stage">
+                <span className="hero-stage-corner"><span className="dot"></span>graph.live</span>
+                <span className="hero-stage-corner-r">{variantMeta.label.toLowerCase()} · {variantMeta.sub}</span>
+                <HeroVisualSwitch variant={tweaks.heroVariant}/>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function App() {
+      const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', tweaks.theme);
+        document.documentElement.setAttribute('data-density', tweaks.density);
+      }, [tweaks.theme, tweaks.density]);
+
+      return (
+        <>
+          <Nav tweaks={tweaks} setTweak={setTweak}/>
+          <Hero tweaks={tweaks}/>
+          <StatsStrip/>
+
+          <section className="section graph-section" data-screen-label="Live graph">
+            <div className="container">
+              <div className="section-head">
+                <span className="eyebrow">The network is the product</span>
+                <h2>Every builder, project, and event — connected.</h2>
+                <p>Hover any node to see what someone is working on. Filter to see only the kinds of connections that matter to you.</p>
+              </div>
+              <LiveGraph/>
+            </div>
+          </section>
+
+          <FeaturedProjects/>
+          <Events/>
+          <Testimonials/>
+          <FAQ/>
+          <FinalCTA/>
+          <Footer/>
+
+          <TweaksPanel title="Tweaks">
+            <TweakSection label="Appearance">
+              <TweakRadio label="Theme" value={tweaks.theme} onChange={v => setTweak('theme', v)}
+                          options={[{value:'dark', label:'Dark'}, {value:'light', label:'Light'}]}/>
+              <TweakRadio label="Density" value={tweaks.density} onChange={v => setTweak('density', v)}
+                          options={[{value:'compact', label:'Compact'}, {value:'default', label:'Default'}, {value:'airy', label:'Airy'}]}/>
+            </TweakSection>
+            <TweakSection label="Hero visual">
+              <TweakSelect label="Variant" value={tweaks.heroVariant} onChange={v => setTweak('heroVariant', v)}
+                           options={HERO_VARIANTS.map(v => ({value: v.k, label: `${v.label} — ${v.sub}`}))}/>
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>

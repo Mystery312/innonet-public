@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.waitlist.models import Waitlist
 from src.email.service import EmailService
+from src.utils.encryption import compute_lookup_hash
 
 
 class WaitlistService:
@@ -17,8 +18,11 @@ class WaitlistService:
         if existing:
             raise ValueError("Email already on waitlist")
 
-        # Create new entry
-        entry = Waitlist(email=email, source=source)
+        entry = Waitlist(
+            email=email,
+            email_lookup_hash=compute_lookup_hash(email),
+            source=source,
+        )
         self.db.add(entry)
         await self.db.flush()
 
@@ -39,8 +43,9 @@ class WaitlistService:
         return entry, position
 
     async def get_by_email(self, email: str) -> Optional[Waitlist]:
+        email_hash = compute_lookup_hash(email)
         result = await self.db.execute(
-            select(Waitlist).where(Waitlist.email == email)
+            select(Waitlist).where(Waitlist.email_lookup_hash == email_hash)
         )
         return result.scalar_one_or_none()
 

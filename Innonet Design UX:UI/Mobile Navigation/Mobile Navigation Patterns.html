@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Innonet Mobile Navigation Patterns</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       DESIGN CONTEXT + ASSUMPTIONS
+       ============================================================
+
+       Problem:
+       - Innonet Navbar has 7+ nav links in a single row
+       - No responsive breakpoints → overflow on mobile
+       - Currently uses CSS Modules (legacy)
+
+       Solution approach:
+       This prototype explores 3 mobile navigation patterns:
+
+       1. SLIDE-OUT DRAWER (hamburger menu)
+          - Most familiar pattern for users
+          - Keeps desktop layout intact
+          - Full navigation accessible via slide-in panel
+          - Good for 5-10+ nav items
+
+       2. BOTTOM TAB BAR
+          - Mobile-first, thumb-friendly
+          - Persistent visibility of key actions
+          - Limited to 4-5 primary items
+          - Secondary items in "More" menu
+
+       3. PRIORITY+ PATTERN
+          - Show what fits, hide overflow
+          - Progressive disclosure
+          - Desktop → Mobile continuity
+          - Best for 6-8 nav items
+
+       Design System Integration:
+       - Uses Innonet's design tokens from index.css
+       - Tailwind v4 utility classes
+       - Dark mode via data-theme attribute
+       - 44px minimum touch targets (WCAG AAA)
+       - Electric blue primary (#3232FF)
+       - Space Grotesk font family
+
+       ============================================================ */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Design Tokens — mirrored from index.css */
+    :root {
+      /* Innonet Blue */
+      --blue-50:  #EBEBFF;
+      --blue-100: #D6D6FF;
+      --blue-200: #ADADFF;
+      --blue-300: #7A7AFF;
+      --blue-400: #4D4DFF;
+      --blue-500: #3232FF;
+      --blue-600: #2222E6;
+      --blue-700: #1A1ACC;
+
+      /* Neutrals */
+      --gray-50:  #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1E293B;
+      --gray-900: #0F172A;
+
+      --ink-1000: #0A0A0F;
+      --ink-900:  #111114;
+      --ink-800:  #1A1A1F;
+      --ink-700:  #25252C;
+      --ink-600:  #353541;
+
+      /* Semantic tokens — light */
+      --color-primary: var(--blue-500);
+      --color-primary-hover: var(--blue-600);
+      --color-primary-soft: rgba(50, 50, 255, 0.10);
+
+      --color-bg: #FFFFFF;
+      --color-bg-secondary: var(--gray-50);
+      --color-surface: #FFFFFF;
+
+      --color-fg: var(--gray-900);
+      --color-fg-secondary: var(--gray-600);
+      --color-fg-muted: var(--gray-500);
+
+      --color-border: var(--gray-200);
+      --color-border-strong: var(--gray-300);
+
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.10), 0 4px 6px -4px rgba(15, 23, 42, 0.06);
+
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+
+      --duration-fast: 120ms;
+      --duration-base: 200ms;
+      --duration-slow: 320ms;
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+      --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --color-primary: var(--blue-500);
+      --color-primary-hover: var(--blue-400);
+      --color-primary-soft: rgba(50, 50, 255, 0.16);
+
+      --color-bg: var(--ink-900);
+      --color-bg-secondary: var(--ink-1000);
+      --color-surface: var(--ink-800);
+
+      --color-fg: #FFFFFF;
+      --color-fg-secondary: #A1A1AA;
+      --color-fg-muted: #71717A;
+
+      --color-border: var(--ink-600);
+      --color-border-strong: #4B4B58;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+    }
+
+    body {
+      font-family: var(--font-display);
+      background: var(--color-bg-secondary);
+      color: var(--color-fg);
+      line-height: 1.6;
+      transition: background-color var(--duration-base) var(--ease-out),
+                  color var(--duration-base) var(--ease-out);
+    }
+
+    /* Prototype frame */
+    .prototype-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+
+    .prototype-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .prototype-header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .prototype-header p {
+      color: var(--color-fg-secondary);
+      font-size: 1.125rem;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* Pattern grid */
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+
+    .pattern-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      transition: box-shadow var(--duration-base) var(--ease-out);
+    }
+
+    .pattern-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .pattern-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .pattern-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .pattern-header p {
+      color: var(--color-fg-secondary);
+      font-size: 0.875rem;
+    }
+
+    .pattern-body {
+      padding: 0;
+      position: relative;
+      background: var(--color-bg-secondary);
+    }
+
+    /* Device frame */
+    .device-frame {
+      max-width: 375px;
+      margin: 32px auto;
+      background: var(--color-bg);
+      border: 12px solid var(--color-fg);
+      border-radius: 36px;
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .device-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 28px;
+      background: var(--color-fg);
+      border-radius: 0 0 16px 16px;
+      z-index: 1000;
+    }
+
+    .device-screen {
+      height: 667px;
+      overflow: auto;
+      position: relative;
+    }
+
+    /* Common navbar styles */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-border);
+      padding: 12px 16px;
+      transition: background var(--duration-base) var(--ease-out);
+    }
+
+    [data-theme="dark"] .navbar {
+      background: rgba(17, 17, 20, 0.8);
+    }
+
+    .navbar-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .navbar-logo {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+
+    .navbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Icon button */
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      color: var(--color-fg-secondary);
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .icon-btn:hover {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Sample content */
+    .sample-content {
+      padding: 24px 16px;
+      min-height: 600px;
+    }
+
+    .sample-content h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .sample-content p {
+      color: var(--color-fg-secondary);
+      margin-bottom: 16px;
+    }
+
+    .content-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    /* ============================================================
+       PATTERN 1: SLIDE-OUT DRAWER
+       ============================================================ */
+
+    .hamburger {
+      width: 24px;
+      height: 24px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .hamburger span {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: currentColor;
+      border-radius: 2px;
+      transition: all var(--duration-base) var(--ease-out);
+    }
+
+    .hamburger span:nth-child(1) { top: 4px; }
+    .hamburger span:nth-child(2) { top: 11px; }
+    .hamburger span:nth-child(3) { top: 18px; }
+
+    .hamburger.active span:nth-child(1) {
+      top: 11px;
+      transform: rotate(45deg);
+    }
+
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+      top: 11px;
+      transform: rotate(-45deg);
+    }
+
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--duration-base) var(--ease-out);
+      z-index: 200;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      background: var(--color-bg);
+      box-shadow: var(--shadow-xl);
+      transform: translateX(-100%);
+      transition: transform var(--duration-slow) var(--ease-out);
+      z-index: 300;
+      overflow-y: auto;
+    }
+
+    .drawer.active {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .drawer-nav {
+      padding: 12px;
+    }
+
+    .drawer-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: var(--color-fg-secondary);
+      text-decoration: none;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      font-size: 0.9375rem;
+      transition: all var(--duration-fast) var(--ease-out);
+      min-height: 44px;
+    }
+
+    .drawer-nav-link:hover {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+    }
+
+    .drawer-nav-link.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    .drawer-footer {
+      padding: 20px;
+      border-top: 1px solid var(--color-border);
+      margin-top: auto;
+    }
+
+    .drawer-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--color-bg-secondary);
+      border-radius: var(--radius-md);
+      margin-bottom: 12px;
+    }
+
+    .drawer-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .drawer-user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .drawer-username {
+      font-weight: 600;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .drawer-email {
+      font-size: 0.75rem;
+      color: var(--color-fg-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .drawer-logout {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-fg-secondary);
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .drawer-logout:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    /* ============================================================
+       PATTERN 2: BOTTOM TAB BAR
+       ============================================================ */
+
+    .bottom-tabs {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--color-bg);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+      z-index: 100;
+    }
+
+    [data-theme="dark"] .bottom-tabs {
+      background: rgba(17, 17, 20, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      color: var(--color-fg-muted);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+      min-width: 64px;
+      min-height: 56px;
+      position: relative;
+    }
+
+    .tab-btn:active {
+      transform: scale(0.95);
+    }
+
+    .tab-btn.active {
+      color: var(--color-primary);
+    }
+
+    .tab-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .tab-btn .badge {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      width: 18px;
+      height: 18px;
+      background: #EF4444;
+      color: white;
+      border-radius: 50%;
+      font-size: 0.625rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .bottom-content {
+      padding-bottom: 88px;
+    }
+
+    /* More menu */
+    .more-menu {
+      position: fixed;
+      bottom: 72px;
+      right: 12px;
+      width: 240px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: all var(--duration-base) var(--ease-out);
+      z-index: 200;
+    }
+
+    .more-menu.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
+
+    .more-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: var(--color-fg);
+      text-decoration: none;
+      transition: background var(--duration-fast) var(--ease-out);
+      font-size: 0.9375rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .more-menu-item:last-child {
+      border-bottom: none;
+    }
+
+    .more-menu-item:hover {
+      background: var(--color-bg-secondary);
+    }
+
+    .more-menu-item svg {
+      width: 20px;
+      height: 20px;
+      color: var(--color-fg-secondary);
+    }
+
+    /* ============================================================
+       PATTERN 3: PRIORITY+ (SHOW WHAT FITS)
+       ============================================================ */
+
+    .priority-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .priority-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      color: var(--color-fg-secondary);
+      text-decoration: none;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      font-size: 0.8125rem;
+      white-space: nowrap;
+      transition: all var(--duration-fast) var(--ease-out);
+      min-height: 44px;
+    }
+
+    .priority-nav-link:hover {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+    }
+
+    .priority-nav-link.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+    }
+
+    .priority-nav-link svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .priority-nav-link.hidden {
+      display: none;
+    }
+
+    .overflow-menu {
+      position: relative;
+    }
+
+    .overflow-toggle {
+      display: none;
+    }
+
+    .overflow-toggle.visible {
+      display: flex;
+    }
+
+    .overflow-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      min-width: 200px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: all var(--duration-base) var(--ease-out);
+      z-index: 200;
+    }
+
+    .overflow-dropdown.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
+
+    .overflow-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: var(--color-fg);
+      text-decoration: none;
+      font-size: 0.9375rem;
+      transition: background var(--duration-fast) var(--ease-out);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .overflow-dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .overflow-dropdown-item:hover {
+      background: var(--color-bg-secondary);
+    }
+
+    .overflow-dropdown-item svg {
+      width: 18px;
+      height: 18px;
+      color: var(--color-fg-secondary);
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 1000;
+    }
+
+    .theme-toggle-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 50%;
+      color: var(--color-fg);
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .theme-toggle-btn:hover {
+      box-shadow: var(--shadow-lg);
+      border-color: var(--color-primary);
+    }
+
+    .theme-toggle-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Implementation notes */
+    .implementation-notes {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-top: 48px;
+    }
+
+    .implementation-notes h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .implementation-notes h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      color: var(--color-primary);
+    }
+
+    .implementation-notes ul {
+      margin-left: 24px;
+      margin-bottom: 16px;
+      color: var(--color-fg-secondary);
+    }
+
+    .implementation-notes li {
+      margin-bottom: 8px;
+    }
+
+    .implementation-notes code {
+      background: var(--color-bg-secondary);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-family: ui-monospace, monospace;
+      font-size: 0.875rem;
+      color: var(--color-primary);
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 24px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .comparison-table th {
+      font-weight: 600;
+      background: var(--color-bg-secondary);
+    }
+
+    .comparison-table td {
+      color: var(--color-fg-secondary);
+      font-size: 0.9375rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .pattern-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .prototype-header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-toggle">
+    <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark mode">
+      <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"/>
+        <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42"/>
+      </svg>
+      <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display: none;">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="prototype-container">
+    <header class="prototype-header">
+      <h1>Mobile Navigation Patterns</h1>
+      <p>Exploring responsive navigation solutions for the Innonet platform — optimized for mobile viewports with 7+ navigation items</p>
+    </header>
+
+    <div class="pattern-grid">
+      <!-- PATTERN 1: SLIDE-OUT DRAWER -->
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <h2>1. Slide-Out Drawer</h2>
+          <p>Hamburger menu with off-canvas navigation panel</p>
+        </div>
+        <div class="pattern-body">
+          <div class="device-frame">
+            <div class="device-notch"></div>
+            <div class="device-screen" id="drawer-screen">
+              <!-- Navbar -->
+              <nav class="navbar">
+                <div class="navbar-content">
+                  <button class="icon-btn" onclick="toggleDrawer()" aria-label="Toggle menu">
+                    <div class="hamburger" id="hamburger">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </button>
+                  <a href="#" class="navbar-logo">Innonet</a>
+                  <div class="navbar-actions">
+                    <button class="icon-btn" aria-label="Notifications">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </nav>
+
+              <!-- Drawer overlay -->
+              <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+
+              <!-- Drawer -->
+              <div class="drawer" id="drawer">
+                <div class="drawer-header">
+                  <span class="navbar-logo">Innonet</span>
+                  <button class="icon-btn" onclick="toggleDrawer()" aria-label="Close menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <nav class="drawer-nav">
+                  <a href="#" class="drawer-nav-link active">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Discover
+                  </a>
+                  <a href="#" class="drawer-nav-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                      <path d="M16 2v4M8 2v4M3 10h18"/>
+                    </svg>
+                    Events
+                  </a>
+                  <a href="#" class="drawer-nav-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                    </svg>
+                    Communities
+                  </a>
+                  <a href="#" class="drawer-nav-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                    Challenges
+                  </a>
+                  <a href="#" class="drawer-nav-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                      <path d="M9 22V12h6v10"/>
+                    </svg>
+                    Companies
+                  </a>
+                  <a href="#" class="drawer-nav-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/>
+                    </svg>
+                    Network
+                  </a>
+                  <a href="#" class="drawer-nav-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                    Messages
+                  </a>
+                </nav>
+
+                <div class="drawer-footer">
+                  <div class="drawer-user">
+                    <div class="drawer-avatar">JD</div>
+                    <div class="drawer-user-info">
+                      <div class="drawer-username">johndoe</div>
+                      <div class="drawer-email">john@example.com</div>
+                    </div>
+                  </div>
+                  <button class="drawer-logout">Log out</button>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="sample-content">
+                <h3>Discover</h3>
+                <p>Explore profiles and connect with professionals in your field.</p>
+                <div class="content-card">
+                  <strong>Sarah Chen</strong><br>
+                  <small style="color: var(--color-fg-secondary)">Product Designer at Figma</small>
+                </div>
+                <div class="content-card">
+                  <strong>Michael Torres</strong><br>
+                  <small style="color: var(--color-fg-secondary)">Senior Engineer at Stripe</small>
+                </div>
+                <div class="content-card">
+                  <strong>Emma Wilson</strong><br>
+                  <small style="color: var(--color-fg-secondary)">VP of Marketing at Notion</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATTERN 2: BOTTOM TAB BAR -->
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <h2>2. Bottom Tab Bar</h2>
+          <p>Mobile-first navigation with persistent bottom tabs</p>
+        </div>
+        <div class="pattern-body">
+          <div class="device-frame">
+            <div class="device-notch"></div>
+            <div class="device-screen">
+              <!-- Navbar -->
+              <nav class="navbar">
+                <div class="navbar-content">
+                  <a href="#" class="navbar-logo">Innonet</a>
+                  <div class="navbar-actions">
+                    <button class="icon-btn" aria-label="Search">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </nav>
+
+              <!-- Content -->
+              <div class="sample-content bottom-content">
+                <h3>Discover</h3>
+                <p>Swipe to connect with professionals in your network.</p>
+                <div class="content-card">
+                  <strong>Alex Johnson</strong><br>
+                  <small style="color: var(--color-fg-secondary)">UX Researcher at Adobe</small>
+                </div>
+                <div class="content-card">
+                  <strong>Lisa Park</strong><br>
+                  <small style="color: var(--color-fg-secondary)">Data Scientist at Google</small>
+                </div>
+                <div class="content-card">
+                  <strong>David Kim</strong><br>
+                  <small style="color: var(--color-fg-secondary)">Founder at TechStart</small>
+                </div>
+              </div>
+
+              <!-- Bottom tabs -->
+              <nav class="bottom-tabs">
+                <button class="tab-btn active">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                  <span>Discover</span>
+                </button>
+                <button class="tab-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <path d="M16 2v4M8 2v4M3 10h18"/>
+                  </svg>
+                  <span>Events</span>
+                </button>
+                <button class="tab-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/>
+                  </svg>
+                  <span>Network</span>
+                </button>
+                <button class="tab-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  </svg>
+                  <span class="badge">3</span>
+                  <span>Messages</span>
+                </button>
+                <button class="tab-btn" onclick="toggleMoreMenu()">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+                  </svg>
+                  <span>More</span>
+                </button>
+              </nav>
+
+              <!-- More menu -->
+              <div class="more-menu" id="more-menu">
+                <a href="#" class="more-menu-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                  </svg>
+                  Communities
+                </a>
+                <a href="#" class="more-menu-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                  </svg>
+                  Challenges
+                </a>
+                <a href="#" class="more-menu-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                    <path d="M9 22V12h6v10"/>
+                  </svg>
+                  Companies
+                </a>
+                <a href="#" class="more-menu-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                  </svg>
+                  Settings
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATTERN 3: PRIORITY+ -->
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <h2>3. Priority+ Pattern</h2>
+          <p>Show what fits, hide overflow in dropdown</p>
+        </div>
+        <div class="pattern-body">
+          <div class="device-frame">
+            <div class="device-notch"></div>
+            <div class="device-screen">
+              <!-- Navbar -->
+              <nav class="navbar">
+                <div class="navbar-content">
+                  <a href="#" class="navbar-logo">Innonet</a>
+
+                  <div class="priority-nav" id="priority-nav">
+                    <a href="#" class="priority-nav-link active" data-priority="1">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                      </svg>
+                      Discover
+                    </a>
+                    <a href="#" class="priority-nav-link" data-priority="2">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <path d="M16 2v4M8 2v4M3 10h18"/>
+                      </svg>
+                      Events
+                    </a>
+                    <a href="#" class="priority-nav-link hidden" data-priority="3">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                      </svg>
+                      Communities
+                    </a>
+                  </div>
+
+                  <div class="navbar-actions">
+                    <button class="icon-btn" aria-label="Notifications">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                      </svg>
+                    </button>
+
+                    <div class="overflow-menu">
+                      <button class="icon-btn overflow-toggle visible" onclick="toggleOverflowMenu()" aria-label="More">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+                        </svg>
+                      </button>
+
+                      <div class="overflow-dropdown" id="overflow-dropdown">
+                        <a href="#" class="overflow-dropdown-item">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                          </svg>
+                          Communities
+                        </a>
+                        <a href="#" class="overflow-dropdown-item">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                          </svg>
+                          Challenges
+                        </a>
+                        <a href="#" class="overflow-dropdown-item">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                            <path d="M9 22V12h6v10"/>
+                          </svg>
+                          Companies
+                        </a>
+                        <a href="#" class="overflow-dropdown-item">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/>
+                          </svg>
+                          Network
+                        </a>
+                        <a href="#" class="overflow-dropdown-item">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                          </svg>
+                          Messages
+                        </a>
+                        <a href="#" class="overflow-dropdown-item">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                          </svg>
+                          Settings
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </nav>
+
+              <!-- Content -->
+              <div class="sample-content">
+                <h3>Discover</h3>
+                <p>Connect with professionals and grow your network.</p>
+                <div class="content-card">
+                  <strong>Rachel Green</strong><br>
+                  <small style="color: var(--color-fg-secondary)">Brand Strategist at Nike</small>
+                </div>
+                <div class="content-card">
+                  <strong>Tom Martinez</strong><br>
+                  <small style="color: var(--color-fg-secondary)">iOS Developer at Apple</small>
+                </div>
+                <div class="content-card">
+                  <strong>Nina Patel</strong><br>
+                  <small style="color: var(--color-fg-secondary)">Head of Growth at Airbnb</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Implementation notes -->
+    <div class="implementation-notes">
+      <h2>Implementation Guide</h2>
+
+      <h3>Pattern Comparison</h3>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Pattern</th>
+            <th>Best For</th>
+            <th>Pros</th>
+            <th>Cons</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Slide-Out Drawer</strong></td>
+            <td>7-15 navigation items</td>
+            <td>Familiar, scalable, desktop continuity</td>
+            <td>Requires extra tap to access, hidden by default</td>
+          </tr>
+          <tr>
+            <td><strong>Bottom Tab Bar</strong></td>
+            <td>4-5 primary destinations</td>
+            <td>Always visible, thumb-friendly, mobile-native feel</td>
+            <td>Limited slots, reduces screen space</td>
+          </tr>
+          <tr>
+            <td><strong>Priority+</strong></td>
+            <td>6-8 items, dynamic content</td>
+            <td>Progressive disclosure, desktop→mobile continuity</td>
+            <td>More complex responsive logic, may confuse users</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Recommendation: Slide-Out Drawer</h3>
+      <ul>
+        <li><strong>Best fit for Innonet</strong> — 7 primary nav items (Discover, Events, Communities, Challenges, Companies, Network, Messages) + user menu</li>
+        <li><strong>Familiar pattern</strong> — Users expect hamburger menus on mobile, reducing learning curve</li>
+        <li><strong>Scalable</strong> — Can easily add more nav items without layout constraints</li>
+        <li><strong>Desktop continuity</strong> — Desktop horizontal nav transitions cleanly to mobile drawer</li>
+        <li><strong>Accessibility</strong> — 44px minimum touch targets, keyboard navigation support, ARIA labels</li>
+      </ul>
+
+      <h3>Technical Implementation</h3>
+      <p>Migrating Navbar.tsx to Tailwind + responsive drawer:</p>
+
+      <ul>
+        <li><strong>Desktop (≥768px)</strong>: Keep current horizontal layout with minor Tailwind refactor</li>
+        <li><strong>Mobile (<768px)</strong>: Hide horizontal links, show hamburger button, implement drawer with Radix Dialog primitive</li>
+        <li><strong>State management</strong>: <code>useState</code> for drawer open/closed</li>
+        <li><strong>Animation</strong>: CSS transitions matching <code>--duration-slow</code> (320ms) with <code>--ease-out</code></li>
+        <li><strong>Dark mode</strong>: Use existing <code>data-theme</code> attribute, drawer inherits theme automatically</li>
+        <li><strong>Icons</strong>: <code>lucide-react</code> already in package.json (Menu, X, icons for nav items)</li>
+        <li><strong>Overlay</strong>: Semi-transparent backdrop with click-to-close</li>
+        <li><strong>Body scroll lock</strong>: Prevent background scrolling when drawer is open</li>
+      </ul>
+
+      <h3>Code Snippets</h3>
+      <p>Key responsive utilities:</p>
+      <ul>
+        <li><code>hidden md:flex</code> — Hide on mobile, show on desktop (horizontal nav)</li>
+        <li><code>flex md:hidden</code> — Show on mobile, hide on desktop (hamburger button)</li>
+        <li><code>fixed inset-0 z-50</code> — Full-screen drawer overlay</li>
+        <li><code>transition-transform duration-[320ms]</code> — Smooth slide-in animation</li>
+        <li><code>translate-x-[-100%]</code> → <code>translate-x-0</code> — Drawer slide animation</li>
+      </ul>
+
+      <h3>Accessibility Checklist</h3>
+      <ul>
+        <li>44px minimum touch targets (WCAG AAA compliance)</li>
+        <li><code>aria-label</code> on hamburger button ("Toggle menu")</li>
+        <li><code>aria-expanded</code> state on drawer trigger</li>
+        <li>Keyboard support: Esc to close drawer, Tab navigation through links</li>
+        <li>Focus trap when drawer is open</li>
+        <li>Screen reader announcements for drawer state changes</li>
+        <li>Color contrast ratio ≥4.5:1 (WCAG AA)</li>
+      </ul>
+
+      <h3>Next Steps</h3>
+      <ul>
+        <li>Refactor <code>Navbar.tsx</code> to use Tailwind utilities instead of inline styles</li>
+        <li>Add responsive breakpoint at 768px (Tailwind <code>md:</code>)</li>
+        <li>Implement drawer with Radix Dialog or custom component</li>
+        <li>Add hamburger menu icon from <code>lucide-react</code></li>
+        <li>Test on real devices (iOS Safari, Android Chrome) for touch interactions</li>
+        <li>Validate with screen readers (VoiceOver, TalkBack)</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Theme toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+
+      const sunIcon = document.getElementById('theme-icon-sun');
+      const moonIcon = document.getElementById('theme-icon-moon');
+      sunIcon.style.display = isDark ? 'block' : 'none';
+      moonIcon.style.display = isDark ? 'none' : 'block';
+    }
+
+    // Pattern 1: Drawer
+    function toggleDrawer() {
+      const drawer = document.getElementById('drawer');
+      const overlay = document.getElementById('drawer-overlay');
+      const hamburger = document.getElementById('hamburger');
+
+      drawer.classList.toggle('active');
+      overlay.classList.toggle('active');
+      hamburger.classList.toggle('active');
+
+      // Prevent body scroll when drawer is open
+      if (drawer.classList.contains('active')) {
+        document.getElementById('drawer-screen').style.overflow = 'hidden';
+      } else {
+        document.getElementById('drawer-screen').style.overflow = 'auto';
+      }
+    }
+
+    // Pattern 2: Bottom tabs
+    function toggleMoreMenu() {
+      const menu = document.getElementById('more-menu');
+      menu.classList.toggle('active');
+    }
+
+    // Close more menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('more-menu');
+      const moreBtn = event.target.closest('.tab-btn');
+      if (!menu.contains(e.target) && !moreBtn) {
+        menu.classList.remove('active');
+      }
+    });
+
+    // Pattern 3: Priority+
+    function toggleOverflowMenu() {
+      const dropdown = document.getElementById('overflow-dropdown');
+      dropdown.classList.toggle('active');
+    }
+
+    // Close overflow menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('overflow-dropdown');
+      const overflowBtn = e.target.closest('.overflow-toggle');
+      if (!dropdown.contains(e.target) && !overflowBtn) {
+        dropdown.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+</html>

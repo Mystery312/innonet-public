@@ -1,86 +1,53 @@
-# Innonet - Professional Innovation Network Platform
+# Innonet — Professional Innovation Network Platform
 
-A comprehensive platform for connecting innovators, showcasing projects, discovering opportunities, and building professional networks in the innovation ecosystem.
+A professional networking platform with AI-powered search, network
+visualization, events, communities, messaging, and profile discovery.
 
-![Platform Status](https://img.shields.io/badge/status-production--ready-green)
-![Tests](https://img.shields.io/badge/tests-94.1%25%20passing-brightgreen)
+![Platform Status](https://img.shields.io/badge/status-active--development-green)
 ![License](https://img.shields.io/badge/license-Proprietary-blue)
-
----
-
-## 🚀 Quick Deploy (15 minutes)
-
-Get your website live **right now** without complex AWS setup:
-
-**👉 See [DEPLOY_NOW.md](DEPLOY_NOW.md) for fastest deployment path**
-
-### Deployment Options
-
-| Platform | Time | Cost | Difficulty | Best For |
-|----------|------|------|------------|----------|
-| **[Railway + Vercel](DEPLOY_NOW.md)** ⭐ | 15 min | $15-30/mo | ⭐ Easy | Quick MVP |
-| **[Aliyun (阿里云)](CHINA_DEPLOYMENT_GUIDE.md)** 🇨🇳 | 30-60 min | ¥200-500/mo | ⭐⭐⭐ Medium | China users |
-| [Render + Vercel](EASY_DEPLOYMENT_OPTIONS.md) | 20 min | $0-15/mo | ⭐ Easy | Free tier |
-| [AWS Singapore](AWS_SETUP_INSTRUCTIONS.md) | 1-2 hrs | $150-250/mo | ⭐⭐⭐⭐ Hard | Enterprise |
-| [DigitalOcean](EASY_DEPLOYMENT_OPTIONS.md) | 30 min | $12-25/mo | ⭐⭐⭐ Medium | Balanced |
-| [Fly.io](EASY_DEPLOYMENT_OPTIONS.md) | 25 min | $15-20/mo | ⭐⭐⭐ Medium | Edge network |
-
-> **🇨🇳 Note for China Users**: Railway, Vercel, AWS are blocked/slow in China. Use [Aliyun or Tencent Cloud](CHINA_DEPLOYMENT_GUIDE.md) instead.
-
-**Recommended**: Start with Railway + Vercel for MVP, migrate to AWS later if needed.
 
 ---
 
 ## ✨ Features
 
-### Core Features
-- 🔐 **User Authentication** - JWT-based auth with role-based access control
-- 👤 **User Profiles** - Rich profiles with skills, interests, and achievements
-- 🏢 **Company Profiles** - Organization pages with team management
-- 📝 **Posts & Updates** - Share innovations, updates, and insights
-- 🎉 **Events** - Create and discover innovation events
-- 🎯 **Opportunities** - Job postings, collaborations, funding opportunities
+### Core
+- 🔐 **Authentication** — JWT (access + refresh), OAuth (Google, Microsoft), account lockout, rate limiting
+- 👤 **Profiles** — Skills, work experience, resume parsing
+- 🏢 **Companies** — Company profiles and challenges
+- 💬 **Communities** — Forum-style communities, posts, voting
+- 🎉 **Events** — RSVP and recommendations
+- 📩 **Messaging** — Direct messages and notifications
+- 🔗 **Network** — Connection requests and relationships
+- 🔥 **Discover** — Tinder-style profile discovery (swipe to connect)
 
-### Advanced Features
-- 🧠 **Knowledge Graph** - Obsidian-like interactive graph visualization
-  - Full ecosystem view
-  - Local graph exploration (1-hop, 2-hop)
-  - Path finding between entities
-  - Semantic search as graph
-  - Community clustering (Louvain algorithm)
-  - Skill roadmap visualization
-  - Similarity graph
-- 🔍 **Smart Search** - Vector-based semantic search with pgvector
-- 🤖 **AI Features** - OpenAI integration for content enhancement
-- 📊 **Analytics** - User engagement and network insights
-- 💳 **Payments** - Stripe integration for premium features
+### Advanced
+- 🧠 **Knowledge Graph** — D3.js network visualization (full/local views, path finding, clustering, skill roadmap, similarity)
+- 🔍 **Smart Search** — Vector-based semantic search with pgvector
+- 🤖 **AI** — OpenAI-powered embeddings and profile analysis
+- 💳 **Payments** — Stripe integration for paid events
 
 ---
 
 ## 🏗️ Tech Stack
 
 ### Frontend
-- **Framework**: React 18 + TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS + Shadcn UI
-- **State Management**: TanStack Query + Zustand
-- **Routing**: React Router v6
-- **Graph Visualization**: D3.js (Force-directed graph)
+- React 19, React Router 7, Vite 7, TypeScript 5.9
+- Tailwind CSS 4 (`@theme` directive) + shadcn/ui (new code); CSS Modules (legacy `components/common/`)
+- TanStack React Query for server state, React Context for auth/theme
 
 ### Backend
-- **Framework**: FastAPI (Python 3.11+)
-- **Database**: PostgreSQL 16 + pgvector
-- **Cache**: Redis
-- **Graph DB**: Neo4j (optional, for advanced graph features)
-- **ORM**: SQLAlchemy 2.0 (async)
-- **Migrations**: Alembic
-- **Authentication**: JWT with bcrypt
+- FastAPI, Python 3.11+
+- SQLAlchemy 2.0 (async) + asyncpg, Alembic migrations
+- JWT + bcrypt auth, OAuth (Google/Microsoft)
+
+### Data
+- PostgreSQL 16 + pgvector (primary store, vector similarity search)
+- Neo4j 5 (network graph visualization, synced from Postgres)
+- Redis 7 (caching, rate limiting)
 
 ### Infrastructure
-- **Containerization**: Docker + Docker Compose
-- **Cloud**: AWS (Terraform IaC) / Railway / Vercel
-- **CI/CD**: GitHub Actions
-- **Monitoring**: Built-in health checks
+- Docker + Docker Compose, Caddy (automatic TLS)
+- GitHub Actions CI/CD (test on every push, auto-deploy `main` over SSH)
 
 ---
 
@@ -88,53 +55,42 @@ Get your website live **right now** without complex AWS setup:
 
 ```
 innonet-public/
-├── frontend/                 # React frontend
+├── backend/
 │   ├── src/
-│   │   ├── features/        # Feature-based modules
-│   │   │   ├── auth/        # Authentication
-│   │   │   ├── graph/       # Knowledge graph (7 flows)
-│   │   │   ├── posts/       # Social posts
-│   │   │   ├── events/      # Events management
-│   │   │   └── ...
-│   │   ├── components/      # Reusable UI components
-│   │   ├── lib/            # Utilities and helpers
-│   │   └── api/            # API client
-│   └── package.json
+│   │   ├── auth/            # JWT, OAuth, account lockout
+│   │   ├── profiles/        # Profile management, skills, work experience
+│   │   ├── events/          # Events with RSVP and recommendations
+│   │   ├── companies/       # Company profiles and challenges
+│   │   ├── communities/     # Forum-style communities, posts, voting
+│   │   ├── messaging/       # Direct messages and notifications
+│   │   ├── network/         # Connection requests and relationships
+│   │   ├── discover/        # Swipe-to-connect profile discovery
+│   │   ├── graph/           # D3.js network graph data endpoints
+│   │   ├── payments/        # Stripe integration
+│   │   ├── ai/              # OpenAI embeddings + profile analysis
+│   │   ├── users/, waitlist/
+│   │   ├── database/        # Postgres (async SQLAlchemy) + Neo4j
+│   │   ├── utils/           # Field-level encryption, account lockout
+│   │   └── main.py          # FastAPI app, middleware stack
+│   ├── alembic/              # Database migrations
+│   └── Dockerfile
 │
-├── backend/                 # FastAPI backend
+├── frontend/
 │   ├── src/
-│   │   ├── auth/           # Authentication & authorization
-│   │   ├── graph/          # Knowledge graph endpoints
-│   │   ├── posts/          # Posts CRUD
-│   │   ├── events/         # Events CRUD
-│   │   ├── companies/      # Company management
-│   │   ├── core/           # Core configs & database
-│   │   └── main.py         # Application entry point
-│   ├── alembic/            # Database migrations
-│   ├── Dockerfile
-│   └── requirements.txt
+│   │   ├── components/      # ui/ (shadcn, Tailwind) + common/ (legacy CSS Modules)
+│   │   ├── pages/            # Route page components
+│   │   ├── features/         # API calls/hooks mirroring backend domains
+│   │   ├── context/          # AuthContext, ThemeContext
+│   │   ├── lib/               # Axios client, cn() utility
+│   │   └── router.tsx
+│   └── Dockerfile
 │
-├── infrastructure/         # Infrastructure as Code
-│   └── terraform/         # AWS Terraform configs
-│       ├── main.tf        # Main configuration
-│       ├── vpc.tf         # Networking
-│       ├── ecs.tf         # Container orchestration
-│       ├── rds.tf         # PostgreSQL database
-│       └── ...
-│
-├── .github/
-│   └── workflows/         # CI/CD pipelines
-│       └── deploy.yml     # Automated deployment
-│
-├── docs/                  # Documentation
-│   └── archive/          # Archived documentation
-│
-├── CLAUDE.md             # AI assistant project context
-├── DEPLOY_NOW.md         # Quick deployment guide ⭐
-├── RAILWAY_DEPLOYMENT_GUIDE.md  # Detailed Railway guide
-├── EASY_DEPLOYMENT_OPTIONS.md  # Platform comparison
-├── AWS_SETUP_INSTRUCTIONS.md   # AWS deployment guide
-└── docker-compose.prod.yml     # Production Docker Compose
+├── .github/workflows/deploy.yml   # CI: lint/test, CD: SSH deploy on push to main
+├── docs/                          # Documentation (see below)
+├── docker-compose.prod.yml        # Production stack (Postgres/Redis/Neo4j/backend/frontend/Caddy)
+├── Caddyfile                      # Reverse proxy + automatic TLS
+├── CLAUDE.md                      # Full project context (architecture, commands, conventions)
+└── start.sh                       # One-command local dev startup
 ```
 
 ---
@@ -142,314 +98,129 @@ innonet-public/
 ## 🚦 Getting Started (Local Development)
 
 ### Prerequisites
-- Node.js 18+ and npm
+- Node.js 20+ and npm
 - Python 3.11+
 - Docker and Docker Compose
-- Git
 
-### 1. Clone Repository
+### Quick start
 
 ```bash
 git clone https://github.com/Mystery312/innonet-public.git
 cd innonet-public
+./start.sh
 ```
 
-### 2. Start Backend
+`start.sh` creates `.env` files from templates, generates a `SECRET_KEY`,
+starts Docker infrastructure (Postgres, Redis, Neo4j), seeds sample data, and
+starts both backend and frontend dev servers.
+
+### Manual startup
 
 ```bash
+docker-compose up -d                                        # Postgres, Redis, Neo4j
+
 cd backend
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your configuration
-
-# Start database with Docker
-docker-compose up -d postgres redis
-
-# Run migrations
+cp .env.example .env                                          # fill in required vars
 alembic upgrade head
+uvicorn src.main:app --reload                                  # http://localhost:8000
 
-# Start development server
-uvicorn src.main:app --reload
-```
-
-Backend will run at: `http://localhost:8000`
-
-### 3. Start Frontend
-
-```bash
-cd frontend
-
-# Install dependencies
+cd ../frontend
 npm install
-
-# Set up environment variables
 cp .env.example .env
-# Edit .env with backend URL
-
-# Start development server
-npm run dev
+npm run dev                                                     # http://localhost:5173
 ```
 
-Frontend will run at: `http://localhost:5173`
-
-### 4. Access Application
-
+### Access points
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-- Health Check: http://localhost:8000/health
+- API docs (Swagger): http://localhost:8000/docs
+- Neo4j Browser: http://localhost:7474
+- Health check: http://localhost:8000/health
 
 ---
 
 ## 🧪 Testing
 
-### Backend Tests
-
 ```bash
-cd backend
-pytest tests/ -v
+# Backend
+cd backend && pytest tests/ -v
+
+# Frontend
+cd frontend && npm run test
 ```
 
-### Frontend Tests
-
-```bash
-cd frontend
-npm run test
-```
-
-### End-to-End Tests
-
-The knowledge graph flows have been comprehensively tested:
-
-```bash
-python test_graph_flows.py
-```
-
-**Latest E2E Results**: 94.1% pass rate (16/17 tests passing)
-- See detailed report: [OBSIDIAN_GRAPH_E2E_REPORT.md](OBSIDIAN_GRAPH_E2E_REPORT.md)
-- Test results: [graph_e2e_test_report_20260228_221137.json](graph_e2e_test_report_20260228_221137.json)
+See `CLAUDE.md` for the full test suite layout (`backend/tests/suites/` by
+domain) and the custom feature-parity test runner.
 
 ---
 
-## 📊 Knowledge Graph System
+## 🔒 Security
 
-The platform features an **Obsidian-like knowledge graph** with 7 major user flows:
+- JWT access (15min) + refresh (7 day) tokens, OAuth (Google/Microsoft)
+- Rate limiting (5 login / 3 signup attempts per 15 min per IP) + account lockout
+- Field-level encryption for all PII (email, phone, names, bio, messages) — versioned Fernet + HMAC lookup hashes, transparent at the ORM layer
+- Production startup validation for required secrets, key formats, and TLS settings
 
-1. **Full Graph View** - See entire ecosystem (companies, users, posts, events)
-2. **Local Graph Exploration** - Explore 1-hop or 2-hop connections from any node
-3. **Path Finding** - Find shortest path between any two entities (BFS algorithm)
-4. **Semantic Search as Graph** - Search converts to graph view with connected results
-5. **Clustering View** - Community detection using Louvain algorithm
-6. **Skill Roadmap** - Visual learning path to acquire new skills
-7. **Similarity Graph** - Find and visualize similar profiles/entities
-
-**All 7 flows are fully implemented and tested** ✅
-
-Backend: `backend/src/graph/router.py` (9 endpoints)
-Frontend: `frontend/src/features/graph/` (D3.js visualization)
-
----
-
-## 🔒 Security Features
-
-- ✅ JWT-based authentication with refresh tokens
-- ✅ Password hashing with bcrypt
-- ✅ Role-based access control (RBAC)
-- ✅ Rate limiting on auth endpoints
-- ✅ CORS protection
-- ✅ SQL injection prevention (SQLAlchemy ORM)
-- ✅ XSS protection
-- ✅ HTTPS enforcement (in production)
-- ✅ Environment variable management
-- ✅ Secrets management (AWS Secrets Manager ready)
-
----
-
-## 📈 Performance Optimizations
-
-- ✅ Redis caching for frequently accessed data
-- ✅ Database query optimization with indexes
-- ✅ Connection pooling (SQLAlchemy async)
-- ✅ CDN for static assets (CloudFront/Vercel)
-- ✅ Image optimization
-- ✅ Code splitting (Vite lazy loading)
-- ✅ Vector search with pgvector for O(log n) semantic search
+Full detail: [docs/SECURITY_ROADMAP.md](docs/SECURITY_ROADMAP.md) and [docs/DATA_ENCRYPTION_GUIDE.md](docs/DATA_ENCRYPTION_GUIDE.md).
 
 ---
 
 ## 🌍 Deployment
 
-### Production-Ready Deployment Options
+Docker Compose + Caddy on a single VPS — Postgres, Redis, Neo4j, backend,
+frontend, and Caddy (automatic TLS) all run from `docker-compose.prod.yml`.
+GitHub Actions (`.github/workflows/deploy.yml`) tests every push and
+auto-deploys `main` over SSH.
 
-#### Option 1: Railway + Vercel (Recommended for MVP) ⭐
-
-**Fastest deployment** - See [DEPLOY_NOW.md](DEPLOY_NOW.md)
-
-- Time: 15 minutes
-- Cost: ~$15-30/month
-- Perfect for: MVP, testing, small-medium scale
-
-#### Option 2: AWS Singapore (Enterprise-Grade)
-
-**Full AWS infrastructure** - See [AWS_SETUP_INSTRUCTIONS.md](AWS_SETUP_INSTRUCTIONS.md)
-
-- Time: 1-2 hours
-- Cost: ~$150-250/month
-- Perfect for: Enterprise, high scale, full control
-
-Infrastructure includes:
-- ECS Fargate (container orchestration)
-- RDS PostgreSQL 16 with pgvector
-- ElastiCache Redis
-- Application Load Balancer
-- CloudFront + S3 (frontend)
-- VPC with public/private subnets
-- NAT Gateway
-- Terraform IaC (all configs in `infrastructure/terraform/`)
-
-#### Option 3: Other Platforms
-
-See [EASY_DEPLOYMENT_OPTIONS.md](EASY_DEPLOYMENT_OPTIONS.md) for:
-- Vercel + Render
-- DigitalOcean App Platform
-- Fly.io
-- VPS with Docker Compose
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the DigitalOcean runbook:
+droplet sizing, DNS, secrets, first deploy, and CI/CD wiring.
 
 ---
 
 ## 🔧 Configuration
 
-### Environment Variables
-
-#### Backend (.env)
-
-```bash
-# Database
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/innonet
-
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# Security
-SECRET_KEY=your-secret-key-here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=7
-
-# CORS
-FRONTEND_URL=http://localhost:5173
-
-# Optional: Neo4j (for advanced graph features)
-NEO4J_URI=neo4j+s://xxxxx.databases.neo4j.io
-NEO4J_USERNAME=neo4j
-NEO4J_PASSWORD=your-password
-
-# Optional: External APIs
-OPENAI_API_KEY=sk-...
-STRIPE_SECRET_KEY=sk_test_...
-SENDGRID_API_KEY=SG...
-```
-
-#### Frontend (.env)
-
-```bash
-VITE_API_URL=http://localhost:8000/api/v1
-```
+See `CLAUDE.md`'s "Required Environment Variables" section for the full list
+(`backend/.env.example` and `frontend/.env.example` are the source of truth).
+At minimum you need `SECRET_KEY`, `DATABASE_URL`, `NEO4J_PASSWORD`,
+`REDIS_URL`, and — in production — `ENCRYPTION_KEY_V1` +
+`ENCRYPTION_LOOKUP_HASH_KEY`.
 
 ---
 
 ## 📚 Documentation
 
-- **[CLAUDE.md](CLAUDE.md)** - Complete project context for AI assistants
-- **[DEPLOY_NOW.md](DEPLOY_NOW.md)** - Quick deployment guide
-- **[RAILWAY_DEPLOYMENT_GUIDE.md](RAILWAY_DEPLOYMENT_GUIDE.md)** - Railway detailed guide
-- **[EASY_DEPLOYMENT_OPTIONS.md](EASY_DEPLOYMENT_OPTIONS.md)** - Platform comparison
-- **[AWS_SETUP_INSTRUCTIONS.md](AWS_SETUP_INSTRUCTIONS.md)** - AWS deployment
-- **[OBSIDIAN_GRAPH_E2E_REPORT.md](OBSIDIAN_GRAPH_E2E_REPORT.md)** - Graph testing report
-- **[GRAPH_FLOW_IMPLEMENTATION_PLAN.md](GRAPH_FLOW_IMPLEMENTATION_PLAN.md)** - Graph architecture
-- **API Documentation**: Available at `/docs` when backend is running
+- **[CLAUDE.md](CLAUDE.md)** — Full project context: architecture, commands, conventions
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — DigitalOcean deployment runbook
+- **[docs/SECURITY_ROADMAP.md](docs/SECURITY_ROADMAP.md)** — Security phase history, compliance checklist
+- **[docs/DATA_ENCRYPTION_GUIDE.md](docs/DATA_ENCRYPTION_GUIDE.md)** — Field-level encryption details
+- **[docs/SSL_SETUP_GUIDE.md](docs/SSL_SETUP_GUIDE.md)** — TLS setup
+- **[docs/backend-api.md](docs/backend-api.md)**, **[docs/backend-overview.md](docs/backend-overview.md)** — Backend reference
+- API docs: `/docs` when the backend is running
+
+---
+
+## 🆘 Troubleshooting
+
+**"Connection refused" errors** — confirm the backend is running on port 8000 and the frontend's `VITE_API_URL` is correct.
+
+**Database errors / "type vector does not exist"** — `docker-compose down -v && docker-compose up -d` to reset volumes and re-run migrations.
+
+**Frontend won't build** — `rm -rf node_modules && npm install`; confirm `node --version` is 20+.
+
+**CORS errors** — check `FRONTEND_URL` in the backend env and restart the backend after changing it.
+
+```bash
+docker-compose logs -f            # infrastructure logs
+```
 
 ---
 
 ## 🤝 Contributing
 
-This is a proprietary project. For questions or collaboration inquiries, please contact the repository owner.
-
----
+This is a proprietary project. For questions or collaboration inquiries, contact the repository owner.
 
 ## 📄 License
 
 Proprietary. All rights reserved.
-
----
-
-## 🆘 Support & Troubleshooting
-
-### Common Issues
-
-**"Connection refused" errors**
-- Make sure backend is running on port 8000
-- Check frontend `.env` has correct `VITE_API_URL`
-
-**Database connection errors**
-- Ensure PostgreSQL is running: `docker ps`
-- Check `DATABASE_URL` format in backend `.env`
-
-**Frontend won't build**
-- Clear node_modules: `rm -rf node_modules && npm install`
-- Check Node.js version: `node --version` (should be 18+)
-
-**CORS errors**
-- Update `FRONTEND_URL` in backend `.env`
-- Restart backend after changing environment variables
-
-### Get Help
-
-- Check documentation files in the repository
-- Review deployment guides for your chosen platform
-- Check backend logs: `docker-compose logs backend`
-- Check frontend console in browser DevTools
-
----
-
-## 🗺️ Roadmap
-
-- [x] Core user authentication and profiles
-- [x] Company profiles and management
-- [x] Posts and social features
-- [x] Events system
-- [x] Knowledge graph (7 flows)
-- [x] Semantic search with pgvector
-- [x] Production deployment configurations
-- [x] E2E testing suite
-- [ ] Mobile app (React Native)
-- [ ] Real-time chat and notifications
-- [ ] AI-powered recommendations
-- [ ] Advanced analytics dashboard
-- [ ] API rate limiting and monitoring
-- [ ] Multi-language support
-
----
-
-## 📊 Project Stats
-
-- **Frontend**: ~15,000 lines of TypeScript/React
-- **Backend**: ~8,000 lines of Python/FastAPI
-- **Tests**: 94.1% pass rate on E2E graph tests
-- **Infrastructure**: Full AWS Terraform IaC
-- **Features**: 7 complete user journeys
-- **Performance**: <100ms API response time (cached)
-
----
-
-**Built with ❤️ for the innovation ecosystem**
-
-Repository: https://github.com/Mystery312/innonet-public

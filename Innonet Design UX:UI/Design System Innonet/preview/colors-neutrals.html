@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:160px; margin:0; padding:24px; background:#fff;
+    font-family: var(--font-sans); display:flex; gap: 12px; }
+  .swatch { flex:1; display:flex; flex-direction:column; gap:8px; }
+  .chip { height: 84px; border-radius: var(--radius-md); position:relative;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+  .chip .lbl { position:absolute; bottom:8px; left:10px;
+    font: 600 11px/1 var(--font-mono, monospace);}
+  .chip[data-light="true"] .lbl { color: #0F172A;}
+  .chip[data-light="false"] .lbl { color: rgba(255,255,255,.92); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+  .name { font: 500 12px/1 var(--font-sans); color: var(--color-fg-secondary); }
+</style>
+</head>
+<body>
+  <div class="swatch"><div class="chip" style="background:#F8FAFC" data-light="true"><span class="lbl">50</span></div><span class="name">gray-50</span></div>
+  <div class="swatch"><div class="chip" style="background:#E2E8F0" data-light="true"><span class="lbl">200</span></div><span class="name">gray-200</span></div>
+  <div class="swatch"><div class="chip" style="background:#94A3B8" data-light="false"><span class="lbl">400</span></div><span class="name">gray-400</span></div>
+  <div class="swatch"><div class="chip" style="background:#475569" data-light="false"><span class="lbl">600</span></div><span class="name">gray-600</span></div>
+  <div class="swatch"><div class="chip" style="background:#1E293B" data-light="false"><span class="lbl">800</span></div><span class="name">gray-800</span></div>
+  <div class="swatch"><div class="chip" style="background:#0F172A" data-light="false"><span class="lbl">900</span></div><span class="name">gray-900</span></div>
+  <div class="swatch"><div class="chip" style="background:#1A1A1F" data-light="false"><span class="lbl">ink-800</span></div><span class="name">ink-800</span></div>
+  <div class="swatch"><div class="chip" style="background:#0A0A0F" data-light="false"><span class="lbl">ink-1000</span></div><span class="name">ink-1000</span></div>
+</body>
+</html>

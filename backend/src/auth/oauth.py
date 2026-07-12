@@ -12,7 +12,7 @@ from src.auth.models import User, UserProfile, OAuthAccount, utc_now
 from src.auth.utils import create_access_token, create_refresh_token
 from src.auth.service import AuthService
 from src.config import get_settings
-from src.utils.encryption import encryption_service, compute_lookup_hash
+from src.utils.encryption import compute_lookup_hash
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -204,10 +204,8 @@ class OAuthService:
             oauth_account.token_expires_at = token_expires_at
             oauth_account.updated_at = now
 
-            # Phase 1 Dual-Write: Update provider_email encryption if changed
             if email and oauth_account.provider_email != email:
                 oauth_account.provider_email = email
-                oauth_account.provider_email_ct = encryption_service.encrypt(email) if email else None
                 oauth_account.provider_email_lookup_hash = compute_lookup_hash(email) if email else None
 
             # Ensure user is loaded with profile
@@ -222,25 +220,19 @@ class OAuthService:
         if email:
             email_hash = compute_lookup_hash(email)
             if email_hash:
-                q = select(User).options(selectinload(User.profile)).where(
-                    User.email_lookup_hash == email_hash
+                result = await self.db.execute(
+                    select(User).options(selectinload(User.profile)).where(
+                        User.email_lookup_hash == email_hash
+                    )
                 )
-            else:
-                q = select(User).options(selectinload(User.profile)).where(
-                    User.email == email
-                )
-            result = await self.db.execute(q)
-            user = result.scalar_one_or_none()
+                user = result.scalar_one_or_none()
 
         if user:
-            # Link OAuth account to existing user. TypeDecorator encrypts tokens.
-            # Phase 1 Dual-Write: populate both plaintext and encrypted provider_email
             oauth_account = OAuthAccount(
                 user_id=user.id,
                 provider=provider,
                 provider_user_id=provider_user_id,
                 provider_email=email,
-                provider_email_ct=encryption_service.encrypt(email) if email else None,
                 provider_email_lookup_hash=compute_lookup_hash(email) if email else None,
                 access_token=provider_access_token,
                 refresh_token=provider_refresh_token,
@@ -254,36 +246,30 @@ class OAuthService:
 
             return user
 
-        # 3. Create new user (Phase 1 dual-write of email ciphertext + hash)
+        # 3. Create new user. EncryptedString TypeDecorator handles encryption.
         username = self._generate_username(email, name)
         user = User(
             username=username,
             email=email,
-            email_ct=encryption_service.encrypt(email) if email else None,
             email_lookup_hash=compute_lookup_hash(email) if email else None,
-            password_hash=None,  # OAuth-only user, no password
+            password_hash=None,
             is_active=True,
-            is_verified=True,  # Provider verified the email
+            is_verified=True,
         )
         self.db.add(user)
-        await self.db.flush()  # Get the user ID
+        await self.db.flush()
 
-        # Create profile (dual-write full_name)
         profile = UserProfile(
             user_id=user.id,
             full_name=name,
-            full_name_ct=encryption_service.encrypt(name) if name else None,
         )
         self.db.add(profile)
 
-        # Create OAuth account (TypeDecorator encrypts tokens transparently)
-        # Phase 1 Dual-Write: populate both plaintext and encrypted provider_email
         oauth_account = OAuthAccount(
             user_id=user.id,
             provider=provider,
             provider_user_id=provider_user_id,
             provider_email=email,
-            provider_email_ct=encryption_service.encrypt(email) if email else None,
             provider_email_lookup_hash=compute_lookup_hash(email) if email else None,
             access_token=provider_access_token,
             refresh_token=provider_refresh_token,

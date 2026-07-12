@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Navbar } from '../../components/common/Navbar';
-import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { BackButton } from '../../components/common/BackButton';
 import { eventsApi } from '../../features/events/api/eventsApi';
@@ -148,13 +146,11 @@ export const EventDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className={styles.page}>
-        <Navbar />
         <main className={styles.main}>
           <div className="container">
             <div className={styles.loading}>Loading event details...</div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -162,7 +158,6 @@ export const EventDetailPage: React.FC = () => {
   if (error || !event) {
     return (
       <div className={styles.page}>
-        <Navbar />
         <main className={styles.main}>
           <div className="container">
             <div className={styles.error}>
@@ -172,7 +167,6 @@ export const EventDetailPage: React.FC = () => {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -182,7 +176,6 @@ export const EventDetailPage: React.FC = () => {
 
   return (
     <div className={styles.page}>
-      <Navbar />
       <main className={styles.main}>
         <div className="container">
           {/* Payment Message */}
@@ -420,8 +413,6 @@ export const EventDetailPage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
-
       {/* Payment Modal */}
       {event && (
         <PaymentModal

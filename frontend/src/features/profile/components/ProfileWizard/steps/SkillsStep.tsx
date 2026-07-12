@@ -3,8 +3,10 @@ import { Input } from '../../../../../components/common/Input';
 import { Button } from '../../../../../components/common/Button';
 import { Badge } from '../../../../../components/common/Badge';
 import { profileApi } from '../../../api/profileApi';
-import type { Skill, UserSkill, ResumeParseResult } from '../../../../../types/profile';
+import type { Skill, UserSkill, ResumeParseResult, SkillCreate } from '../../../../../types/profile';
 import styles from '../ProfileWizard.module.css';
+
+type ProficiencyLevel = NonNullable<SkillCreate['proficiency_level']>;
 
 interface SkillsStepProps {
   onNext: () => void;
@@ -17,7 +19,7 @@ export const SkillsStep: React.FC<SkillsStepProps> = ({ onNext, onPrevious, pars
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedProficiency, setSelectedProficiency] = useState<string>('intermediate');
+  const [selectedProficiency, setSelectedProficiency] = useState<ProficiencyLevel>('intermediate');
 
   useEffect(() => {
     const loadData = async () => {
@@ -55,7 +57,7 @@ export const SkillsStep: React.FC<SkillsStepProps> = ({ onNext, onPrevious, pars
     try {
       const newUserSkill = await profileApi.addSkill({
         skill_id: skill.id,
-        proficiency_level: selectedProficiency as any,
+        proficiency_level: selectedProficiency,
         is_primary: userSkills.length < 3,
       });
       setUserSkills((prev) => [...prev, newUserSkill]);
@@ -136,7 +138,7 @@ export const SkillsStep: React.FC<SkillsStepProps> = ({ onNext, onPrevious, pars
           />
           <select
             value={selectedProficiency}
-            onChange={(e) => setSelectedProficiency(e.target.value)}
+            onChange={(e) => setSelectedProficiency(e.target.value as ProficiencyLevel)}
             style={{
               padding: '0.75rem',
               borderRadius: '6px',

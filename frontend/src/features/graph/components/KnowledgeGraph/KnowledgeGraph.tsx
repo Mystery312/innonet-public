@@ -157,11 +157,23 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
   customGroups = [],
   highlightConnectedOnHover = true,
   enableClustering = false,
+  chrome = true,
 }) => {
+  // Resolve the chrome flags once per change.
+  const chromeFlags = useMemo(() => {
+    if (chrome === false) return { legend: false, controls: false, viewMode: false };
+    if (chrome === true)  return { legend: true,  controls: true,  viewMode: true  };
+    return {
+      legend:   chrome.showLegend ?? true,
+      controls: chrome.showControls ?? true,
+      viewMode: chrome.showViewModeIndicator ?? true,
+    };
+  }, [chrome]);
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width, height });
   const [_hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
-  const [transform, setTransform] = useState<d3.ZoomTransform | null>(null);
+  // Not render state — only used to restore pan/zoom position across effect re-runs.
+  const transformRef = useRef<d3.ZoomTransform | null>(null);
 
   // Update dimensions on resize
   useEffect(() => {
@@ -237,14 +249,14 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
       .scaleExtent([0.1, 4])
       .on('zoom', (event) => {
         container.attr('transform', event.transform);
-        setTransform(event.transform);
+        transformRef.current = event.transform;
       });
 
     svg.call(zoom);
 
     // Restore previous transform if exists
-    if (transform) {
-      svg.call(zoom.transform, transform);
+    if (transformRef.current) {
+      svg.call(zoom.transform, transformRef.current);
     }
 
     // Add defs for gradients, markers, and filters
@@ -294,6 +306,15 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
     const pathMerge = pathGlow.append('feMerge');
     pathMerge.append('feMergeNode').attr('in', 'coloredBlur');
     pathMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+    // "Me" halo — soft radial behind the current-user node.
+    const meHalo = defs.append('radialGradient')
+      .attr('id', 'meHalo')
+      .attr('cx', '50%').attr('cy', '50%').attr('r', '50%');
+    meHalo.append('stop').attr('offset', '0%')
+      .attr('stop-color', NODE_COLORS.user || '#5B6BFF').attr('stop-opacity', '0.5');
+    meHalo.append('stop').attr('offset', '100%')
+      .attr('stop-color', NODE_COLORS.user || '#5B6BFF').attr('stop-opacity', '0');
 
     const container = svg.append('g');
 
@@ -379,7 +400,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
 
     // Draw cluster hulls if clustering enabled
     let clusterHulls: d3.Selection<SVGPathElement, number, SVGGElement, unknown> | null = null;
-    if (enableClustering && clusterOptions?.showHulls) {
+    if (enableClustering && (clusterOptions?.showHulls ?? true)) {
       const clusterGroups = new Map<number, SimulationNode[]>();
       visibleNodes.forEach((node) => {
         if (node.cluster !== undefined) {
@@ -502,13 +523,20 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
       g.attr('opacity', opacity);
 
       if (d.type === 'user') {
+        // Halo behind the current user — pulls the eye to "me" on the graph.
+        if (isCurrentUser) {
+          g.append('circle')
+            .attr('r', radius * 1.9)
+            .attr('fill', 'url(#meHalo)')
+            .attr('pointer-events', 'none');
+        }
         // Circle for users
         g.append('circle')
           .attr('r', radius)
           .attr('fill', isCurrentUser ? color : '#f6f8fa')
-          .attr('stroke', color)
-          .attr('stroke-width', isSelected || isFocusNode ? 4 : 2)
-          .attr('filter', isFocusNode || d.isInPath ? 'url(#glow)' : null);
+          .attr('stroke', isSelected ? '#fff' : color)
+          .attr('stroke-width', isSelected ? 4 : isFocusNode ? 4 : 2)
+          .attr('filter', isFocusNode || d.isInPath || isCurrentUser ? 'url(#glow)' : null);
 
         // Profile image or initials
         if (d.image_url) {
@@ -819,7 +847,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
       />
 
       {/* View mode indicator */}
-      {viewMode !== 'full' && (
+      {chromeFlags.viewMode && viewMode !== 'full' && (
         <div className={styles.viewModeIndicator}>
           {viewMode === 'local' && localOptions && (
             <span>Local view: {localOptions.depth} hop{localOptions.depth > 1 ? 's' : ''}</span>
@@ -836,28 +864,32 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
         </div>
       )}
 
-      <div className={styles.legend}>
-        <div className={styles.legendItem}>
-          <span className={styles.legendColor} style={{ backgroundColor: NODE_COLORS.user }} />
-          <span>People</span>
+      {chromeFlags.legend && (
+        <div className={styles.legend}>
+          <div className={styles.legendItem}>
+            <span className={styles.legendColor} style={{ backgroundColor: NODE_COLORS.user }} />
+            <span>People</span>
+          </div>
+          <div className={styles.legendItem}>
+            <span className={styles.legendColor} style={{ backgroundColor: NODE_COLORS.skill }} />
+            <span>Skills</span>
+          </div>
+          <div className={styles.legendItem}>
+            <span className={styles.legendColor} style={{ backgroundColor: NODE_COLORS.community }} />
+            <span>Communities</span>
+          </div>
+          <div className={styles.legendItem}>
+            <span className={styles.legendColor} style={{ backgroundColor: NODE_COLORS.event }} />
+            <span>Events</span>
+          </div>
         </div>
-        <div className={styles.legendItem}>
-          <span className={styles.legendColor} style={{ backgroundColor: NODE_COLORS.skill }} />
-          <span>Skills</span>
-        </div>
-        <div className={styles.legendItem}>
-          <span className={styles.legendColor} style={{ backgroundColor: NODE_COLORS.community }} />
-          <span>Communities</span>
-        </div>
-        <div className={styles.legendItem}>
-          <span className={styles.legendColor} style={{ backgroundColor: NODE_COLORS.event }} />
-          <span>Events</span>
-        </div>
-      </div>
+      )}
 
-      <div className={styles.controls}>
-        <p>Drag nodes to rearrange • Scroll to zoom • Click nodes for details • Hover to highlight connections</p>
-      </div>
+      {chromeFlags.controls && (
+        <div className={styles.controls}>
+          <p>Drag nodes to rearrange • Scroll to zoom • Click nodes for details • Hover to highlight connections</p>
+        </div>
+      )}
     </div>
   );
 };

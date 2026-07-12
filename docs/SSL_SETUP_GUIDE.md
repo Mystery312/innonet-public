@@ -166,12 +166,12 @@ sudo certbot renew
 docker-compose -f docker-compose.prod.yml restart frontend
 ```
 
-## Production Server Configuration (Aliyun - 47.86.249.5)
+## Production Server Configuration (Aliyun - <YOUR_SERVER_IP>)
 
 For your existing production server:
 
 ### Current Status
-- Server: Aliyun ECS at `47.86.249.5`
+- Server: Aliyun ECS at `<YOUR_SERVER_IP>`
 - Domain: (Not yet configured - **action required**)
 - SSL: Not configured
 
@@ -180,20 +180,20 @@ For your existing production server:
 1. **Configure Domain:**
    ```bash
    # In Aliyun DNS console:
-   # Add A record: @ → 47.86.249.5
-   # Add A record: www → 47.86.249.5
+   # Add A record: @ → <YOUR_SERVER_IP>
+   # Add A record: www → <YOUR_SERVER_IP>
    ```
 
 2. **Wait for DNS Propagation:**
    ```bash
    # Test DNS resolution (wait until this works):
    dig yourdomain.com +short
-   # Should return: 47.86.249.5
+   # Should return: <YOUR_SERVER_IP>
    ```
 
 3. **SSH to Server:**
    ```bash
-   ssh root@47.86.249.5
+   ssh root@<YOUR_SERVER_IP>
    ```
 
 4. **Follow Steps 1-6 Above**

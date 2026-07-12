@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:160px; margin:0; padding:0; background:#111114;
+    font-family: var(--font-sans); display:flex; align-items:center; justify-content:center;}
+  .nav { width: 100%; background: rgba(17,17,20,.8); backdrop-filter: blur(12px);
+    border-bottom: 1px solid #25252C; padding: 12px 32px; display:flex;
+    align-items:center; justify-content:space-between;}
+  .left { display:flex; align-items:center; gap: 32px;}
+  .logo { height: 28px;}
+  .links { display:flex; gap: 20px;}
+  .link { font: 500 14px/1 var(--font-sans); color:#A1A1AA; text-decoration:none;}
+  .link.active { color:#fff;}
+  .right { display:flex; align-items:center; gap: 12px;}
+  .profile { font: 600 13px/1 var(--font-sans); color:#4D4DFF;
+    background: rgba(77,77,255,.2); padding: 6px 12px; border-radius: 6px;}
+  .cta { font: 500 13px/1 var(--font-sans); color:#fff;
+    background:#4D4DFF; padding: 8px 14px; border-radius: 8px; border:none;}
+</style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="left">
+      <img src="../assets/logo.svg" class="logo" alt="InnoNet"/>
+      <div class="links">
+        <a class="link active">Discover</a>
+        <a class="link">Communities</a>
+        <a class="link">Events</a>
+        <a class="link">Network</a>
+        <a class="link">Messages</a>
+      </div>
+    </div>
+    <div class="right">
+      <span class="profile">@mei</span>
+      <button class="cta">New post</button>
+    </div>
+  </nav>
+</body>
+</html>

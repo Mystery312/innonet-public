@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:160px; margin:0; padding:24px; background:#fff;
+    font-family: var(--font-sans); display:flex; gap: 16px; }
+  .swatch { flex:1; display:flex; flex-direction:column; gap:8px; }
+  .chip { height: 84px; border-radius: var(--radius-md); position:relative;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+  .chip .lbl { position:absolute; bottom:8px; left:10px;
+    font: 600 11px/1 var(--font-mono, monospace); color:rgba(255,255,255,0.92);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.25);}
+  .chip[data-light="true"] .lbl { color: #0F172A; text-shadow:none; }
+  .name { font: 500 12px/1 var(--font-sans); color: var(--color-fg-secondary); }
+</style>
+</head>
+<body>
+  <div class="swatch"><div class="chip" style="background:#EEEEFF" data-light="true"><span class="lbl">#EEEEFF</span></div><span class="name">blue-50</span></div>
+  <div class="swatch"><div class="chip" style="background:#D9D9FF" data-light="true"><span class="lbl">#D9D9FF</span></div><span class="name">blue-100</span></div>
+  <div class="swatch"><div class="chip" style="background:#8F8FFF" data-light="true"><span class="lbl">#8F8FFF</span></div><span class="name">blue-300</span></div>
+  <div class="swatch"><div class="chip" style="background:#6B6BFF"><span class="lbl">#6B6BFF</span></div><span class="name">blue-400</span></div>
+  <div class="swatch"><div class="chip" style="background:#4D4DFF; box-shadow:0 8px 24px -4px rgba(77,77,255,.45);"><span class="lbl">#4D4DFF · primary</span></div><span class="name">blue-500</span></div>
+  <div class="swatch"><div class="chip" style="background:#3D3DE6"><span class="lbl">#3D3DE6</span></div><span class="name">blue-600</span></div>
+  <div class="swatch"><div class="chip" style="background:#2424A8"><span class="lbl">#2424A8</span></div><span class="name">blue-800</span></div>
+</body>
+</html>

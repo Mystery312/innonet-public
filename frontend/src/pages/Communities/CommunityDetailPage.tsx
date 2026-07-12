@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Navbar } from '../../components/common/Navbar';
-import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
@@ -137,11 +135,9 @@ export const CommunityDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className={styles.page}>
-        <Navbar />
         <main className={styles.main}>
           <div className={styles.loading}>Loading community...</div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -149,7 +145,6 @@ export const CommunityDetailPage: React.FC = () => {
   if (error || !community) {
     return (
       <div className={styles.page}>
-        <Navbar />
         <main className={styles.main}>
           <div className={styles.error}>
             <h2>Community not found</h2>
@@ -157,14 +152,12 @@ export const CommunityDetailPage: React.FC = () => {
             <Button onClick={() => navigate('/communities')}>Browse Communities</Button>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className={styles.page}>
-      <Navbar />
       <main className={styles.main}>
         {/* Back Navigation */}
         <div className={styles.backNav}>
@@ -378,8 +371,6 @@ export const CommunityDetailPage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
-
       {/* Create Post Modal */}
       <Modal
         isOpen={isCreatePostOpen}

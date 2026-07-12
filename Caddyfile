@@ -1,0 +1,26 @@
+{
+    email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+
+    # WebSockets — disable read timeout for long-lived connections
+    reverse_proxy /ws/* backend:8000 {
+        transport http {
+            read_timeout 0
+        }
+    }
+
+    # FastAPI backend
+    reverse_proxy /api/* backend:8000
+    reverse_proxy /health backend:8000
+
+    # React SPA (all other routes)
+    reverse_proxy /* frontend:80
+}

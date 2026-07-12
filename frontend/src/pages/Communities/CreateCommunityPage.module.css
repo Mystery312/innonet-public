@@ -79,7 +79,7 @@
 
 .textarea:focus {
   outline: none;
-  border-color: var(--color-primary, #0969da);
+  border-color: var(--color-primary, #3232FF);
   box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.15);
 }
 
@@ -102,11 +102,11 @@
 }
 
 .categoryOption:hover {
-  border-color: var(--color-primary, #0969da);
+  border-color: var(--color-primary, #3232FF);
 }
 
 .categoryOption.selected {
-  border-color: var(--color-primary, #0969da);
+  border-color: var(--color-primary, #3232FF);
   background: rgba(9, 105, 218, 0.05);
 }
 
@@ -147,7 +147,7 @@
 }
 
 .checkboxLabel:hover {
-  border-color: var(--color-primary, #0969da);
+  border-color: var(--color-primary, #3232FF);
 }
 
 .checkboxLabel input[type="checkbox"] {

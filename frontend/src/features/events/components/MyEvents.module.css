@@ -39,8 +39,8 @@
 }
 
 .tab.active {
-  background: var(--color-primary, #0969da);
-  border-color: var(--color-primary, #0969da);
+  background: var(--color-primary, #3232FF);
+  border-color: var(--color-primary, #3232FF);
   color: #ffffff;
 }
 
@@ -107,7 +107,7 @@
 .browseLink {
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--color-primary, #0969da);
+  color: var(--color-primary, #3232FF);
   text-decoration: none;
 }
 

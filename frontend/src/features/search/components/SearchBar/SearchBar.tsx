@@ -6,6 +6,12 @@ interface SearchBarProps {
   onSearch: (query: string) => void;
   isLoading?: boolean;
   placeholder?: string;
+  /**
+   * Seed value for the field. Used when the page arrives with a query already
+   * in hand — e.g. the user submitted from the AppShell topbar (/search?q=…).
+   * The field stays editable; this only sets the starting text.
+   */
+  initialValue?: string;
 }
 
 const EXAMPLE_QUERIES = [
@@ -20,8 +26,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onSearch,
   isLoading = false,
   placeholder = 'Search for professionals using natural language...',
+  initialValue = '',
 }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialValue);
+
+  // Re-sync when the page hands us a new initial value (topbar → /search?q=…).
+  React.useEffect(() => {
+    setQuery(initialValue);
+  }, [initialValue]);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {

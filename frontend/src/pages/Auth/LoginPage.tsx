@@ -1,18 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import LoginForm from '../../features/auth/components/LoginForm';
-import styles from './AuthPage.module.css';
+import AuthShell from './AuthShell';
 
 export const LoginPage: React.FC = () => {
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <Link to="/" className={styles.logo}>
-          Innonet
-        </Link>
-        <LoginForm />
-      </div>
-    </div>
+    <AuthShell title="Welcome back to your network." lead="Sign in to keep building with your collaborators.">
+      <LoginForm />
+    </AuthShell>
   );
 };
 

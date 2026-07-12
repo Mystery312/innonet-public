@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '../../../../../components/common/Button';
 import { profileApi } from '../../../api/profileApi';
+import { formatError } from '../../../../../utils/error';
 import type { ResumeParseResult } from '../../../../../types/profile';
 import styles from '../ProfileWizard.module.css';
 
@@ -9,6 +10,27 @@ interface ResumeUploadStepProps {
   onSkip: () => void;
   onParsedData: (data: ResumeParseResult) => void;
 }
+
+const ALLOWED_TYPES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+];
+const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.doc'];
+
+/** Returns an error message if the file is invalid, or null if it's fine. */
+const validateFile = (file: File): string | null => {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (!ext || !['pdf', 'docx', 'doc'].includes(ext)) {
+      return 'Please upload a PDF or Word document (.pdf, .docx, .doc)';
+    }
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return 'File is too large. Maximum size is 10MB.';
+  }
+  return null;
+};
 
 export const ResumeUploadStep: React.FC<ResumeUploadStepProps> = ({
   onNext,
@@ -23,36 +45,17 @@ export const ResumeUploadStep: React.FC<ResumeUploadStepProps> = ({
   const [parsedData, setParsedData] = useState<ResumeParseResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const allowedTypes = [
-    'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/msword',
-  ];
-  const allowedExtensions = ['.pdf', '.docx', '.doc'];
-
-  const validateFile = (file: File): boolean => {
-    if (!allowedTypes.includes(file.type)) {
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      if (!ext || !['pdf', 'docx', 'doc'].includes(ext)) {
-        setError('Please upload a PDF or Word document (.pdf, .docx, .doc)');
-        return false;
-      }
+  const handleFileSelect = useCallback((selectedFile: File) => {
+    const validationError = validateFile(selectedFile);
+    if (validationError) {
+      setError(validationError);
+      return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      setError('File is too large. Maximum size is 10MB.');
-      return false;
-    }
-    return true;
-  };
-
-  const handleFileSelect = (selectedFile: File) => {
     setError(null);
-    if (validateFile(selectedFile)) {
-      setFile(selectedFile);
-      setUploadStatus('idle');
-      setParsedData(null);
-    }
-  };
+    setFile(selectedFile);
+    setUploadStatus('idle');
+    setParsedData(null);
+  }, []);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -80,7 +83,7 @@ export const ResumeUploadStep: React.FC<ResumeUploadStepProps> = ({
     if (droppedFile) {
       handleFileSelect(droppedFile);
     }
-  }, []);
+  }, [handleFileSelect]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -106,9 +109,9 @@ export const ResumeUploadStep: React.FC<ResumeUploadStepProps> = ({
         setUploadStatus('error');
         setError('Failed to parse resume. Please try again or skip this step.');
       }
-    } catch (err: any) {
+    } catch (err) {
       setUploadStatus('error');
-      setError(err.response?.data?.detail || 'Failed to upload resume. Please try again.');
+      setError(formatError(err));
     } finally {
       setIsUploading(false);
     }
@@ -190,7 +193,7 @@ export const ResumeUploadStep: React.FC<ResumeUploadStepProps> = ({
         onClick={() => fileInputRef.current?.click()}
         style={{
           padding: '3rem 2rem',
-          border: `2px dashed ${isDragging ? 'var(--color-accent-emphasis, #0969da)' : 'var(--color-border, #d0d7de)'}`,
+          border: `2px dashed ${isDragging ? 'var(--color-primary)' : 'var(--color-border, #d0d7de)'}`,
           borderRadius: '8px',
           backgroundColor: isDragging ? 'var(--color-accent-subtle, #ddf4ff)' : 'var(--color-bg-secondary, #f6f8fa)',
           textAlign: 'center',
@@ -201,7 +204,7 @@ export const ResumeUploadStep: React.FC<ResumeUploadStepProps> = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept={allowedExtensions.join(',')}
+          accept={ALLOWED_EXTENSIONS.join(',')}
           onChange={handleInputChange}
           style={{ display: 'none' }}
         />

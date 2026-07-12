@@ -70,6 +70,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook must live alongside its Provider
 export function useTheme(): ThemeContextType {
   const context = useContext(ThemeContext);
   if (context === undefined) {

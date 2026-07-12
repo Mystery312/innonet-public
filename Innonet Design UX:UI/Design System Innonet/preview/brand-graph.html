@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:280px; margin:0; padding:0; background:#0A0A0F;
+    font-family: var(--font-sans); display:flex; align-items:center; justify-content:center;}
+  .stage { width: 100%; height:100%; position:relative; overflow:hidden;}
+  .stage::before { content:""; position:absolute; inset:0;
+    background: radial-gradient(circle at 30% 40%, rgba(77,77,255,.22), transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(124,58,237,.18), transparent 55%);}
+  svg { position:absolute; inset:0; width:100%; height:100%;}
+  text { font: 500 11px/1 var(--font-mono, monospace); fill:#A1A1AA;}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <svg viewBox="0 0 700 280">
+      <!-- edges -->
+      <g stroke="#4D4DFF" stroke-width="1" opacity=".4">
+        <line x1="180" y1="100" x2="350" y2="80"/>
+        <line x1="350" y1="80" x2="520" y2="120"/>
+        <line x1="180" y1="100" x2="240" y2="200"/>
+        <line x1="240" y1="200" x2="420" y2="220"/>
+        <line x1="420" y1="220" x2="520" y2="120"/>
+        <line x1="350" y1="80" x2="420" y2="220"/>
+        <line x1="240" y1="200" x2="350" y2="80"/>
+        <line x1="520" y1="120" x2="600" y2="200"/>
+      </g>
+      <!-- nodes -->
+      <g>
+        <circle cx="180" cy="100" r="10" fill="#4D4DFF" opacity=".7"/>
+        <circle cx="350" cy="80" r="16" fill="#4D4DFF"/>
+        <circle cx="520" cy="120" r="11" fill="#4D4DFF" opacity=".8"/>
+        <circle cx="240" cy="200" r="8"  fill="#4D4DFF" opacity=".55"/>
+        <circle cx="420" cy="220" r="12" fill="#7C3AED" opacity=".75"/>
+        <circle cx="600" cy="200" r="7"  fill="#06B6D4" opacity=".7"/>
+      </g>
+      <!-- labels -->
+      <text x="195" y="102" dx="6">mei.chen</text>
+      <text x="370" y="78" dx="6">graph.center</text>
+      <text x="540" y="120" dx="6">alex.r</text>
+      <text x="255" y="202" dx="6">project · ai-tutor</text>
+      <text x="438" y="222" dx="6">event · hackshanghai</text>
+      <text x="615" y="200" dx="6">company · arc</text>
+    </svg>
+  </div>
+</body>
+</html>

@@ -119,7 +119,7 @@ export const MiniGraph: React.FC<MiniGraphProps> = ({
       .attr('width', scaleX(viewport.x + viewport.width) - scaleX(viewport.x))
       .attr('height', scaleY(viewport.y + viewport.height) - scaleY(viewport.y))
       .attr('fill', 'rgba(9, 105, 218, 0.1)')
-      .attr('stroke', '#0969da')
+      .attr('stroke', 'var(--color-primary)')
       .attr('stroke-width', 1.5)
       .attr('rx', 2)
       .style('cursor', 'move');
@@ -142,7 +142,7 @@ export const MiniGraph: React.FC<MiniGraphProps> = ({
       onViewportChange({ x: clampedX, y: clampedY });
     });
 
-    viewportRect.call(drag as any);
+    viewportRect.call(drag);
 
     // Click to move viewport
     svg.on('click', (event) => {

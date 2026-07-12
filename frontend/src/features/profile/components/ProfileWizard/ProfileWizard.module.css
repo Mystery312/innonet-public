@@ -185,8 +185,8 @@
 }
 
 .addButton:hover {
-  border-color: var(--color-accent-emphasis, #0969da);
-  color: var(--color-accent-fg, #0969da);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .emptyState {

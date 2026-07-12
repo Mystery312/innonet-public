@@ -6,7 +6,7 @@ export interface GraphNode {
   id: string;
   type: NodeType;
   label: string;
-  properties: Record<string, any>;
+  properties: Record<string, unknown>;
   size?: number;
   color?: string;
   image_url?: string;
@@ -84,26 +84,19 @@ export interface CustomGroup {
   id: string;
   name: string;
   color: string;
-  filter: string; // Search query to match nodes
-  nodeIds?: string[]; // Cached matching node IDs
+  filter: string;
+  nodeIds?: string[];
 }
 
 export interface AdvancedFilters extends GraphFilters {
-  // Node type toggles
   showUsers: boolean;
   showSkills: boolean;
   showCommunities: boolean;
   showEvents: boolean;
   showCompanies: boolean;
-
-  // Relationship filters
   connectionTypes: ('connection' | 'similar' | 'member' | 'has_skill')[];
-
-  // Custom groups for color coding
   customGroups: CustomGroup[];
-
-  // Display options
-  showOrphans: boolean; // Nodes with no connections
+  showOrphans: boolean;
   minConnections: number;
   showLabels: boolean;
   showEdgeLabels: boolean;
@@ -224,6 +217,18 @@ export interface KnowledgeGraphProps {
   animateOnLoad?: boolean;
   highlightConnectedOnHover?: boolean;
   enableClustering?: boolean;
+
+  /**
+   * Built-in chrome (legend, controls hint, view-mode pill).
+   * `false`     — hide all built-in chrome (use when the host page provides its own).
+   * `true`      — show all (default, preserves previous behavior).
+   * `{ ... }`   — fine-grained control.
+   */
+  chrome?: boolean | {
+    showLegend?: boolean;
+    showControls?: boolean;
+    showViewModeIndicator?: boolean;
+  };
 }
 
 export interface GraphControlsProps {
@@ -270,34 +275,42 @@ export interface GraphSidebarProps {
   onClose: () => void;
   onViewProfile?: (userId: string) => void;
   onConnect?: (userId: string) => void;
+  onSelectRelated?: (node: GraphNode) => void;
   relatedNodes?: GraphNode[];
 }
 
 // ============== Node Colors ==============
+// Single source of truth for node colors across the graph, sidebar avatar,
+// legend, and filter chips. Aligned with the Roadmap mockup palette.
 
 export const NODE_COLORS: Record<NodeType, string> = {
-  user: '#0969da',
-  skill: '#2da44e',
-  community: '#8250df',
-  event: '#bf8700',
-  project: '#cf222e',
-  company: '#57606a',
-  search: '#953800',
+  user:      '#3232FF',
+  skill:     '#10B981',
+  community: '#F59E0B',
+  event:     '#EC4899',
+  project:   '#06B6D4',
+  company:   '#8B5CF6',
+  search:    '#64748B',
 };
+
+/** Extra colors keyed off properties (not the NodeType union). */
+export const SPECIAL_NODE_COLORS = {
+  me: '#5B6BFF', // current user (when properties.is_current_user)
+} as const;
 
 // ============== Cluster Colors ==============
 
 export const CLUSTER_COLORS = [
-  '#0969da', // Blue
-  '#2da44e', // Green
-  '#8250df', // Purple
-  '#bf8700', // Orange
-  '#cf222e', // Red
-  '#0550ae', // Dark Blue
-  '#1a7f37', // Dark Green
-  '#6639ba', // Dark Purple
-  '#9a6700', // Dark Orange
-  '#a40e26', // Dark Red
+  '#3232FF', // Blue
+  '#10B981', // Green
+  '#8B5CF6', // Purple
+  '#F59E0B', // Orange
+  '#EC4899', // Pink
+  '#06B6D4', // Cyan
+  '#6366F1', // Indigo
+  '#84CC16', // Lime
+  '#F97316', // Dark Orange
+  '#EF4444', // Red
 ];
 
 // ============== Node Shapes ==============

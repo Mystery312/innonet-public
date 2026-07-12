@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:280px; margin:0; padding:24px; background:#F8FAFC;
+    font-family: var(--font-sans); display:flex; gap: 16px; align-items:center;}
+  .card { flex:1; background:#fff; border-radius: 16px; padding: 1.25rem;
+    box-shadow: 0 4px 6px -1px rgba(15,23,42,.06), 0 10px 15px -3px rgba(15,23,42,.08);
+    display:flex; flex-direction:column; gap: 14px;}
+  .head { display:flex; align-items:center; gap: 12px;}
+  .avatar { width:44px; height:44px; border-radius:50%;
+    background: linear-gradient(135deg, #6B6BFF, #4D4DFF); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; color:#fff;
+    font: 600 16px/1 "Space Grotesk", sans-serif;}
+  .meta { flex:1; display:flex; flex-direction:column; gap:2px;}
+  .name { font: 600 15px/1.2 var(--font-sans); color:#0F172A;}
+  .role { font: 400 12px/1.2 var(--font-sans); color:#64748B;}
+  .match { font: 700 11px/1 var(--font-sans); color:#4D4DFF;
+    background: rgba(77,77,255,.1); padding: 4px 10px; border-radius: 9999px;}
+  .tags { display:flex; gap: 6px; flex-wrap:wrap;}
+  .tag { font: 500 11px/1 var(--font-sans); color:#475569;
+    background:#F1F5F9; padding: 4px 10px; border-radius: 9999px;}
+  .stats { display:flex; gap: 16px; padding-top: 12px; border-top: 1px solid #E2E8F0;}
+  .stat { display:flex; flex-direction:column; gap:2px; align-items:center; flex:1;}
+  .v { font: 700 16px/1 "Space Grotesk", sans-serif; color:#0F172A;}
+  .l { font: 400 11px/1 var(--font-sans); color:#94A3B8;}
+  .featured { box-shadow: 0 16px 48px -8px rgba(77,77,255,.35); border: 1px solid rgba(77,77,255,.2);}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="head">
+      <div class="avatar">M</div>
+      <div class="meta"><span class="name">Mei Chen</span><span class="role">Builder · Shanghai</span></div>
+      <span class="match">92% match</span>
+    </div>
+    <div class="tags"><span class="tag">React</span><span class="tag">AI/ML</span><span class="tag">Design</span></div>
+    <div class="stats">
+      <div class="stat"><span class="v">12</span><span class="l">mutual</span></div>
+      <div class="stat"><span class="v">3</span><span class="l">events</span></div>
+      <div class="stat"><span class="v">5</span><span class="l">projects</span></div>
+    </div>
+  </div>
+  <div class="card featured">
+    <div class="head">
+      <div class="avatar" style="background:linear-gradient(135deg,#7C3AED,#4D4DFF)">A</div>
+      <div class="meta"><span class="name">Alex Rivera</span><span class="role">Founder · Pudong</span></div>
+      <span class="match">Featured</span>
+    </div>
+    <div class="tags"><span class="tag">Hardware</span><span class="tag">IoT</span></div>
+    <div class="stats">
+      <div class="stat"><span class="v">28</span><span class="l">mutual</span></div>
+      <div class="stat"><span class="v">7</span><span class="l">events</span></div>
+      <div class="stat"><span class="v">2</span><span class="l">projects</span></div>
+    </div>
+  </div>
+</body>
+</html>

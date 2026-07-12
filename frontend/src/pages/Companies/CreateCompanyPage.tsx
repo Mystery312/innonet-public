@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { companiesApi } from '../../features/companies/api/companiesApi';
+import { formatError } from '../../utils/error';
 import type { CompanyCreate, CompanySize } from '../../types/company';
 import styles from './CreateCompanyPage.module.css';
 
@@ -48,11 +49,9 @@ export const CreateCompanyPage: React.FC = () => {
     try {
       const company = await companiesApi.createCompany(formData);
       navigate(`/companies/${company.id}`);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to create company:', err);
-      setError(
-        err.response?.data?.detail || 'Failed to create company. Please try again.'
-      );
+      setError(formatError(err));
     } finally {
       setIsSubmitting(false);
     }

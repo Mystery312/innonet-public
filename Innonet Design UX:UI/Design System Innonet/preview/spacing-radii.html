@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:160px; margin:0; padding:24px; background:#fff;
+    font-family: var(--font-sans); display:flex; gap: 18px; align-items:center; justify-content:center;}
+  .item { display:flex; flex-direction:column; gap: 8px; align-items:center;}
+  .box { width: 64px; height: 64px; background: linear-gradient(135deg, #6B6BFF, #4D4DFF); }
+  .lbl { font: 500 12px/1 var(--font-mono, monospace); color:#475569;}
+  .px { font: 400 10px/1 var(--font-mono); color:#94A3B8;}
+</style>
+</head>
+<body>
+  <div class="item"><div class="box" style="border-radius:2px"></div><span class="lbl">xs</span><span class="px">2px</span></div>
+  <div class="item"><div class="box" style="border-radius:4px"></div><span class="lbl">sm</span><span class="px">4px</span></div>
+  <div class="item"><div class="box" style="border-radius:8px"></div><span class="lbl">md</span><span class="px">8px</span></div>
+  <div class="item"><div class="box" style="border-radius:12px"></div><span class="lbl">lg</span><span class="px">12px</span></div>
+  <div class="item"><div class="box" style="border-radius:16px"></div><span class="lbl">xl</span><span class="px">16px</span></div>
+  <div class="item"><div class="box" style="border-radius:24px"></div><span class="lbl">2xl</span><span class="px">24px</span></div>
+  <div class="item"><div class="box" style="border-radius:9999px"></div><span class="lbl">pill</span><span class="px">∞</span></div>
+</body>
+</html>

@@ -18,13 +18,18 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """
-    Get current user from httpOnly cookie.
+    Get current user from httpOnly cookie or Authorization header.
 
-    Security: Reads JWT token from httpOnly cookie which cannot be accessed
-    by JavaScript, preventing XSS attacks from stealing tokens.
+    Checks cookie first (browser clients), then falls back to
+    Authorization Bearer header (API clients, demo scripts).
     """
-    # Get token from cookie
+    # Try cookie first, then Authorization header
     token = request.cookies.get(ACCESS_TOKEN_COOKIE)
+
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:]
 
     if not token:
         raise HTTPException(
@@ -90,9 +95,14 @@ async def get_optional_current_user(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> Optional[User]:
-    """Get current user from cookie if authenticated, otherwise return None."""
-    # Get token from cookie
+    """Get current user from cookie or Authorization header if authenticated, otherwise return None."""
+    # Try cookie first, then Authorization header
     token = request.cookies.get(ACCESS_TOKEN_COOKIE)
+
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:]
 
     if not token:
         return None

@@ -97,7 +97,7 @@
   border: 1px solid rgba(9, 105, 218, 0.3);
   font-size: 0.75rem;
   font-weight: 500;
-  color: #0969da;
+  color: var(--color-primary);
 }
 
 .controls p {
@@ -163,7 +163,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid #f6f8fa;
-  border-top-color: #0969da;
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

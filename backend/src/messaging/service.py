@@ -201,7 +201,7 @@ class MessagingService:
         message = Message(
             conversation_id=conversation_id,
             sender_id=sender_id,
-            content=content
+            content=content,
         )
         self.db.add(message)
 

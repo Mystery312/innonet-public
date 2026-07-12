@@ -21,6 +21,7 @@ from src.auth.utils import (
     get_email_verification_expiry,
 )
 from src.utils.account_lockout import lockout_manager
+from src.utils.encryption import compute_lookup_hash
 
 
 class AuthService:
@@ -35,27 +36,31 @@ class AuthService:
         if existing.scalar_one_or_none():
             raise ValueError("Username already exists")
 
-        # Check if email exists
+        # Phase 3: uniqueness is enforced via HMAC lookup hashes.
         if data.email:
-            existing = await self.db.execute(
-                select(User).where(User.email == data.email)
-            )
-            if existing.scalar_one_or_none():
-                raise ValueError("Email already registered")
+            email_hash = compute_lookup_hash(data.email)
+            if email_hash:
+                existing = await self.db.execute(
+                    select(User).where(User.email_lookup_hash == email_hash)
+                )
+                if existing.scalar_one_or_none():
+                    raise ValueError("Email already registered")
 
-        # Check if phone exists
         if data.phone:
-            existing = await self.db.execute(
-                select(User).where(User.phone == data.phone)
-            )
-            if existing.scalar_one_or_none():
-                raise ValueError("Phone number already registered")
+            phone_hash = compute_lookup_hash(data.phone)
+            if phone_hash:
+                existing = await self.db.execute(
+                    select(User).where(User.phone_lookup_hash == phone_hash)
+                )
+                if existing.scalar_one_or_none():
+                    raise ValueError("Phone number already registered")
 
-        # Create user
         user = User(
             username=data.username,
             email=data.email,
             phone=data.phone,
+            email_lookup_hash=compute_lookup_hash(data.email) if data.email else None,
+            phone_lookup_hash=compute_lookup_hash(data.phone) if data.phone else None,
             password_hash=hash_password(data.password),
         )
         self.db.add(user)
@@ -87,17 +92,17 @@ class AuthService:
                 f"Please try again in {remaining_minutes} minutes."
             )
 
-        # Find user by username, email, or phone
+        # Find user by username, email, or phone.
+        # Email/phone lookups use HMAC blind index (Phase 3: plaintext columns gone).
+        identifier_hash = compute_lookup_hash(identifier)
+        where_clauses = [User.username == identifier]
+        if identifier_hash:
+            where_clauses.append(User.email_lookup_hash == identifier_hash)
+            where_clauses.append(User.phone_lookup_hash == identifier_hash)
         result = await self.db.execute(
             select(User)
             .options(selectinload(User.profile))
-            .where(
-                or_(
-                    User.username == identifier,
-                    User.email == identifier,
-                    User.phone == identifier,
-                )
-            )
+            .where(or_(*where_clauses))
         )
         user = result.scalar_one_or_none()
 
@@ -228,9 +233,12 @@ class AuthService:
 
     async def request_password_reset(self, email: str) -> Optional[str]:
         """Request a password reset. Returns the reset token if user exists."""
-        result = await self.db.execute(
-            select(User).where(User.email == email)
-        )
+        email_hash = compute_lookup_hash(email)
+        if email_hash:
+            q = select(User).where(User.email_lookup_hash == email_hash)
+        else:
+            q = select(User).where(User.email == email)
+        result = await self.db.execute(q)
         user = result.scalar_one_or_none()
 
         if not user:
@@ -393,3 +401,24 @@ class AuthService:
         token = await self.create_email_verification_token(user_id)
 
         return token
+
+    async def resend_verification_by_email(self, email: str) -> Optional[Tuple[str, str]]:
+        """Look up user by email and return (email, token) if resend is appropriate.
+
+        Returns None when the email is unknown or already verified — callers
+        should return the same success message regardless to prevent enumeration.
+        """
+        email_hash = compute_lookup_hash(email)
+        if email_hash:
+            result = await self.db.execute(
+                select(User).where(User.email_lookup_hash == email_hash)
+            )
+        else:
+            return None
+
+        user = result.scalar_one_or_none()
+        if not user or user.is_verified or not user.email:
+            return None
+
+        token = await self.create_email_verification_token(user.id)
+        return user.email, token

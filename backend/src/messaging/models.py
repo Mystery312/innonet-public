@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 import enum
 
 from src.database.postgres import Base
+from src.utils.encryption import EncryptedText
 
 
 def utc_now() -> datetime:
@@ -77,7 +78,7 @@ class Message(Base):
     sender_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
-    content: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[str] = mapped_column(EncryptedText, nullable=False)
     is_edited: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
     updated_at: Mapped[datetime] = mapped_column(
@@ -99,7 +100,7 @@ class Notification(Base):
     )
     type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    message: Mapped[str] = mapped_column(Text, nullable=False)
+    message: Mapped[str] = mapped_column(EncryptedText, nullable=False)
     link: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     related_id: Mapped[uuid.UUID | None] = mapped_column(

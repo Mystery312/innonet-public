@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:200px; margin:0; padding:32px; background:#F8FAFC;
+    font-family: var(--font-sans); display:flex; gap: 28px; align-items:center; justify-content:center;}
+  .item { display:flex; flex-direction:column; gap: 10px; align-items:center; }
+  .box { width: 96px; height: 96px; background:#fff; border-radius: 12px; }
+  .lbl { font: 500 12px/1 var(--font-mono, monospace); color:#475569;}
+  .desc { font: 400 10px/1 var(--font-sans); color:#94A3B8;}
+  .sm { box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .md { box-shadow: 0 4px 6px -1px rgba(15,23,42,.08), 0 2px 4px -2px rgba(15,23,42,.06); }
+  .lg { box-shadow: 0 10px 15px -3px rgba(15,23,42,.10), 0 4px 6px -4px rgba(15,23,42,.06); }
+  .xl { box-shadow: 0 20px 25px -5px rgba(15,23,42,.10), 0 8px 10px -6px rgba(15,23,42,.06); }
+  .glow {
+    background: linear-gradient(135deg, #2E2ECC, #1A1A7A);
+    box-shadow: 0 6px 16px -6px rgba(26,26,122,.55);
+  }
+</style>
+</head>
+<body>
+  <div class="item"><div class="box sm"></div><span class="lbl">shadow-sm</span><span class="desc">subtle hairline</span></div>
+  <div class="item"><div class="box md"></div><span class="lbl">shadow-md</span><span class="desc">cards default</span></div>
+  <div class="item"><div class="box lg"></div><span class="lbl">shadow-lg</span><span class="desc">menus, popovers</span></div>
+  <div class="item"><div class="box xl"></div><span class="lbl">shadow-xl</span><span class="desc">hero cards</span></div>
+  <div class="item"><div class="box glow"></div><span class="lbl">glow-primary</span><span class="desc">deep blue accent</span></div>
+</body>
+</html>

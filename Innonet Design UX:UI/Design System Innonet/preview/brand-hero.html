@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:240px; margin:0; padding:0; background:#fff;}
+  .hero { width: 100%; height: 100%; padding: 32px;
+    background: linear-gradient(135deg, rgba(77,77,255,.04) 0%, rgba(77,77,255,.08) 40%,
+      rgba(120,80,255,.06) 70%, rgba(77,77,255,.02) 100%);
+    background-size: 200% 200%;
+    animation: shift 12s ease infinite;
+    display:flex; flex-direction:column; justify-content:center; gap: 14px;
+    font-family: var(--font-sans);}
+  @keyframes shift { 0%,100% { background-position: 0 50%;} 50% { background-position:100% 50%;}}
+  .eyebrow { font: 600 11px/1 var(--font-sans); color:#4D4DFF; letter-spacing:.08em;
+    text-transform: uppercase; }
+  .title { font: 800 44px/1.05 "Space Grotesk", sans-serif; color:#0F172A; letter-spacing:-.025em; max-width: 560px;}
+  .sub { font: 400 16px/1.6 var(--font-sans); color:#64748B; max-width: 540px;}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="hero">
+    <span class="eyebrow">AI-powered networking</span>
+    <h1 class="title">From ideas to impact, faster</h1>
+    <p class="sub">Discover nearby builders, hackathons, and projects — so collaboration happens faster and smarter.</p>
+  </div>
+</body>
+</html>

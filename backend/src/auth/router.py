@@ -18,6 +18,7 @@ from src.auth.schemas import (
     MessageResponse,
     PasswordResetRequest,
     PasswordResetConfirm,
+    ResendVerificationRequest,
 )
 from src.auth.service import AuthService
 from src.auth.oauth import OAuthService, OAUTH_PROVIDERS
@@ -60,7 +61,7 @@ async def register(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/login", response_model=UserResponse)
+@router.post("/login", response_model=AuthResponse)
 @limiter.limit("30/minute")
 async def login(
     request: Request,
@@ -69,10 +70,9 @@ async def login(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Login endpoint that sets JWT tokens in httpOnly cookies.
+    Login endpoint that sets JWT tokens in httpOnly cookies and returns them in the body.
 
-    Security: Tokens are stored in httpOnly cookies which cannot be accessed
-    by JavaScript, preventing XSS attacks from stealing tokens.
+    Supports both cookie-based auth (browser) and token-based auth (API clients/demos).
     """
     auth_service = AuthService(db)
     try:
@@ -80,14 +80,14 @@ async def login(
             data.identifier, data.password
         )
 
-        # Set tokens in httpOnly cookies
+        # Set tokens in httpOnly cookies for browser clients
         response.set_cookie(
             key=ACCESS_TOKEN_COOKIE,
             value=access_token,
             max_age=TOKEN_COOKIE_MAX_AGE,
-            httponly=True,  # Cannot be accessed by JavaScript
-            secure=settings.is_production,  # Only sent over HTTPS in production
-            samesite="lax",  # CSRF protection
+            httponly=True,
+            secure=settings.is_production,
+            samesite="lax",
             path="/",
         )
 
@@ -101,10 +101,21 @@ async def login(
             path="/",
         )
 
-        # Return only user data, not tokens
-        return UserResponse.model_validate(user)
+        # Return tokens in body for API clients and demo scripts
+        return AuthResponse(
+            user=UserResponse.model_validate(user),
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        err = str(e)
+        if "not verified" in err.lower():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=err,
+                headers={"X-Verification-Required": "true"},
+            )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=err)
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -203,6 +214,28 @@ async def verify_email(
         return MessageResponse(message="Email verified successfully! You can now login.")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/resend-verification-email", response_model=MessageResponse)
+@limiter.limit("3/minute")
+async def resend_verification_email_public(
+    request: Request,
+    data: ResendVerificationRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Resend verification email by email address — no authentication required.
+
+    Always returns the same response to prevent user enumeration.
+    """
+    auth_service = AuthService(db)
+    result = await auth_service.resend_verification_by_email(data.email)
+    if result:
+        email_address, token = result
+        email_service = EmailService()
+        await email_service.send_email_verification(email_address, token)
+    return MessageResponse(
+        message="If an account exists with this email, a verification link has been sent."
+    )
 
 
 @router.post("/resend-verification", response_model=MessageResponse)

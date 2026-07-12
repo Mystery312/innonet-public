@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 import enum
 
 from src.database.postgres import Base
+from src.utils.encryption import EncryptedText
 
 
 def utc_now() -> datetime:
@@ -149,11 +150,11 @@ class ChallengeApplication(Base):
     status: Mapped[str] = mapped_column(
         String(50), default=ApplicationStatus.PENDING.value, index=True
     )
-    cover_letter: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cover_letter: Mapped[str | None] = mapped_column(EncryptedText, nullable=True)
     portfolio_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     applied_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    reviewer_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reviewer_notes: Mapped[str | None] = mapped_column(EncryptedText, nullable=True)
 
     # Relationships
     challenge: Mapped["Challenge"] = relationship(back_populates="applications")

@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Navbar } from '../../components/common/Navbar';
-import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
@@ -88,7 +86,6 @@ export const ChallengesPage: React.FC = () => {
 
   return (
     <div className={styles.page}>
-      <Navbar />
       <main className={styles.main}>
         <div className={styles.container}>
           <div className={styles.backNav}>
@@ -221,7 +218,6 @@ export const ChallengesPage: React.FC = () => {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

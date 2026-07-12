@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
-import { Badge } from '../../components/common/Badge';
+import { Badge, type BadgeVariant } from '../../components/common/Badge';
 import { Avatar } from '../../components/common/Avatar';
 import { BackButton } from '../../components/common/BackButton';
 import { useAuth } from '../../context/AuthContext';
@@ -26,7 +26,7 @@ const SIZE_LABELS: Record<CompanySize, string> = {
   enterprise: '1000+ employees',
 };
 
-const DIFFICULTY_COLORS: Record<string, string> = {
+const DIFFICULTY_COLORS: Record<string, BadgeVariant> = {
   beginner: 'success',
   intermediate: 'warning',
   advanced: 'danger',
@@ -403,7 +403,7 @@ export const CompanyDetailPage: React.FC = () => {
                     <div className={styles.challengeHeader}>
                       <h3>{challenge.title}</h3>
                       <Badge
-                        variant={(DIFFICULTY_COLORS[challenge.difficulty] as any) || 'default'}
+                        variant={DIFFICULTY_COLORS[challenge.difficulty] || 'default'}
                         size="small"
                       >
                         {challenge.difficulty}

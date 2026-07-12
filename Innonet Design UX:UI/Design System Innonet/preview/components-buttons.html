@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:140px; margin:0; padding:24px; background:#fff;
+    font-family: var(--font-sans); display:flex; gap: 12px; align-items:center; flex-wrap:wrap;}
+  .btn { display:inline-flex; align-items:center; gap: 8px; font-weight: 500;
+    border-radius: 8px; border:none; cursor:pointer; transition: all .15s ease;
+    font-family: inherit;}
+  .btn-md { padding: .5rem 1rem; font-size: 1rem; }
+  .btn-sm { padding: .375rem .75rem; font-size: .875rem; }
+  .btn-lg { padding: .75rem 1.5rem; font-size: 1.0625rem; border-radius: 12px;}
+  .primary { background:#4D4DFF; color:#fff;}
+  .primary:hover { background:#3D3DE6;}
+  .outline { background:transparent; color:#4D4DFF; border: 1px solid #4D4DFF;}
+  .outline:hover { background:#4D4DFF; color:#fff;}
+  .ghost { background:transparent; color:#475569;}
+  .ghost:hover { background:#F1F5F9; color:#0F172A;}
+  .disabled { background:#4D4DFF; color:#fff; opacity:.5; cursor:not-allowed;}
+</style>
+</head>
+<body>
+  <button class="btn btn-md primary">Create your account</button>
+  <button class="btn btn-md outline">Browse events</button>
+  <button class="btn btn-md ghost">Log out</button>
+  <button class="btn btn-sm primary">Connect</button>
+  <button class="btn btn-lg primary">Get started free</button>
+  <button class="btn btn-md disabled">Joining…</button>
+</body>
+</html>

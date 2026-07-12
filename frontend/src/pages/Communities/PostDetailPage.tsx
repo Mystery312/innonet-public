@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Navbar } from '../../components/common/Navbar';
-import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Avatar } from '../../components/common/Avatar';
@@ -114,11 +112,9 @@ export const PostDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className={styles.page}>
-        <Navbar />
         <main className={styles.main}>
           <div className={styles.loading}>Loading post...</div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -126,7 +122,6 @@ export const PostDetailPage: React.FC = () => {
   if (error || !post) {
     return (
       <div className={styles.page}>
-        <Navbar />
         <main className={styles.main}>
           <div className={styles.error}>
             <h2>Post not found</h2>
@@ -136,14 +131,12 @@ export const PostDetailPage: React.FC = () => {
             </Button>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className={styles.page}>
-      <Navbar />
       <main className={styles.main}>
         <div className={styles.container}>
           <div className={styles.backNav}>
@@ -352,7 +345,6 @@ export const PostDetailPage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

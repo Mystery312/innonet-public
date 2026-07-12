@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:200px; margin:0; padding:24px; background:#F8FAFC;
+    font-family: var(--font-sans); display:flex; flex-direction:column; gap: 12px; justify-content:center;}
+  .field { display:flex; flex-direction:column; gap: 6px;}
+  .label { font: 500 13px/1 var(--font-sans); color:#0F172A;}
+  .input { padding: .625rem .875rem; border-radius: 8px; border:1px solid #E2E8F0;
+    background:#fff; font: 400 14px/1 var(--font-sans); color:#0F172A;
+    transition: all .15s ease;}
+  .input:focus { outline:none; border-color:#4D4DFF; box-shadow: 0 0 0 4px rgba(77,77,255,.12);}
+  .input.focused { border-color:#4D4DFF; box-shadow: 0 0 0 4px rgba(77,77,255,.12);}
+  .input.err { border-color:#EF4444;}
+  .help { font: 400 12px/1 var(--font-sans); color:#94A3B8;}
+  .err-msg { font: 400 12px/1 var(--font-sans); color:#EF4444;}
+</style>
+</head>
+<body>
+  <div class="field">
+    <label class="label">Email</label>
+    <input class="input focused" value="builder@innonet.io" />
+    <span class="help">We'll send a confirmation link.</span>
+  </div>
+  <div class="field">
+    <label class="label">Skills</label>
+    <input class="input err" value="invalid input" />
+    <span class="err-msg">Pick at least one skill.</span>
+  </div>
+</body>
+</html>

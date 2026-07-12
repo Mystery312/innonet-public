@@ -44,7 +44,6 @@ export const NotificationBell: React.FC = () => {
   // Fetch notifications when dropdown opens
   useEffect(() => {
     if (isOpen && notifications.length === 0) {
-      setIsLoading(true);
       messagingApi
         .getNotifications({ limit: 20 })
         .then((data) => {
@@ -71,7 +70,11 @@ export const NotificationBell: React.FC = () => {
   }, []);
 
   const handleToggle = () => {
-    setIsOpen(!isOpen);
+    const next = !isOpen;
+    setIsOpen(next);
+    if (next && notifications.length === 0) {
+      setIsLoading(true);
+    }
   };
 
   const handleMarkAsRead = useCallback(async (id: string) => {

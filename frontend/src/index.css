@@ -1,23 +1,136 @@
+/* =============================================================
+   INNONET — Global Styles + Design System Tokens
+   ============================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
+
+/* Tailwind v4 dark mode variant — matches data-theme attribute */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Tailwind v4 theme — expose design tokens as utility classes */
+@theme {
+  --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* -----------------------------------------------------------------
+   1. PRIMITIVE COLOR RAMPS
+   ----------------------------------------------------------------- */
 :root {
-  /* Brand Colors - Innonet Blue */
-  --color-primary: #4D4DFF;
-  --color-primary-dark: #3D3DE6;
-  --color-primary-light: #6B6BFF;
-  --color-secondary: #7c3aed;
-  --color-accent: #06b6d4;
+  /* Innonet Blue — the brand's electric primary */
+  --blue-50:  #EBEBFF;
+  --blue-100: #D6D6FF;
+  --blue-200: #ADADFF;
+  --blue-300: #7A7AFF;
+  --blue-400: #4D4DFF;
+  --blue-500: #3232FF;
+  --blue-600: #2222E6;
+  --blue-700: #1A1ACC;
+  --blue-800: #1414A3;
+  --blue-900: #0F0F7A;
 
-  /* Theme Colors (Light Mode Default) */
-  --color-background: #ffffff;
-  --color-background-secondary: #f8fafc;
-  --color-surface: #ffffff;
-  --color-text: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #64748b;
-  --color-border: #e2e8f0;
-  --color-border-light: #f1f5f9;
+  /* Neutral ramp */
+  --gray-50:  #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --gray-900: #0F172A;
 
-  /* Neutrals */
-  --color-gray-50: #f8fafc;
+  /* True dark surfaces — brand-forward dark theme */
+  --ink-1000: #0A0A0F;
+  --ink-900:  #111114;
+  --ink-800:  #1A1A1F;
+  --ink-700:  #25252C;
+  --ink-600:  #353541;
+
+  /* Accent ramp — used sparingly for graph nodes, info states */
+  --violet-500: #7C3AED;
+  --cyan-500:   #06B6D4;
+
+  /* Semantic colors */
+  --green-500: #10B981;
+  --green-100: #D1FAE5;
+  --amber-500: #F59E0B;
+  --amber-100: #FEF3C7;
+  --red-500:   #EF4444;
+  --red-100:   #FEE2E2;
+}
+
+/* -----------------------------------------------------------------
+   2. SEMANTIC TOKENS — LIGHT THEME (default)
+   ----------------------------------------------------------------- */
+:root {
+  /* brand */
+  --color-primary:        var(--blue-500);
+  --color-primary-hover:  var(--blue-600);
+  --color-primary-active: var(--blue-700);
+  --color-primary-dark:   var(--blue-600);
+  --color-primary-light:  var(--blue-400);
+  --color-primary-soft:   rgba(50, 50, 255, 0.10);
+  --color-primary-tint:   rgba(50, 50, 255, 0.15);
+
+  /* surfaces */
+  --color-bg:             #FFFFFF;
+  --color-bg-secondary:   var(--gray-50);
+  --color-bg-tertiary:    var(--gray-100);
+  --color-surface:        #FFFFFF;
+  --color-surface-raised: #FFFFFF;
+
+  /* legacy aliases (used by existing CSS Module components) */
+  --color-background:           #FFFFFF;
+  --color-background-secondary: var(--gray-50);
+  --color-text:                 var(--gray-900);
+  --color-text-secondary:       var(--gray-600);
+  --color-text-muted:           var(--gray-500);
+
+  /* foreground */
+  --color-fg:             var(--gray-900);
+  --color-fg-secondary:   var(--gray-600);
+  --color-fg-muted:       var(--gray-500);
+  --color-fg-on-primary:  #FFFFFF;
+
+  /* borders */
+  --color-border:         var(--gray-200);
+  --color-border-subtle:  var(--gray-100);
+  --color-border-strong:  var(--gray-300);
+  --color-border-light:   var(--gray-100);
+
+  /* status */
+  --color-success:        var(--green-500);
+  --color-success-bg:     var(--green-100);
+  --color-success-light:  var(--green-100);
+  --color-warning:        var(--amber-500);
+  --color-warning-bg:     var(--amber-100);
+  --color-warning-light:  var(--amber-100);
+  --color-danger:         var(--red-500);
+  --color-danger-bg:      var(--red-100);
+  --color-error:          var(--red-500);
+  --color-error-light:    var(--red-100);
+  --color-info:           var(--cyan-500);
+  --color-info-bg:        rgba(6, 182, 212, 0.15);
+  --color-secondary:      var(--violet-500);
+  --color-accent:         var(--cyan-500);
+
+  /* shadows */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.10), 0 4px 6px -4px rgba(15, 23, 42, 0.06);
+  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.10), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+
+  /* glows — branded blue halos for emphasis */
+  --glow-primary-sm: 0 0 0 4px rgba(50, 50, 255, 0.14);
+  --glow-primary-md: 0 8px 24px -4px rgba(50, 50, 255, 0.40);
+  --glow-primary-lg: 0 16px 48px -8px rgba(50, 50, 255, 0.50);
+
+  /* neutrals (legacy compat) */
+  --color-gray-50:  #f8fafc;
   --color-gray-100: #f1f5f9;
   --color-gray-200: #e2e8f0;
   --color-gray-300: #cbd5e1;
@@ -27,55 +140,55 @@
   --color-gray-700: #334155;
   --color-gray-800: #1e293b;
   --color-gray-900: #0f172a;
-
-  /* Status */
-  --color-success: #10b981;
-  --color-success-light: #d1fae5;
-  --color-warning: #f59e0b;
-  --color-warning-light: #fef3c7;
-  --color-error: #ef4444;
-  --color-error-light: #fee2e2;
-
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-
-  /* Border radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-full: 9999px;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-
-  /* Typography */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-
-  /* Transitions */
-  --transition-colors: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-/* Dark Mode */
+/* -----------------------------------------------------------------
+   3. SEMANTIC TOKENS — DARK THEME
+   ----------------------------------------------------------------- */
 [data-theme="dark"] {
-  --color-background: #1A1A1A;
-  --color-background-secondary: #121212;
-  --color-surface: #2A2A2A;
-  --color-text: #ffffff;
-  --color-text-secondary: #a1a1aa;
-  --color-text-muted: #71717a;
-  --color-border: #3f3f46;
-  --color-border-light: #27272a;
+  --color-primary:        var(--blue-500);
+  --color-primary-hover:  var(--blue-400);
+  --color-primary-active: var(--blue-300);
+  --color-primary-dark:   var(--blue-400);
+  --color-primary-soft:   rgba(50, 50, 255, 0.16);
+  --color-primary-tint:   rgba(50, 50, 255, 0.26);
 
-  /* Adjusted grays for dark mode */
-  --color-gray-50: #27272a;
+  --color-bg:             var(--ink-900);
+  --color-bg-secondary:   var(--ink-1000);
+  --color-bg-tertiary:    var(--ink-800);
+  --color-surface:        var(--ink-800);
+  --color-surface-raised: var(--ink-700);
+
+  --color-background:           var(--ink-900);
+  --color-background-secondary: var(--ink-1000);
+  --color-text:                 #FFFFFF;
+  --color-text-secondary:       #A1A1AA;
+  --color-text-muted:           #71717A;
+
+  --color-fg:             #FFFFFF;
+  --color-fg-secondary:   #A1A1AA;
+  --color-fg-muted:       #71717A;
+  --color-fg-on-primary:  #FFFFFF;
+
+  --color-border:         var(--ink-600);
+  --color-border-subtle:  #27272A;
+  --color-border-strong:  #4B4B58;
+  --color-border-light:   #27272A;
+
+  --color-success-bg:     rgba(16, 185, 129, 0.18);
+  --color-success-light:  rgba(16, 185, 129, 0.18);
+  --color-warning-bg:     rgba(245, 158, 11, 0.18);
+  --color-warning-light:  rgba(245, 158, 11, 0.18);
+  --color-danger-bg:      rgba(239, 68, 68, 0.18);
+  --color-error-light:    rgba(239, 68, 68, 0.18);
+  --color-info-bg:        rgba(6, 182, 212, 0.20);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6),  0 8px 10px -6px rgba(0, 0, 0, 0.45);
+
+  --color-gray-50:  #27272a;
   --color-gray-100: #3f3f46;
   --color-gray-200: #52525b;
   --color-gray-300: #71717a;
@@ -85,21 +198,104 @@
   --color-gray-700: #f4f4f5;
   --color-gray-800: #fafafa;
   --color-gray-900: #ffffff;
-
-  /* Adjusted primary for dark mode */
-  --color-primary-dark: #6B6BFF;
-
-  /* Status colors for dark mode */
-  --color-success-light: #064e3b;
-  --color-warning-light: #78350f;
-  --color-error-light: #7f1d1d;
-
-  /* Shadows for dark mode */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
 }
 
+/* -----------------------------------------------------------------
+   4. SPACING + RADIUS + MOTION
+   ----------------------------------------------------------------- */
+:root {
+  /* Density scale — controls section padding and gap rhythm */
+  --d-section-y: 96px;
+  --d-gap:       64px;
+  --d-card-pad:  28px;
+  --d-stack:     20px;
+
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  24px;
+  --radius-pill:  9999px;
+  --radius-full: 9999px;
+
+  /* legacy spacing aliases */
+  --spacing-xs:  0.25rem;
+  --spacing-sm:  0.5rem;
+  --spacing-md:  1rem;
+  --spacing-lg:  1.5rem;
+  --spacing-xl:  2rem;
+  --spacing-2xl: 3rem;
+
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast:   120ms;
+  --duration-base:   200ms;
+  --duration-slow:   320ms;
+
+  --transition-colors: color var(--duration-base) var(--ease-out),
+                       background-color var(--duration-base) var(--ease-out),
+                       border-color var(--duration-base) var(--ease-out);
+}
+
+/* -----------------------------------------------------------------
+   5. TYPOGRAPHY
+   ----------------------------------------------------------------- */
+:root {
+  --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --fs-12: 0.75rem;
+  --fs-13: 0.8125rem;
+  --fs-14: 0.875rem;
+  --fs-15: 0.9375rem;
+  --fs-16: 1rem;
+  --fs-18: 1.125rem;
+  --fs-20: 1.25rem;
+  --fs-24: 1.5rem;
+  --fs-28: 1.75rem;
+  --fs-32: 2rem;
+  --fs-40: 2.5rem;
+  --fs-48: 3rem;
+  --fs-64: 4rem;
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-black:    800;
+
+  --lh-tight:    1.05;
+  --lh-snug:     1.25;
+  --lh-normal:   1.5;
+  --lh-relaxed:  1.6;
+  --lh-loose:    1.75;
+
+  --tracking-tighter: -0.025em;
+  --tracking-tight:   -0.015em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.02em;
+  --tracking-wider:   0.08em;
+}
+
+/* -----------------------------------------------------------------
+   6. BASE RESET
+   ----------------------------------------------------------------- */
 * {
   margin: 0;
   padding: 0;
@@ -114,11 +310,12 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-background-secondary);
-  color: var(--color-text);
+  background-color: var(--color-bg);
+  color: var(--color-fg);
   line-height: 1.6;
   min-height: 100vh;
-  transition: var(--transition-colors);
+  transition: background-color var(--duration-base) var(--ease-out),
+              color var(--duration-base) var(--ease-out);
 }
 
 #root {
@@ -145,12 +342,14 @@ input, textarea, select {
   font-family: inherit;
 }
 
-/* Utility classes */
+/* -----------------------------------------------------------------
+   7. UTILITY CLASSES
+   ----------------------------------------------------------------- */
 .container {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--spacing-md);
+  padding: 0 24px;
 }
 
 .sr-only {
@@ -163,4 +362,58 @@ input, textarea, select {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* -----------------------------------------------------------------
+   8. HERO VISUAL ANIMATIONS (used by homepage + auth)
+   ----------------------------------------------------------------- */
+.spin-slow { animation: spin 60s linear infinite; transform-origin: 50% 50%; }
+.spin-med  { animation: spin 38s linear infinite reverse; transform-origin: 50% 50%; }
+.spin-fast { animation: spin 22s linear infinite; transform-origin: 50% 50%; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.float-a { animation: floatA 7s var(--ease-in-out) infinite; transform-origin: center; }
+.float-b { animation: floatA 9s var(--ease-in-out) infinite -2s; }
+.float-c { animation: floatA 11s var(--ease-in-out) infinite -4s; }
+@keyframes floatA {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.node-pulse {
+  animation: nodePulse 3s var(--ease-in-out) infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.node-pulse:nth-child(2n) { animation-delay: -1s; }
+.node-pulse:nth-child(3n) { animation-delay: -2s; }
+@keyframes nodePulse {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.edge-trace {
+  stroke-dasharray: 4 6;
+  animation: dash 6s linear infinite;
+}
+@keyframes dash { to { stroke-dashoffset: -100; } }
+
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(50,50,255,0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(50,50,255,0); }
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* grid cell pulse (hero variant 4) */
+.grid-cell {
+  animation: cellPulse 4s var(--ease-in-out) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes cellPulse {
+  0%,100% { opacity: 0.05; }
+  50% { opacity: 0.5; }
 }

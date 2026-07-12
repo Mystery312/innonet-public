@@ -35,7 +35,7 @@
 
 .viewTab.active {
   background: #fff;
-  color: #0969da;
+  color: var(--color-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -69,13 +69,13 @@
 }
 
 .searchInput:focus {
-  border-color: #0969da;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
 }
 
 .searchButton {
   padding: 0.5rem 1rem;
-  background: #0969da;
+  background: var(--color-primary);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -130,8 +130,8 @@
 }
 
 .filterToggle.active {
-  border-color: #0969da;
-  color: #0969da;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
   background: #f0f7ff;
 }
 
@@ -179,7 +179,7 @@
 
 .slider {
   flex: 1;
-  accent-color: #0969da;
+  accent-color: var(--color-primary);
 }
 
 @media (max-width: 768px) {

@@ -1,0 +1,352 @@
+/* =============================================================
+   INNONET DESIGN SYSTEM — COLORS & TYPE
+   Strong electric blue on deep neutrals.
+   "From ideas to impact, faster."
+   ============================================================= */
+
+/* -----------------------------------------------------------------
+   1. PRIMITIVE COLOR RAMPS
+   ----------------------------------------------------------------- */
+:root {
+  /* Innonet Blue — the brand's electric primary.
+     #4D4DFF is the canonical blue from the codebase + logo. */
+  --blue-50:  #EBEBFF;
+  --blue-100: #D6D6FF;
+  --blue-200: #ADADFF;
+  --blue-300: #7A7AFF;
+  --blue-400: #4D4DFF;  /* primary-light */
+  --blue-500: #3232FF;  /* PRIMARY — matches the logo mark */
+  --blue-600: #2222E6;  /* primary-dark, hover */
+  --blue-700: #1A1ACC;
+  --blue-800: #1414A3;
+  --blue-900: #0F0F7A;
+
+  /* Neutral ramp — slate-leaning grays for the light theme,
+     cooler near-blacks for the dark theme. */
+  --gray-50:  #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --gray-900: #0F172A;
+
+  /* True dark surfaces — used by the brand-forward dark theme,
+     which is the hero/marketing default. */
+  --ink-1000: #0A0A0F;  /* deepest — full-bleed marketing backgrounds */
+  --ink-900:  #111114;  /* page background */
+  --ink-800:  #1A1A1F;  /* surface */
+  --ink-700:  #25252C;  /* raised surface, hover row */
+  --ink-600:  #353541;  /* border, divider */
+
+  /* Accent ramp — used very sparingly for graph nodes, info states. */
+  --violet-500: #7C3AED;
+  --cyan-500:   #06B6D4;
+
+  /* Semantic colors */
+  --green-500: #10B981;
+  --green-100: #D1FAE5;
+  --amber-500: #F59E0B;
+  --amber-100: #FEF3C7;
+  --red-500:   #EF4444;
+  --red-100:   #FEE2E2;
+}
+
+/* -----------------------------------------------------------------
+   2. SEMANTIC TOKENS — LIGHT THEME (default)
+   ----------------------------------------------------------------- */
+:root {
+  /* brand */
+  --color-primary:        var(--blue-500);
+  --color-primary-hover:  var(--blue-600);
+  --color-primary-active: var(--blue-700);
+  --color-primary-soft:   rgba(50, 50, 255, 0.10);  /* tint backgrounds */
+  --color-primary-tint:   rgba(50, 50, 255, 0.15);  /* badges, hover tints */
+
+  /* surfaces */
+  --color-bg:             #FFFFFF;
+  --color-bg-secondary:   var(--gray-50);
+  --color-bg-tertiary:    var(--gray-100);
+  --color-surface:        #FFFFFF;
+  --color-surface-raised: #FFFFFF;
+
+  /* foreground */
+  --color-fg:             var(--gray-900);
+  --color-fg-secondary:   var(--gray-600);
+  --color-fg-muted:       var(--gray-500);
+  --color-fg-on-primary:  #FFFFFF;
+
+  /* borders */
+  --color-border:         var(--gray-200);
+  --color-border-subtle:  var(--gray-100);
+  --color-border-strong:  var(--gray-300);
+
+  /* status (foreground/background pairs) */
+  --color-success:        var(--green-500);
+  --color-success-bg:     var(--green-100);
+  --color-warning:        var(--amber-500);
+  --color-warning-bg:     var(--amber-100);
+  --color-danger:         var(--red-500);
+  --color-danger-bg:      var(--red-100);
+  --color-info:           var(--cyan-500);
+  --color-info-bg:        rgba(6, 182, 212, 0.15);
+
+  /* shadows — soft, rarely heavy */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.10), 0 4px 6px -4px rgba(15, 23, 42, 0.06);
+  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.10), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+
+  /* glows — branded blue halos for emphasis */
+  --glow-primary-sm: 0 0 0 4px rgba(50, 50, 255, 0.14);
+  --glow-primary-md: 0 8px 24px -4px rgba(50, 50, 255, 0.40);
+  --glow-primary-lg: 0 16px 48px -8px rgba(50, 50, 255, 0.50);
+}
+
+/* -----------------------------------------------------------------
+   3. SEMANTIC TOKENS — DARK THEME (the brand-forward default)
+   ----------------------------------------------------------------- */
+[data-theme="dark"] {
+  /* brand stays vivid in dark — that's the whole point */
+  --color-primary:        var(--blue-500);
+  --color-primary-hover:  var(--blue-400);
+  --color-primary-active: var(--blue-300);
+  --color-primary-soft:   rgba(50, 50, 255, 0.16);
+  --color-primary-tint:   rgba(50, 50, 255, 0.26);
+
+  --color-bg:             var(--ink-900);
+  --color-bg-secondary:   var(--ink-1000);
+  --color-bg-tertiary:    var(--ink-800);
+  --color-surface:        var(--ink-800);
+  --color-surface-raised: var(--ink-700);
+
+  --color-fg:             #FFFFFF;
+  --color-fg-secondary:   #A1A1AA;
+  --color-fg-muted:       #71717A;
+  --color-fg-on-primary:  #FFFFFF;
+
+  --color-border:         var(--ink-600);
+  --color-border-subtle:  #27272A;
+  --color-border-strong:  #4B4B58;
+
+  --color-success-bg:     rgba(16, 185, 129, 0.18);
+  --color-warning-bg:     rgba(245, 158, 11, 0.18);
+  --color-danger-bg:      rgba(239, 68, 68, 0.18);
+  --color-info-bg:        rgba(6, 182, 212, 0.20);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6),  0 8px 10px -6px rgba(0, 0, 0, 0.45);
+}
+
+/* -----------------------------------------------------------------
+   4. SPACING + RADIUS + MOTION
+   ----------------------------------------------------------------- */
+:root {
+  --space-1:  0.25rem;   /*  4px */
+  --space-2:  0.5rem;    /*  8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+
+  --radius-xs:  2px;
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+  --radius-pill: 9999px;
+
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast:   120ms;
+  --duration-base:   200ms;
+  --duration-slow:   320ms;
+
+  --transition-colors: color var(--duration-base) var(--ease-out),
+                       background-color var(--duration-base) var(--ease-out),
+                       border-color var(--duration-base) var(--ease-out);
+}
+
+/* -----------------------------------------------------------------
+   5. TYPOGRAPHY
+   ----------------------------------------------------------------- */
+:root {
+  /* Display: Space Grotesk — geometric, modern, slightly technical.
+     Pairs with the graph/network theme. Loaded from Google Fonts. */
+  --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Body: Inter — but the codebase uses system stack; we keep that here. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+
+  /* Mono: for data, IDs, numeric stats */
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Type scale — bold display, generous body line-height */
+  --fs-12: 0.75rem;     /* caption, micro */
+  --fs-13: 0.8125rem;   /* small label */
+  --fs-14: 0.875rem;    /* body small / nav links */
+  --fs-15: 0.9375rem;   /* body */
+  --fs-16: 1rem;        /* body default */
+  --fs-18: 1.125rem;    /* lead */
+  --fs-20: 1.25rem;     /* h4 */
+  --fs-24: 1.5rem;      /* h3 */
+  --fs-28: 1.75rem;     /* section heading */
+  --fs-32: 2rem;        /* h2 */
+  --fs-40: 2.5rem;      /* hero on stats */
+  --fs-48: 3rem;        /* page hero */
+  --fs-64: 4rem;        /* mega hero */
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-black:    800;
+
+  --lh-tight:    1.05;  /* hero titles */
+  --lh-snug:     1.25;
+  --lh-normal:   1.5;
+  --lh-relaxed:  1.6;   /* body */
+  --lh-loose:    1.75;
+
+  --tracking-tighter: -0.025em;  /* hero */
+  --tracking-tight:   -0.015em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.02em;    /* badges, eyebrows */
+  --tracking-wider:   0.08em;
+}
+
+/* -----------------------------------------------------------------
+   6. SEMANTIC TYPE STYLES — apply via class
+   ----------------------------------------------------------------- */
+.t-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.t-display {
+  font-family: var(--font-display);
+  font-size: var(--fs-64);
+  font-weight: var(--fw-black);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tighter);
+  color: var(--color-fg);
+}
+
+.t-h1 {
+  font-family: var(--font-display);
+  font-size: var(--fs-48);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tighter);
+  color: var(--color-fg);
+}
+
+.t-h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-32);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-fg);
+}
+
+.t-h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-24);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  color: var(--color-fg);
+}
+
+.t-h4 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  color: var(--color-fg);
+}
+
+.t-lead {
+  font-family: var(--font-sans);
+  font-size: var(--fs-18);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-relaxed);
+  color: var(--color-fg-secondary);
+}
+
+.t-body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-16);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-relaxed);
+  color: var(--color-fg);
+}
+
+.t-body-sm {
+  font-family: var(--font-sans);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-relaxed);
+  color: var(--color-fg-secondary);
+}
+
+.t-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  color: var(--color-fg);
+}
+
+.t-caption {
+  font-family: var(--font-sans);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-regular);
+  color: var(--color-fg-muted);
+}
+
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-regular);
+  color: var(--color-fg-secondary);
+}
+
+.t-stat {
+  font-family: var(--font-display);
+  font-size: var(--fs-40);
+  font-weight: var(--fw-black);
+  line-height: 1;
+  color: var(--color-primary);
+}
+
+/* -----------------------------------------------------------------
+   7. BASE
+   ----------------------------------------------------------------- */
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

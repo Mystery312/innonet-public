@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-density="default">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>InnoNet — Sign in</title>
+  <link rel="icon" href="assets/favicon.svg"/>
+  <link rel="stylesheet" href="auth.css"/>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script>
+    // Override base URL by setting window.__INNONET_API_BASE__ before api.js loads.
+    // Default matches the backend dev port.
+    window.__INNONET_API_BASE__ = window.__INNONET_API_BASE__ || 'http://localhost:8000/api/v1';
+  </script>
+  <script src="api.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="HeroVisuals.jsx"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+    const api = window.innonetApi;
+
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "theme": "dark",
+      "density": "default",
+      "stageVariant": "constellation",
+      "page": "verify-success",
+      "demoMode": true,
+      "apiBase": "http:\/\/localhost:8000\/api\/v1"
+    }/*EDITMODE-END*/;
+
+    const ROUTES = [
+      { k: 'login',          label: 'Login' },
+      { k: 'signup',         label: 'Sign up' },
+      { k: 'forgot',         label: 'Forgot password' },
+      { k: 'check-email',    label: 'Check email' },
+      { k: 'reset',          label: 'Reset password' },
+      { k: 'reset-success',  label: 'Reset done' },
+      { k: 'verify-loading', label: 'Verifying' },
+      { k: 'verify-success', label: 'Verified ✓' },
+      { k: 'verify-error',   label: 'Verify error' },
+    ];
+
+    /* Parse the URL: ?page=verify&token=... or hash route */
+    function parseUrlRoute() {
+      const params = new URLSearchParams(window.location.search);
+      const path = window.location.pathname;
+      const token = params.get('token');
+      if (path.includes('verify-email') || params.get('page') === 'verify-email') {
+        return { page: 'verify-loading', token };
+      }
+      if (path.includes('reset-password') || params.get('page') === 'reset-password') {
+        return { page: 'reset', token };
+      }
+      const p = params.get('page');
+      if (p && ROUTES.some(r => r.k === p)) return { page: p, token };
+      return { page: null, token };
+    }
+
+    /* ─────────── Reusable bits ─────────── */
+    const Field = ({ label, helper, link, onLinkClick, children }) => (
+      <div className="field">
+        <div className="field-row">
+          <label>{label}</label>
+          {link && <a className="field-link" onClick={onLinkClick}>{link}</a>}
+        </div>
+        {children}
+        {helper && <span className="field-helper">{helper}</span>}
+      </div>
+    );
+
+    const PasswordInput = ({ value, onChange, placeholder, name }) => {
+      const [show, setShow] = useState(false);
+      return (
+        <div className="input-wrap">
+          <input className="input has-toggle"
+                 type={show ? 'text' : 'password'}
+                 value={value} onChange={onChange}
+                 placeholder={placeholder} name={name}
+                 autoComplete={name === 'new-password' ? 'new-password' : 'current-password'}/>
+          <button type="button" className="toggle" onClick={() => setShow(!show)}
+                  tabIndex={-1} aria-label={show ? 'Hide password' : 'Show password'}>
+            {show ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            )}
+          </button>
+        </div>
+      );
+    };
+
+    const OAuthGoogle = ({ onClick }) => (
+      <button type="button" className="oauth-btn" onClick={onClick}>
+        <svg viewBox="0 0 24 24">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+    );
+
+    const OAuthMicrosoft = ({ onClick }) => (
+      <button type="button" className="oauth-btn" onClick={onClick}>
+        <svg viewBox="0 0 24 24">
+          <path d="M11.4 2H2v9.4h9.4V2z" fill="#F25022"/>
+          <path d="M22 2h-9.4v9.4H22V2z" fill="#7FBA00"/>
+          <path d="M11.4 12.6H2V22h9.4v-9.4z" fill="#00A4EF"/>
+          <path d="M22 12.6h-9.4V22H22v-9.4z" fill="#FFB900"/>
+        </svg>
+        Continue with Microsoft
+      </button>
+    );
+
+    /* ─────────── Stage ─────────── */
+    function StageArt({ variant }) {
+      switch (variant) {
+        case 'orbits': return <HeroVisualOrbits/>;
+        case 'flow':   return <HeroVisualFlowField/>;
+        case 'grid':   return <HeroVisualGrid/>;
+        default:       return <HeroVisualConstellation/>;
+      }
+    }
+    function AuthStage({ variant, title, lead }) {
+      return (
+        <aside className="auth-shell-stage">
+          <div className="auth-stage-svg"><StageArt variant={variant}/></div>
+          <div className="auth-stage-content">
+            <a className="auth-stage-logo"><img src="assets/logo.svg" alt="InnoNet"/></a>
+            <h2 className="auth-stage-title">{title}</h2>
+            <p className="auth-stage-lead">{lead}</p>
+          </div>
+          <div className="auth-stage-quote">
+            <p>"Found my co-founder here. We met at a Hack Shanghai event two weekends after I made my profile."</p>
+            <div className="who">
+              <span className="av" style={{width:28,height:28,fontSize:11}}>M</span>
+              <span>Mei Chen · Builder, Shanghai</span>
+            </div>
+          </div>
+        </aside>
+      );
+    }
+
+    function Shell({ tweaks, setTweak, stageTitle, stageLead, children }) {
+      const dark = tweaks.theme === 'dark';
+      return (
+        <div className="auth-shell">
+          <AuthStage variant={tweaks.stageVariant} title={stageTitle} lead={stageLead}/>
+          <div className="auth-shell-form">
+            <a className="auth-shell-back" href="Homepage.html">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back to home
+            </a>
+            <div className="auth-shell-toggle">
+              <button className="theme-toggle"
+                      onClick={() => setTweak('theme', dark ? 'light' : 'dark')}
+                      aria-label="Toggle theme">
+                {dark ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                )}
+              </button>
+            </div>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    /* Helper: error message extraction */
+    const getErrMsg = (err) => err?.detail || err?.message || 'Something went wrong. Please try again.';
+
+    /* ─────────── Pages ─────────── */
+    function LoginPage({ go, demoMode, setEmailHint }) {
+      const [identifier, setIdentifier] = useState('');
+      const [password, setPassword] = useState('');
+      const [err, setErr] = useState('');
+      const [showResend, setShowResend] = useState(false);
+      const [resendStatus, setResendStatus] = useState('idle'); // idle|sending|sent
+      const [loading, setLoading] = useState(false);
+
+      const submit = async (e) => {
+        e.preventDefault();
+        setErr(''); setShowResend(false); setLoading(true);
+        try {
+          if (demoMode) {
+            await new Promise(r => setTimeout(r, 600));
+            api.setTokens('demo.access.token', 'demo.refresh.token');
+            window.location.href = 'Events.html';
+            return;
+          }
+          await api.login({ identifier, password });
+          window.location.href = '/events'; // matches frontend's /events route
+        } catch (e2) {
+          const msg = getErrMsg(e2);
+          if (e2.status === 403 || /not verified/i.test(msg)) {
+            setErr('Please verify your email before signing in. Check your inbox for the link.');
+            setShowResend(true);
+          } else {
+            setErr(msg);
+          }
+        } finally { setLoading(false); }
+      };
+
+      const resend = async () => {
+        if (resendStatus !== 'idle') return;
+        if (!identifier.includes('@')) {
+          setErr('Enter your email above, then click Resend.');
+          return;
+        }
+        setResendStatus('sending');
+        try {
+          await api.resendVerification(identifier);
+          setResendStatus('sent');
+          setEmailHint(identifier);
+        } catch { setResendStatus('idle'); }
+      };
+
+      return (
+        <div className="auth-card">
+          <div className="auth-head">
+            <h1>Welcome back</h1>
+            <p>Sign in to your account to keep building.</p>
+          </div>
+          <div className="oauth-stack">
+            <OAuthGoogle  onClick={() => demoMode ? alert('Demo mode: OAuth disabled.') : api.oauthAuthorize('google')}/>
+            <OAuthMicrosoft onClick={() => demoMode ? alert('Demo mode: OAuth disabled.') : api.oauthAuthorize('microsoft')}/>
+          </div>
+          <div className="divider"><span className="line"/><span className="text">or</span><span className="line"/></div>
+          {err && (
+            <div className="banner is-error">
+              {err}
+              {showResend && (
+                <div>
+                  {resendStatus === 'sent' ? (
+                    <span style={{color:'var(--color-success)',fontWeight:500}}>Verification email sent — check your inbox.</span>
+                  ) : (
+                    <a className="field-link" onClick={resend} style={{textDecoration:'underline'}}>
+                      {resendStatus === 'sending' ? 'Sending…' : 'Resend verification email'}
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          <form className="auth-form" onSubmit={submit}>
+            <Field label="Email, phone, or username">
+              <input className="input" type="text" value={identifier}
+                     onChange={e => setIdentifier(e.target.value)}
+                     placeholder="you@school.edu"
+                     autoComplete="username" required/>
+            </Field>
+            <Field label="Password" link="Forgot password?" onLinkClick={() => go('forgot')}>
+              <PasswordInput value={password} onChange={e => setPassword(e.target.value)}
+                             placeholder="Enter your password"/>
+            </Field>
+            <button type="submit" className="btn btn-primary btn-lg" style={{marginTop:8}} disabled={loading}>
+              {loading ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
+          <p className="auth-footer">Don't have an account? <a onClick={() => go('signup')}>Create one</a></p>
+        </div>
+      );
+    }
+
+    function SignupPage({ go, demoMode, setEmailHint }) {
+      const [username, setUsername] = useState('');
+      const [contact, setContact] = useState('email');
+      const [email, setEmail] = useState('');
+      const [phone, setPhone] = useState('');
+      const [pwd, setPwd] = useState('');
+      const [confirm, setConfirm] = useState('');
+      const [err, setErr] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const submit = async (e) => {
+        e.preventDefault();
+        if (pwd !== confirm) return setErr('Passwords do not match');
+        if (pwd.length < 8)  return setErr('Password must be at least 8 characters');
+        setErr(''); setLoading(true);
+        try {
+          const payload = { username, password: pwd, ...(contact === 'email' ? { email } : { phone }) };
+          if (demoMode) {
+            await new Promise(r => setTimeout(r, 600));
+          } else {
+            await api.register(payload);
+          }
+          if (contact === 'email') {
+            setEmailHint(email);
+            go('check-email');
+          } else {
+            go('login');
+          }
+        } catch (e2) { setErr(getErrMsg(e2)); }
+        finally { setLoading(false); }
+      };
+
+      return (
+        <div className="auth-card">
+          <div className="auth-head">
+            <h1>Create your account</h1>
+            <p>Join the InnoNet community of young builders.</p>
+          </div>
+          <div className="oauth-stack">
+            <OAuthGoogle  onClick={() => demoMode ? alert('Demo mode: OAuth disabled.') : api.oauthAuthorize('google')}/>
+            <OAuthMicrosoft onClick={() => demoMode ? alert('Demo mode: OAuth disabled.') : api.oauthAuthorize('microsoft')}/>
+          </div>
+          <div className="divider"><span className="line"/><span className="text">or</span><span className="line"/></div>
+          {err && <div className="banner is-error">{err}</div>}
+          <form className="auth-form" onSubmit={submit}>
+            <Field label="Username">
+              <input className="input" type="text" value={username}
+                     onChange={e => setUsername(e.target.value)}
+                     placeholder="Choose a username" required/>
+            </Field>
+            <div className="tabs">
+              <button type="button" className={`tab${contact==='email'?' is-active':''}`} onClick={()=>setContact('email')}>Email</button>
+              <button type="button" className={`tab${contact==='phone'?' is-active':''}`} onClick={()=>setContact('phone')}>Phone</button>
+            </div>
+            {contact === 'email' ? (
+              <Field label="Email">
+                <input className="input" type="email" value={email}
+                       onChange={e => setEmail(e.target.value)}
+                       placeholder="you@school.edu" required/>
+              </Field>
+            ) : (
+              <Field label="Phone number" helper="Include country code">
+                <input className="input" type="tel" value={phone}
+                       onChange={e => setPhone(e.target.value)}
+                       placeholder="+1234567890" required/>
+              </Field>
+            )}
+            <Field label="Password" helper="At least 8 characters">
+              <PasswordInput value={pwd} onChange={e => setPwd(e.target.value)}
+                             placeholder="Create a password" name="new-password"/>
+            </Field>
+            <Field label="Confirm password">
+              <PasswordInput value={confirm} onChange={e => setConfirm(e.target.value)}
+                             placeholder="Confirm your password" name="new-password"/>
+            </Field>
+            <button type="submit" className="btn btn-primary btn-lg" style={{marginTop:8}} disabled={loading}>
+              {loading ? 'Creating account…' : 'Create your account'}
+            </button>
+          </form>
+          <p className="auth-footer">Already have an account? <a onClick={() => go('login')}>Sign in</a></p>
+        </div>
+      );
+    }
+
+    function ForgotPage({ go, demoMode, setEmailHint }) {
+      const [email, setEmail] = useState('');
+      const [err, setErr] = useState('');
+      const [loading, setLoading] = useState(false);
+      const submit = async (e) => {
+        e.preventDefault(); setErr(''); setLoading(true);
+        try {
+          if (!demoMode) await api.forgotPassword(email);
+          else await new Promise(r => setTimeout(r, 500));
+          setEmailHint(email);
+          go('check-email');
+        } catch (e2) { setErr(getErrMsg(e2)); }
+        finally { setLoading(false); }
+      };
+      return (
+        <div className="auth-card">
+          <div className="auth-head">
+            <h1>Forgot password?</h1>
+            <p>Enter your email and we'll send you a reset link.</p>
+          </div>
+          {err && <div className="banner is-error">{err}</div>}
+          <form className="auth-form" onSubmit={submit}>
+            <Field label="Email">
+              <input className="input" type="email" value={email}
+                     onChange={e => setEmail(e.target.value)}
+                     placeholder="you@school.edu" required/>
+            </Field>
+            <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
+              {loading ? 'Sending…' : 'Send reset link'}
+            </button>
+          </form>
+          <p className="auth-footer">Remember your password? <a onClick={() => go('login')}>Sign in</a></p>
+        </div>
+      );
+    }
+
+    function CheckEmailPage({ go, emailHint, demoMode }) {
+      const [resendStatus, setResendStatus] = useState('idle');
+      const resend = async () => {
+        if (resendStatus !== 'idle' || !emailHint) return;
+        setResendStatus('sending');
+        try {
+          if (!demoMode) await api.resendVerification(emailHint);
+          else await new Promise(r => setTimeout(r, 500));
+          setResendStatus('sent');
+        } catch { setResendStatus('idle'); }
+      };
+      return (
+        <div className="auth-card">
+          <div className="auth-head">
+            <h1>Check your email</h1>
+            <p>We've sent a verification link to <strong style={{color:"var(--color-fg)"}}>{emailHint || 'you@school.edu'}</strong>.</p>
+          </div>
+          <div className="banner is-info">
+            <strong>What to do next</strong>
+            <ol>
+              <li>Open the email we just sent you.</li>
+              <li>Click the "Verify email address" button.</li>
+              <li>You'll be redirected back here to sign in.</li>
+            </ol>
+          </div>
+          <div className="banner is-warn">
+            The verification link expires in 24 hours. You won't be able to sign in until your email is verified.
+          </div>
+          <div style={{font:"400 14px/1.6 var(--font-sans)",color:"var(--color-fg-muted)"}}>
+            <strong style={{color:"var(--color-fg-secondary)"}}>Didn't receive the email?</strong>
+            <ul style={{margin:"6px 0 0",paddingLeft:18}}>
+              <li>Check your spam or junk folder.</li>
+              <li>Make sure you entered the right address.</li>
+              <li>{resendStatus === 'sent'
+                    ? <span style={{color:'var(--color-success)'}}>Email resent — check again in a minute.</span>
+                    : <a className="field-link" onClick={resend}>{resendStatus === 'sending' ? 'Resending…' : 'Resend the email'}</a>}
+              </li>
+            </ul>
+          </div>
+          <button className="btn btn-primary btn-lg" onClick={() => go('login')}>Continue to sign in</button>
+          <p className="auth-footer">Wrong email? <a onClick={() => go('signup')}>Sign up again</a></p>
+        </div>
+      );
+    }
+
+    function ResetPage({ go, resetToken, demoMode }) {
+      const [pwd, setPwd] = useState('');
+      const [confirm, setConfirm] = useState('');
+      const [err, setErr] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      if (!resetToken && !demoMode) {
+        return (
+          <div className="auth-card">
+            <div className="auth-head"><h1>Invalid link</h1><p>This password reset link is invalid or has expired.</p></div>
+            <button className="btn btn-primary btn-lg" onClick={() => go('forgot')}>Request a new link</button>
+          </div>
+        );
+      }
+
+      const submit = async (e) => {
+        e.preventDefault();
+        if (pwd !== confirm) return setErr('Passwords do not match');
+        if (pwd.length < 8)  return setErr('Password must be at least 8 characters');
+        setErr(''); setLoading(true);
+        try {
+          if (!demoMode) await api.resetPassword(resetToken, pwd);
+          else await new Promise(r => setTimeout(r, 500));
+          go('reset-success');
+        } catch (e2) { setErr(getErrMsg(e2)); }
+        finally { setLoading(false); }
+      };
+      return (
+        <div className="auth-card">
+          <div className="auth-head">
+            <h1>Reset your password</h1>
+            <p>Enter a new password for your account.</p>
+          </div>
+          {err && <div className="banner is-error">{err}</div>}
+          <form className="auth-form" onSubmit={submit}>
+            <Field label="New password" helper="At least 8 characters">
+              <PasswordInput value={pwd} onChange={e => setPwd(e.target.value)}
+                             placeholder="Enter new password" name="new-password"/>
+            </Field>
+            <Field label="Confirm password">
+              <PasswordInput value={confirm} onChange={e => setConfirm(e.target.value)}
+                             placeholder="Confirm new password" name="new-password"/>
+            </Field>
+            <button type="submit" className="btn btn-primary btn-lg" style={{marginTop:8}} disabled={loading}>
+              {loading ? 'Resetting…' : 'Reset password'}
+            </button>
+          </form>
+          <p className="auth-footer">Remember it now? <a onClick={() => go('login')}>Sign in</a></p>
+        </div>
+      );
+    }
+
+    function ResetSuccessPage({ go }) {
+      return (
+        <div className="auth-card" style={{textAlign:'center'}}>
+          <div className="success-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div className="auth-head" style={{textAlign:'center'}}>
+            <h1>Password reset</h1>
+            <p>Your password has been successfully reset. You can now sign in with your new password.</p>
+          </div>
+          <button className="btn btn-primary btn-lg" onClick={() => go('login')}>Sign in</button>
+        </div>
+      );
+    }
+
+    function VerifyLoadingPage() {
+      return (
+        <div className="auth-card" style={{textAlign:'center'}}>
+          <div className="auth-head" style={{textAlign:'center'}}>
+            <h1>Verifying your email</h1>
+            <p>Hold on while we confirm your address.</p>
+          </div>
+          <div className="spin-loader"/>
+        </div>
+      );
+    }
+
+    function VerifySuccessPage({ go }) {
+      return (
+        <div className="auth-card" style={{textAlign:'center'}}>
+          <div className="success-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div className="auth-head" style={{textAlign:'center'}}>
+            <h1>Email verified</h1>
+            <p>Your email is confirmed. You're ready to sign in and start building.</p>
+          </div>
+          <button className="btn btn-primary btn-lg" onClick={() => go('login')}>Continue to sign in</button>
+        </div>
+      );
+    }
+
+    function VerifyErrorPage({ go, errorMessage }) {
+      return (
+        <div className="auth-card" style={{textAlign:'center'}}>
+          <div className="success-icon" style={{background:"var(--color-danger-bg)",color:"var(--color-danger)"}}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+          <div className="auth-head" style={{textAlign:'center'}}>
+            <h1>Verification failed</h1>
+            <p>{errorMessage || 'This link is invalid or has expired. You can request a new one from the sign-in page.'}</p>
+          </div>
+          <button className="btn btn-primary btn-lg" onClick={() => go('login')}>Go to sign in</button>
+          <p className="auth-footer">Need help? <a>Contact support</a></p>
+        </div>
+      );
+    }
+
+    /* ─────────── App ─────────── */
+    const STAGE_COPY = {
+      'login':         { title: <>Welcome back to <span className="accent">InnoNet</span>.</>,         lead: "The shortest path to your collaborators. Pick up where you left off." },
+      'signup':        { title: <>Build with people<br/>who actually <span className="accent">ship.</span></>, lead: "Join 487 young builders shipping projects across 12 cities. Free, always." },
+      'forgot':        { title: <>Forgot it<br/>happens.</>,                                            lead: "Reset your password in two clicks. We'll email you a secure link." },
+      'check-email':   { title: <>One more<br/>step.</>,                                                lead: "Check your inbox to verify your address — then come back and sign in." },
+      'reset':         { title: <>A fresh<br/>start.</>,                                                lead: "Pick a new password. Make it strong; you're guarding your network." },
+      'reset-success': { title: <>You're<br/>all set.</>,                                               lead: "Password reset successfully. Sign in with your new credentials." },
+      'verify-loading':{ title: <>Just<br/>a moment.</>,                                                lead: "Verifying your email address. This usually takes less than a second." },
+      'verify-success':{ title: <>You're<br/>verified.</>,                                              lead: "Your email is confirmed. Time to start building with the network." },
+      'verify-error':  { title: <>That link<br/>expired.</>,                                            lead: "Verification links expire after 24 hours. Request a new one and try again." },
+    };
+
+    function App() {
+      const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+      const urlRoute = parseUrlRoute();
+      const [page, setPage] = useState(urlRoute.page || tweaks.page || 'login');
+      const [resetToken] = useState(urlRoute.token || '');
+      const [emailHint, setEmailHint] = useState('');
+      const [verifyError, setVerifyError] = useState('');
+
+      const go = useCallback((p) => {
+        setPage(p);
+        setTweak('page', p);
+      }, [setTweak]);
+
+      // sync API base from tweak
+      useEffect(() => {
+        if (tweaks.apiBase) {
+          window.__INNONET_API_BASE__ = tweaks.apiBase;
+          if (window.innonetApi) window.innonetApi.base = tweaks.apiBase;
+        }
+      }, [tweaks.apiBase]);
+
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', tweaks.theme);
+        document.documentElement.setAttribute('data-density', tweaks.density);
+      }, [tweaks.theme, tweaks.density]);
+
+      // Auto-run email verification if landed on verify page with a token
+      useEffect(() => {
+        if (page !== 'verify-loading') return;
+        let cancel = false;
+        (async () => {
+          if (!urlRoute.token && !tweaks.demoMode) {
+            setVerifyError('Invalid verification link.');
+            setPage('verify-error');
+            return;
+          }
+          try {
+            if (!tweaks.demoMode && urlRoute.token) {
+              await api.verifyEmail(urlRoute.token);
+            } else {
+              await new Promise(r => setTimeout(r, 900));
+            }
+            if (!cancel) setPage('verify-success');
+          } catch (e) {
+            if (!cancel) {
+              setVerifyError(getErrMsg(e));
+              setPage('verify-error');
+            }
+          }
+        })();
+        return () => { cancel = true; };
+      }, [page]);
+
+      const stage = STAGE_COPY[page] || STAGE_COPY['login'];
+
+      const pageEl = (() => {
+        const shared = { go, demoMode: tweaks.demoMode, setEmailHint, emailHint, resetToken };
+        switch (page) {
+          case 'signup':         return <SignupPage {...shared}/>;
+          case 'forgot':         return <ForgotPage {...shared}/>;
+          case 'check-email':    return <CheckEmailPage {...shared}/>;
+          case 'reset':          return <ResetPage {...shared}/>;
+          case 'reset-success':  return <ResetSuccessPage go={go}/>;
+          case 'verify-loading': return <VerifyLoadingPage/>;
+          case 'verify-success': return <VerifySuccessPage go={go}/>;
+          case 'verify-error':   return <VerifyErrorPage go={go} errorMessage={verifyError}/>;
+          default:               return <LoginPage {...shared}/>;
+        }
+      })();
+
+      return (
+        <>
+          <Shell tweaks={tweaks} setTweak={setTweak}
+                 stageTitle={stage.title} stageLead={stage.lead}>
+            {pageEl}
+          </Shell>
+
+          {/* mode badge */}
+          <div style={{
+            position:'fixed', top:16, left:16, zIndex:40,
+            display:'inline-flex', alignItems:'center', gap:8,
+            padding:'6px 12px', borderRadius:9999,
+            background: tweaks.demoMode ? 'var(--color-warning-bg)' : 'var(--color-success-bg)',
+            color:     tweaks.demoMode ? 'var(--color-warning)'     : 'var(--color-success)',
+            font:'600 11px/1 var(--font-sans)', textTransform:'uppercase', letterSpacing:'.08em',
+            border:'1px solid currentColor',
+          }}>
+            <span style={{width:6,height:6,borderRadius:'50%',background:'currentColor'}}/>
+            {tweaks.demoMode ? 'Demo mode' : 'Live API · ' + tweaks.apiBase}
+          </div>
+
+          <div className="page-switcher" role="tablist" aria-label="Page">
+            {ROUTES.map(r => (
+              <button key={r.k}
+                      className={page === r.k ? 'is-active' : ''}
+                      onClick={() => go(r.k)}>{r.label}</button>
+            ))}
+          </div>
+
+          <TweaksPanel title="Tweaks">
+            <TweakSection label="Backend">
+              <TweakToggle label="Demo mode (no API calls)"
+                           checked={tweaks.demoMode}
+                           onChange={v => setTweak('demoMode', v)}/>
+              <TweakText  label="API base URL"
+                          value={tweaks.apiBase}
+                          onChange={v => setTweak('apiBase', v)}/>
+            </TweakSection>
+            <TweakSection label="Appearance">
+              <TweakRadio label="Theme" value={tweaks.theme} onChange={v => setTweak('theme', v)}
+                          options={[{value:'dark', label:'Dark'}, {value:'light', label:'Light'}]}/>
+              <TweakRadio label="Density" value={tweaks.density} onChange={v => setTweak('density', v)}
+                          options={[{value:'compact', label:'Compact'}, {value:'default', label:'Default'}, {value:'airy', label:'Airy'}]}/>
+            </TweakSection>
+            <TweakSection label="Stage art">
+              <TweakSelect label="Variant" value={tweaks.stageVariant} onChange={v => setTweak('stageVariant', v)}
+                           options={[
+                             {value:'constellation', label:'Constellation'},
+                             {value:'orbits', label:'Orbits'},
+                             {value:'flow', label:'Flow field'},
+                             {value:'grid', label:'Grid'},
+                           ]}/>
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>

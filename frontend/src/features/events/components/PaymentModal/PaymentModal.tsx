@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../../../../components/common/Button';
 import { Modal } from '../../../../components/common/Modal';
 import api from '../../../../lib/api';
+import { formatError } from '../../../../utils/error';
 import type { EventDetail } from '../../../../types/events';
 import styles from './PaymentModal.module.css';
 
@@ -46,9 +47,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       } else {
         throw new Error('No checkout URL received');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Payment failed:', err);
-      setError(err.response?.data?.detail || 'Payment failed. Please try again.');
+      setError(formatError(err));
       setIsProcessing(false);
     }
   };

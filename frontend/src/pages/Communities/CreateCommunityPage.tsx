@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Navbar } from '../../components/common/Navbar';
-import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { communitiesApi } from '../../features/communities/api/communitiesApi';
@@ -67,7 +65,6 @@ export const CreateCommunityPage: React.FC = () => {
 
   return (
     <div className={styles.page}>
-      <Navbar />
       <main className={styles.main}>
         <div className={styles.container}>
           <div className={styles.header}>
@@ -181,7 +178,6 @@ export const CreateCommunityPage: React.FC = () => {
           </form>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

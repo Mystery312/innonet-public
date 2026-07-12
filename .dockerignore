@@ -1,0 +1,11 @@
+**/.git
+**/.DS_Store
+**/node_modules
+**/venv
+**/__pycache__
+**/*.pyc
+**/.env*
+**/dist
+**/*.log
+**/coverage
+**/.pytest_cache

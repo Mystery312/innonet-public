@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { width:700px; height:160px; margin:0; padding:24px; background:#fff;
+    font-family: var(--font-sans); display:flex; align-items:center; gap: 16px; flex-wrap:wrap;}
+  .av { width: 44px; height: 44px; border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font: 600 15px/1 "Space Grotesk", sans-serif;
+    flex-shrink:0; }
+  .lg { width: 64px; height: 64px; font-size: 22px;}
+  .sm { width: 32px; height: 32px; font-size: 12px;}
+  .ring { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #4D4DFF;}
+  .stack { display:flex;}
+  .stack .av { margin-left: -10px; box-shadow: 0 0 0 2px #fff;}
+  .stack .av:first-child { margin-left: 0;}
+  .more { background:#F1F5F9; color:#475569;}
+  .label { font: 500 12px/1 var(--font-sans); color:#475569; margin-left: 8px;}
+</style>
+</head>
+<body>
+  <div class="av lg" style="background:linear-gradient(135deg,#6B6BFF,#4D4DFF)">M</div>
+  <div class="av" style="background:linear-gradient(135deg,#6B6BFF,#4D4DFF)">A</div>
+  <div class="av sm" style="background:linear-gradient(135deg,#7C3AED,#4D4DFF)">R</div>
+  <div class="av ring" style="background:linear-gradient(135deg,#06B6D4,#4D4DFF)">K</div>
+  <div class="stack">
+    <div class="av sm" style="background:linear-gradient(135deg,#6B6BFF,#4D4DFF)">M</div>
+    <div class="av sm" style="background:linear-gradient(135deg,#7C3AED,#4D4DFF)">A</div>
+    <div class="av sm" style="background:linear-gradient(135deg,#06B6D4,#4D4DFF)">R</div>
+    <div class="av sm more">+5</div>
+  </div>
+  <span class="label">8 builders connected</span>
+</body>
+</html>

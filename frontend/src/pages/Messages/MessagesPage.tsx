@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Navbar } from '../../components/common/Navbar';
 import { Button } from '../../components/common/Button';
 import { Avatar } from '../../components/common/Avatar';
 import { BackButton } from '../../components/common/BackButton';
@@ -135,7 +134,6 @@ export const MessagesPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className={styles.page}>
-        <Navbar />
         <div className={styles.loading}>Loading messages...</div>
       </div>
     );
@@ -143,7 +141,6 @@ export const MessagesPage: React.FC = () => {
 
   return (
     <div className={styles.page}>
-      <Navbar />
       <div className={styles.container}>
         {/* Conversation List */}
         <aside className={styles.sidebar}>

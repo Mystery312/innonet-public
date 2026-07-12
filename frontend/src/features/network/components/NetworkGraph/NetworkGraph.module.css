@@ -1,60 +1,67 @@
+/* NetworkGraph.module.css — token-driven so it adopts theme + design system.
+   Mirrors the visual vocabulary of KnowledgeGraph + the Roadmap stage. */
+
 .container {
   position: relative;
   width: 100%;
   height: 100%;
   min-height: 400px;
-  background: var(--color-bg-secondary, #f6f8fa);
-  border-radius: 12px;
-  overflow: hidden;
+  /* The host page (RoadmapPage's .stage) provides the radial-gradient bg
+     and overflow; we just need a transparent surface here. */
+  background: transparent;
 }
 
 .graph {
   display: block;
   width: 100%;
   height: 100%;
+  cursor: grab;
 }
+.graph:active { cursor: grabbing; }
 
+/* Built-in chrome — only visible when the host passes chrome={true|undefined}.
+   In RoadmapPage we pass chrome={false} so these never render. */
 .controls {
   position: absolute;
-  bottom: 1rem;
-  left: 1rem;
-  background: var(--color-bg-primary, #ffffff);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  bottom: 12px;
+  right: 12px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  font: 400 11px/1.4 var(--font-sans);
+  color: var(--color-fg-secondary);
+  pointer-events: none;
 }
+.controls p { margin: 0; }
 
-.controls p {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--color-text-secondary, #57606a);
-}
-
+/* Empty state — matches GraphSidebar's empty card. */
 .empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  padding: 3rem;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--color-fg-secondary);
   text-align: center;
-  background: var(--color-bg-secondary, #f6f8fa);
-  border-radius: 12px;
 }
-
+.empty > div { max-width: 320px; }
 .empty svg {
-  margin-bottom: 1.5rem;
-  color: var(--color-text-tertiary, #8b949e);
+  width: 32px;
+  height: 32px;
+  color: var(--color-fg-tertiary);
+  margin: 0 auto 10px;
+  display: block;
 }
-
 .empty h3 {
-  margin: 0 0 0.5rem;
-  font-size: 1.25rem;
-  color: var(--color-text-primary, #24292f);
+  margin: 0 0 4px;
+  font: 700 14px/1.2 var(--font-display);
+  color: var(--color-fg);
 }
-
 .empty p {
   margin: 0;
-  color: var(--color-text-secondary, #57606a);
-  max-width: 300px;
+  font: 400 12px/1.5 var(--font-sans);
 }

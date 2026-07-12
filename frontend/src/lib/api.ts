@@ -8,7 +8,7 @@ interface AuthTokens {
 }
 
 // Initialize tokens from localStorage on module load
-let tokens: AuthTokens = {
+const tokens: AuthTokens = {
   accessToken: localStorage.getItem('access_token'),
   refreshToken: localStorage.getItem('refreshToken'),
 };
