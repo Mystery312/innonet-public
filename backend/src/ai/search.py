@@ -5,8 +5,7 @@ from sqlalchemy import text, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.auth.models import User, UserProfile
-from src.profiles.models import ProfileEmbedding, UserSkill
+from src.profiles.models import UserSkill
 from src.profiles.schemas import ProfileSearchResult, ProfileSearchResponse
 from src.ai.embeddings import embedding_service
 

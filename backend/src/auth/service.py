@@ -122,8 +122,8 @@ class AuthService:
             # If account is now locked, raise specific error
             if lockout_info.get("locked"):
                 raise ValueError(
-                    f"Account locked due to multiple failed login attempts. "
-                    f"Please try again in 15 minutes."
+                    "Account locked due to multiple failed login attempts. "
+                    "Please try again in 15 minutes."
                 )
 
             # Otherwise, inform about remaining attempts

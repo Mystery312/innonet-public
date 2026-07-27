@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-from .models import CompanySize, ChallengeStatus, ChallengeDifficulty, ApplicationStatus
+from .models import CompanySize, ChallengeDifficulty
 
 
 # User info for nested responses

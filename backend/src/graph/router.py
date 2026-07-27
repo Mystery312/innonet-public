@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.postgres import get_db
@@ -15,8 +15,6 @@ from src.graph.service import get_graph_service, GraphService
 from src.graph.similarity_service import get_similarity_service, ProfileSimilarityService
 from src.graph.schemas import (
     KnowledgeGraph,
-    KnowledgeGraphRequest,
-    SearchGraphRequest,
     SkillRoadmap,
     SimilarProfilesResponse,
     CommunityGraph,

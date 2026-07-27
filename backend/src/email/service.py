@@ -38,19 +38,19 @@ class EmailService:
 
     async def send_waitlist_confirmation(self, to_email: str) -> bool:
         subject = "Welcome to the Innonet Waitlist!"
-        html_content = f"""
+        html_content = """
         <!DOCTYPE html>
         <html>
         <head>
             <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 40px 20px; }}
-                .header {{ text-align: center; margin-bottom: 30px; }}
-                .logo {{ font-size: 28px; font-weight: bold; color: #2563eb; }}
-                .content {{ background: #f8fafc; border-radius: 8px; padding: 30px; }}
-                h1 {{ color: #1e293b; font-size: 24px; margin-bottom: 16px; }}
-                p {{ color: #475569; margin-bottom: 16px; }}
-                .footer {{ text-align: center; margin-top: 30px; color: #94a3b8; font-size: 14px; }}
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .logo { font-size: 28px; font-weight: bold; color: #2563eb; }
+                .content { background: #f8fafc; border-radius: 8px; padding: 30px; }
+                h1 { color: #1e293b; font-size: 24px; margin-bottom: 16px; }
+                p { color: #475569; margin-bottom: 16px; }
+                .footer { text-align: center; margin-top: 30px; color: #94a3b8; font-size: 14px; }
             </style>
         </head>
         <body>

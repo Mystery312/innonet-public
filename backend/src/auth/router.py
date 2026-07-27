@@ -210,7 +210,7 @@ async def verify_email(
     """Verify email with token from email link."""
     auth_service = AuthService(db)
     try:
-        user = await auth_service.verify_email(token)
+        await auth_service.verify_email(token)
         return MessageResponse(message="Email verified successfully! You can now login.")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

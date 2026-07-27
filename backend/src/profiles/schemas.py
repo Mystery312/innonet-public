@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 
 # ============== Skill Schemas ==============

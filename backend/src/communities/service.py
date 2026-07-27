@@ -1,14 +1,12 @@
 import uuid
 import re
-from datetime import datetime
 from typing import Optional, List, Tuple
-from sqlalchemy import select, func, and_, or_
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from src.communities.models import (
     Community, CommunityMember, Post, Comment, PostVote,
-    MemberRole, CommunityCategory
+    MemberRole
 )
 
 

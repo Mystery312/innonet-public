@@ -8,11 +8,9 @@ Implements multiple layers of validation to prevent malicious file uploads:
 4. Filename sanitization
 5. File size limits
 """
-import mimetypes
 import re
 import logging
 from typing import Optional, Set, Tuple
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -253,7 +251,7 @@ def validate_image_file(
         raise FileValidationError(f"Unsupported extension: .{extension}")
 
     # 5. Validate MIME type
-    mime_type = validate_mime_type(content, content_type, ALLOWED_IMAGE_TYPES)
+    validate_mime_type(content, content_type, ALLOWED_IMAGE_TYPES)
 
     # 6. Validate magic number (file signature)
     if not validate_magic_number(content, expected_mime):
@@ -292,7 +290,7 @@ def validate_document_file(
         raise FileValidationError(f"Unsupported extension: .{extension}")
 
     # 5. Validate MIME type
-    mime_type = validate_mime_type(content, content_type, ALLOWED_DOCUMENT_TYPES)
+    validate_mime_type(content, content_type, ALLOWED_DOCUMENT_TYPES)
 
     # 6. Validate magic number (file signature)
     if expected_mime in MAGIC_NUMBERS and MAGIC_NUMBERS[expected_mime]:
@@ -336,7 +334,7 @@ def validate_resume_file(
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     }
-    mime_type = validate_mime_type(content, content_type, allowed_resume_types)
+    validate_mime_type(content, content_type, allowed_resume_types)
 
     # 6. Validate magic number
     if not validate_magic_number(content, expected_mime):

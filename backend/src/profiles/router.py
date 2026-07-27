@@ -20,6 +20,7 @@ from src.profiles.schemas import (
     ResumeUploadResponse, ResumeParseResult
 )
 from src.ai.resume import get_resume_service
+from src.utils.file_validation import validate_resume_file, FileValidationError
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -481,8 +482,6 @@ async def delete_my_education(
 
 
 # ============== Resume Upload Endpoints ==============
-
-from src.utils.file_validation import validate_resume_file, FileValidationError
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 

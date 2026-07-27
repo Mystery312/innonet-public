@@ -1,10 +1,9 @@
 import uuid
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Optional, List, Tuple, Dict, Any
-from sqlalchemy import select, func, and_, or_, extract
+from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from src.events.models import Event, EventRegistration
 from src.auth.models import UserProfile

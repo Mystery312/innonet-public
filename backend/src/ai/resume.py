@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import get_settings
 from src.profiles.models import ResumeUpload
-from src.profiles.schemas import ResumeParseResult
 from src.utils.encryption import encryption_service
 
 logger = logging.getLogger(__name__)

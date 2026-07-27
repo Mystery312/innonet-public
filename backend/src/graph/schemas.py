@@ -1,6 +1,5 @@
 """Pydantic schemas for graph API."""
 
-from datetime import datetime
 from typing import Optional, Literal, Any
 from uuid import UUID
 from pydantic import BaseModel, Field

@@ -143,14 +143,14 @@ export const GraphSidebar: React.FC<GraphSidebarProps> = ({
       </div>
 
       {/* ── Type-specific meta ── */}
-      {node.type === 'user' && node.properties?.location && (
+      {node.type === 'user' && Boolean(node.properties?.location) && (
         <p className={styles.meta}>
           {I.pin}
           {String(node.properties.location)}
         </p>
       )}
 
-      {node.type === 'event' && node.properties?.location_city && (
+      {node.type === 'event' && Boolean(node.properties?.location_city) && (
         <p className={styles.meta}>
           {I.pin}
           {String(node.properties.location_city)}
@@ -169,10 +169,10 @@ export const GraphSidebar: React.FC<GraphSidebarProps> = ({
         </span>
       )}
 
-      {node.type === 'skill' && node.properties?.is_current && (
+      {node.type === 'skill' && Boolean(node.properties?.is_current) && (
         <span className={`${styles.stateBadge} ${styles.success}`}>You have this skill</span>
       )}
-      {node.type === 'skill' && node.properties?.is_target && (
+      {node.type === 'skill' && Boolean(node.properties?.is_target) && (
         <span className={`${styles.stateBadge} ${styles.warning}`}>Target skill</span>
       )}
 

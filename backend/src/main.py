@@ -12,7 +12,7 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from src.config import get_settings
 from src.database.postgres import init_db
 from src.exceptions import (
-    InnonetException, NotFoundError, ValidationError,
+    NotFoundError, ValidationError,
     AuthorizationError, ConflictError, AlreadyExistsError,
     CapacityExceededError
 )
@@ -93,22 +93,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Content-Security-Policy"] = csp_policy
 
         return response
-
-
-class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Apply global rate limiting to all API endpoints."""
-
-    async def dispatch(self, request: Request, call_next) -> Response:
-        # Skip rate limiting for health checks and root endpoint
-        if request.url.path in ["/health", "/"]:
-            return await call_next(request)
-
-        # Apply rate limiting based on endpoint type
-        # Most endpoints have a reasonable global limit
-        # Auth endpoints have stricter limits defined in their routers
-        # This is a safety net to prevent abuse
-
-        return await call_next(request)
 
 
 @asynccontextmanager

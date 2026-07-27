@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import text as sa_text
-import sqlalchemy as sa
 from typing import AsyncGenerator
 import logging
 
@@ -71,19 +70,6 @@ async def init_db():
     """Initialize database by creating all tables and extensions."""
     try:
         # Import all models to ensure they're registered with Base.metadata
-        from src.auth.models import User, UserProfile, RefreshToken, OAuthAccount
-        from src.events.models import Event, EventRegistration
-        from src.payments.models import Payment
-        from src.waitlist.models import Waitlist
-        from src.profiles.models import (
-            Skill, UserSkill, Project, Certification, Award,
-            WorkExperience, Education, ProfileEmbedding, ProfileAnalysis,
-            Connection, ResumeUpload
-        )
-        from src.communities.models import Community, CommunityMember, Post, Comment, PostVote
-        from src.companies.models import Company, CompanyMember, Challenge, ChallengeApplication
-        from src.messaging.models import Conversation, ConversationParticipant, Message, Notification
-        from src.discover.models import DiscoverSwipe
 
         async with engine.begin() as conn:
             # Create pgvector extension if not exists

@@ -6,7 +6,7 @@ from sqlalchemy import select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.auth.models import User, UserProfile
+from src.auth.models import User
 from src.profiles.models import Connection
 from src.database.neo4j import neo4j_client
 

@@ -8,13 +8,8 @@ from sqlalchemy.orm import selectinload
 from src.auth.models import User, UserProfile
 from src.profiles.models import (
     Skill, UserSkill, Project, Certification, Award,
-    WorkExperience, Education, ProfileEmbedding, ProfileAnalysis
+    WorkExperience, Education
 )
-
-
-def utc_now_naive() -> datetime:
-    """Return current UTC time as a naive datetime (for PostgreSQL compatibility)."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 from src.profiles.schemas import (
     SkillCreate, UserSkillCreate, UserSkillUpdate,
     ProjectCreate, ProjectUpdate,
@@ -24,6 +19,11 @@ from src.profiles.schemas import (
     EducationCreate, EducationUpdate,
     BasicProfileUpdate, ProfileCompletionResponse
 )
+
+
+def utc_now_naive() -> datetime:
+    """Return current UTC time as a naive datetime (for PostgreSQL compatibility)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class ProfileService:

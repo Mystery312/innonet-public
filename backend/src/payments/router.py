@@ -45,7 +45,7 @@ async def create_checkout_session(
         )
 
     # Create pending registration first
-    registration = await event_service.register_for_event(data.event_id, current_user.id)
+    await event_service.register_for_event(data.event_id, current_user.id)
 
     # Get user email
     user_email = current_user.email or f"{current_user.username}@innonet.placeholder"

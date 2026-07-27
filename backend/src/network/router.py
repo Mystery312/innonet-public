@@ -8,7 +8,6 @@ from src.auth.models import User
 from src.network.service import NetworkService
 from src.network.schemas import (
     ConnectionRequestCreate,
-    ConnectionResponse,
     ConnectionListResponse,
     PendingRequestsResponse,
     ConnectionStatusResponse,

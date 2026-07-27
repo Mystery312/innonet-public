@@ -34,7 +34,6 @@ router = APIRouter()
 
 # Helper to get user brief info
 async def get_user_brief(db: AsyncSession, user_id: uuid.UUID) -> Optional[UserBrief]:
-    from src.auth.models import UserProfile
     from sqlalchemy.orm import selectinload
 
     result = await db.execute(
