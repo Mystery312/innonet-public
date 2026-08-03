@@ -90,20 +90,7 @@ def upgrade() -> None:
     )
 
     # Event registrations table
-    op.create_table(
-        'event_registrations',
-        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column('event_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('events.id', ondelete='CASCADE'), index=True),
-        sa.Column('user_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id', ondelete='CASCADE'), index=True),
-        sa.Column('status', sa.String(20), default='pending'),
-        sa.Column('ticket_code', sa.String(50), unique=True, nullable=True),
-        sa.Column('payment_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('payments.id'), nullable=True),
-        sa.Column('registered_at', sa.DateTime(), server_default=sa.func.now()),
-        sa.Column('cancelled_at', sa.DateTime(), nullable=True),
-        sa.UniqueConstraint('event_id', 'user_id', name='unique_event_registration')
-    )
-
-    # Payments table
+    # Payments table (created before event_registrations, which has a FK to it)
     op.create_table(
         'payments',
         sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True),
@@ -119,6 +106,19 @@ def upgrade() -> None:
         sa.Column('metadata', postgresql.JSONB(), nullable=True),
         sa.Column('created_at', sa.DateTime(), server_default=sa.func.now()),
         sa.Column('updated_at', sa.DateTime(), server_default=sa.func.now(), onupdate=sa.func.now()),
+    )
+
+    op.create_table(
+        'event_registrations',
+        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column('event_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('events.id', ondelete='CASCADE'), index=True),
+        sa.Column('user_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id', ondelete='CASCADE'), index=True),
+        sa.Column('status', sa.String(20), default='pending'),
+        sa.Column('ticket_code', sa.String(50), unique=True, nullable=True),
+        sa.Column('payment_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('payments.id'), nullable=True),
+        sa.Column('registered_at', sa.DateTime(), server_default=sa.func.now()),
+        sa.Column('cancelled_at', sa.DateTime(), nullable=True),
+        sa.UniqueConstraint('event_id', 'user_id', name='unique_event_registration')
     )
 
     # Waitlist table
@@ -482,8 +482,8 @@ def downgrade() -> None:
     op.drop_table('user_skills')
     op.drop_table('skills')
     op.drop_table('waitlist')
-    op.drop_table('payments')
     op.drop_table('event_registrations')
+    op.drop_table('payments')
     op.drop_table('events')
     op.drop_table('refresh_tokens')
     op.drop_table('user_profiles')
