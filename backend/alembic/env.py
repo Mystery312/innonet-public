@@ -9,7 +9,7 @@ from src.config import get_settings
 
 # Import all models to ensure they're registered
 from src.database.postgres import Base
-from src.auth.models import User, UserProfile, RefreshToken, PasswordResetToken, EmailVerificationToken
+from src.auth.models import User, UserProfile, RefreshToken, PasswordResetToken, EmailVerificationToken, OAuthAccount
 from src.events.models import Event, EventRegistration
 from src.payments.models import Payment
 from src.waitlist.models import Waitlist
@@ -27,6 +27,7 @@ from src.companies.models import (
 from src.messaging.models import (
     Conversation, ConversationParticipant, Message, Notification
 )
+from src.discover.models import DiscoverSwipe
 
 config = context.config
 
