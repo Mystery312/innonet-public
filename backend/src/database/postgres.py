@@ -67,7 +67,16 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db():
-    """Initialize database by creating all tables and extensions."""
+    """Initialize database by creating all tables and extensions.
+
+    Schema in production is owned exclusively by Alembic migrations
+    (`alembic upgrade head`) — create_all() here would race migrations on
+    every fresh deploy and collide with them. Only run it for local
+    dev/testing convenience.
+    """
+    if settings.environment == "production":
+        return
+
     try:
         # Import all models to ensure they're registered with Base.metadata
 
