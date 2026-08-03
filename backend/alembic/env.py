@@ -5,6 +5,8 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
+from src.config import get_settings
+
 # Import all models to ensure they're registered
 from src.database.postgres import Base
 from src.auth.models import User, UserProfile, RefreshToken, PasswordResetToken, EmailVerificationToken
@@ -30,6 +32,11 @@ config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# Always use the environment's DATABASE_URL (or its component parts) rather
+# than whatever is checked into alembic.ini's sqlalchemy.url — credentials
+# differ per environment and must never live in a tracked file.
+config.set_main_option("sqlalchemy.url", get_settings().get_database_url())
 
 target_metadata = Base.metadata
 
