@@ -3,8 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../../../lib/api';
 import { formatError } from '../../../utils/error';
 
-type ContactMethod = 'email' | 'phone';
-
 const inputCls =
   'w-full px-3.5 py-3 rounded-[var(--radius-md)] border border-[var(--color-border)] outline-none text-[15px]';
 
@@ -26,9 +24,7 @@ const inputStyle: React.CSSProperties = {
 
 export const SignupForm: React.FC = () => {
   const [username, setUsername] = useState('');
-  const [contactMethod, setContactMethod] = useState<ContactMethod>('email');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -53,19 +49,8 @@ export const SignupForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const data = {
-        username,
-        password,
-        ...(contactMethod === 'email' ? { email } : { phone }),
-      };
-
-      await api.post('/auth/register', data);
-
-      if (contactMethod === 'email') {
-        navigate('/check-email', { state: { email } });
-      } else {
-        navigate('/login');
-      }
+      await api.post('/auth/register', { username, email, password });
+      navigate('/login');
     } catch (err) {
       console.error('Registration error:', err);
       setError(formatError(err));
@@ -142,66 +127,22 @@ export const SignupForm: React.FC = () => {
           />
         </div>
 
-        {/* Contact method tabs */}
+        {/* Email */}
         <div className="flex flex-col gap-1.5">
-          <div
-            className="flex rounded-[var(--radius-md)] p-0.5"
-            style={{ background: 'var(--color-surface-raised)' }}
-          >
-            {(['email', 'phone'] as ContactMethod[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setContactMethod(m)}
-                className="flex-1 py-2 rounded-[var(--radius-sm)] text-[13px] font-medium border-0 cursor-pointer capitalize"
-                style={{
-                  background: contactMethod === m ? 'var(--color-bg)' : 'transparent',
-                  color: contactMethod === m ? 'var(--color-fg)' : 'var(--color-fg-muted)',
-                  boxShadow: contactMethod === m ? 'var(--shadow-xs)' : 'none',
-                  transition: 'all var(--duration-fast)',
-                }}
-              >
-                {m === 'email' ? 'Email' : 'Phone'}
-              </button>
-            ))}
-          </div>
-
-          {contactMethod === 'email' ? (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium" style={{ color: 'var(--color-fg)' }}>
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-                className={inputCls}
-                style={inputStyle}
-                onFocus={focusInput}
-                onBlur={blurInput}
-              />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium" style={{ color: 'var(--color-fg)' }}>
-                Phone number
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1234567890"
-                required
-                className={inputCls}
-                style={inputStyle}
-                onFocus={focusInput}
-                onBlur={blurInput}
-              />
-              <span className="text-xs" style={{ color: 'var(--color-fg-muted)' }}>Include country code</span>
-            </div>
-          )}
+          <label className="text-[13px] font-medium" style={{ color: 'var(--color-fg)' }}>
+            Email
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            required
+            className={inputCls}
+            style={inputStyle}
+            onFocus={focusInput}
+            onBlur={blurInput}
+          />
         </div>
 
         {/* Password */}

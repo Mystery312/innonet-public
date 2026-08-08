@@ -136,10 +136,6 @@ class AuthService:
         if not user.is_active:
             raise ValueError("Account is deactivated")
 
-        # Check if email is verified (only for users with email)
-        if user.email and not user.is_verified:
-            raise ValueError("Email not verified")
-
         # Successful login - clear any failed attempts
         await lockout_manager.clear_failed_attempts(identifier)
 

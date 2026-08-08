@@ -30,15 +30,12 @@ export const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showResend, setShowResend] = useState(false);
-  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setShowResend(false);
     setIsLoading(true);
 
     try {
@@ -46,39 +43,9 @@ export const LoginForm: React.FC = () => {
       navigate('/events');
     } catch (err: unknown) {
       console.error('Login error:', err);
-      const axiosError = err as { response?: { status?: number; data?: { detail?: string } } };
-      const statusCode = axiosError.response?.status;
-      const errorDetail = axiosError.response?.data?.detail ?? '';
-
-      if (statusCode === 403 || errorDetail.toLowerCase().includes('not verified')) {
-        setError('Please verify your email before logging in. Check your inbox for the verification link.');
-        setShowResend(true);
-      } else {
-        setError(formatError(err));
-      }
+      setError(formatError(err));
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleResendVerification = async () => {
-    if (resendStatus !== 'idle') return;
-    setResendStatus('sending');
-    try {
-      const emailValue = identifier.includes('@') ? identifier : '';
-      if (!emailValue) {
-        setError('Enter your email address in the field above, then click "Resend".');
-        setResendStatus('idle');
-        return;
-      }
-      await fetch(`${API_BASE}/auth/resend-verification-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailValue }),
-      });
-      setResendStatus('sent');
-    } catch {
-      setResendStatus('idle');
     }
   };
 
@@ -119,25 +86,6 @@ export const LoginForm: React.FC = () => {
           }}
         >
           {error}
-          {showResend && (
-            <div className="mt-2">
-              {resendStatus === 'sent' ? (
-                <span className="font-medium" style={{ color: 'var(--color-success)' }}>
-                  Verification email sent — check your inbox.
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResendVerification}
-                  disabled={resendStatus === 'sending'}
-                  className="bg-transparent border-0 cursor-pointer font-semibold p-0 underline text-[inherit]"
-                  style={{ color: 'var(--color-primary)' }}
-                >
-                  {resendStatus === 'sending' ? 'Sending…' : 'Resend verification email'}
-                </button>
-              )}
-            </div>
-          )}
         </div>
       )}
 
@@ -197,13 +145,13 @@ export const LoginForm: React.FC = () => {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] font-medium" style={{ color: 'var(--color-fg)' }}>
-            Email, phone, or username
+            Email or username
           </label>
           <input
             type="text"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="Enter your email, phone, or username"
+            placeholder="Enter your email or username"
             required
             className={inputCls}
             style={inputStyle}

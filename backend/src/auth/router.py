@@ -47,15 +47,10 @@ async def register(
 ):
     auth_service = AuthService(db)
     try:
-        user = await auth_service.register(data)
-
-        # Send verification email if user has email and verification token
-        if user.email and hasattr(user, '_verification_token'):
-            email_service = EmailService()
-            await email_service.send_email_verification(user.email, user._verification_token)
+        await auth_service.register(data)
 
         return MessageResponse(
-            message="Registration successful! Check your email to verify your account."
+            message="Registration successful! You can now log in."
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

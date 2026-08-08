@@ -84,41 +84,6 @@ const AuthShell: React.FC<AuthShellProps> = ({
             {lead}
           </p>
         </div>
-
-        {/* bottom quote */}
-        <div
-          className="relative z-[1] max-w-[480px] pt-6 flex flex-col gap-3.5"
-          style={{ borderTop: '1px solid var(--color-border)' }}
-        >
-          <p
-            style={{
-              font: '500 16px/1.55 var(--font-sans)',
-              color: 'var(--color-fg)',
-              margin: 0,
-            }}
-          >
-            "Found my co-founder here. We met at a Hack Shanghai event two weekends after I made my profile."
-          </p>
-          <div className="flex items-center gap-2.5">
-            <span
-              className="inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-[10px] font-bold"
-              style={{
-                background: 'linear-gradient(135deg, #7A7AFF, #3232FF)',
-                fontFamily: 'var(--font-display)',
-              }}
-            >
-              M
-            </span>
-            <span
-              style={{
-                font: '500 13px/1 var(--font-sans)',
-                color: 'var(--color-fg-muted)',
-              }}
-            >
-              Mei Chen · Builder · Shanghai
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* ─── RIGHT: Form Panel ─────────────────────────── */}
